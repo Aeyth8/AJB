@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34330.188
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JoJo", "JoJo.vcxproj", "{68C3D0CD-4F62-4156-88E0-72E3A5A0A9B7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{68C3D0CD-4F62-4156-88E0-72E3A5A0A9B7}.Release|x64.ActiveCfg = Release|x64
+		{68C3D0CD-4F62-4156-88E0-72E3A5A0A9B7}.Release|x64.Build.0 = Release|x64
+		{68C3D0CD-4F62-4156-88E0-72E3A5A0A9B7}.Release|x86.ActiveCfg = Release|Win32
+		{68C3D0CD-4F62-4156-88E0-72E3A5A0A9B7}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A2BC31DB-DE40-4B8D-8DFB-DBA95B3D9A23}
+	EndGlobalSection
+EndGlobal

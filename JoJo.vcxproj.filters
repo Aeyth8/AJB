@@ -1,0 +1,171 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="SDK">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Aeyth8">
+      <UniqueIdentifier>{88fb48e4-fda5-426c-b090-0761d5a15754}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Aeyth8\Proxy">
+      <UniqueIdentifier>{c8bcff96-6d72-4d33-b142-f025f73aac65}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MinHook">
+      <UniqueIdentifier>{b89952ac-c71b-42a2-a6b9-1961545c4ddb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Version">
+      <UniqueIdentifier>{4f616dc7-8577-4658-9118-8a7701b86086}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Aeyth8\Logic">
+      <UniqueIdentifier>{cd20e907-be6c-4435-9a46-706998633854}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Kiero">
+      <UniqueIdentifier>{ae5ce2fd-8659-47fa-920a-46f14379ca6f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Kiero\ImGui">
+      <UniqueIdentifier>{01c1c601-fd62-4a76-9b0a-7b3092690e5e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\Basic.cpp">
+      <Filter>SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\Engine_functions.cpp">
+      <Filter>SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\CoreUObject_functions.cpp">
+      <Filter>SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\OnlineSubsystem_functions.cpp">
+      <Filter>SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\OnlineSubsystemUtils_functions.cpp">
+      <Filter>SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\AJB_functions.cpp">
+      <Filter>SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\BP_AJBStartupHUD_functions.cpp">
+      <Filter>SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\UMG_functions.cpp">
+      <Filter>SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\AmwPlugin_functions.cpp">
+      <Filter>SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\BP_AJBGameInstance_functions.cpp">
+      <Filter>SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="Kiero\kiero.cpp">
+      <Filter>Kiero</Filter>
+    </ClCompile>
+    <ClCompile Include="Kiero\ImGui\imgui.cpp">
+      <Filter>Kiero\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Kiero\ImGui\imgui_demo.cpp">
+      <Filter>Kiero\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Kiero\ImGui\imgui_draw.cpp">
+      <Filter>Kiero\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Kiero\ImGui\imgui_impl_dx11.cpp">
+      <Filter>Kiero\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Kiero\ImGui\imgui_impl_win32.cpp">
+      <Filter>Kiero\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Kiero\ImGui\imgui_widgets.cpp">
+      <Filter>Kiero\ImGui</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PropertyFixup.hpp">
+      <Filter>SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK.hpp">
+      <Filter>SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="UnrealContainers.hpp">
+      <Filter>SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\Logger.hpp">
+      <Filter>Aeyth8</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\Pointers.hpp">
+      <Filter>Aeyth8</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\Proxy\Proxy.hpp">
+      <Filter>Aeyth8\Proxy</Filter>
+    </ClInclude>
+    <ClInclude Include="MinHook\MinHook.h">
+      <Filter>MinHook</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\FunctionHooks.hpp">
+      <Filter>Aeyth8</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\Logic\CustomLogic.hpp">
+      <Filter>Aeyth8\Logic</Filter>
+    </ClInclude>
+    <ClInclude Include="Kiero\kiero.h">
+      <Filter>Kiero</Filter>
+    </ClInclude>
+    <ClInclude Include="Kiero\ImGui\imconfig.h">
+      <Filter>Kiero\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Kiero\ImGui\imgui.h">
+      <Filter>Kiero\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Kiero\ImGui\imgui_impl_dx11.h">
+      <Filter>Kiero\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Kiero\ImGui\imgui_impl_win32.h">
+      <Filter>Kiero\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Kiero\ImGui\imgui_internal.h">
+      <Filter>Kiero\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Kiero\ImGui\imstb_rectpack.h">
+      <Filter>Kiero\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Kiero\ImGui\imstb_textedit.h">
+      <Filter>Kiero\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Kiero\ImGui\imstb_truetype.h">
+      <Filter>Kiero\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Kiero\includes.h">
+      <Filter>Kiero</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\Structs.hpp">
+      <Filter>Aeyth8</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="NameCollisions.inl">
+      <Filter>SDK</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Version\JoJo.rc">
+      <Filter>Version</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>
