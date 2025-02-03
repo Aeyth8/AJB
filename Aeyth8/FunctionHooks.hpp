@@ -1,147 +1,123 @@
 #pragma once
 #include "../pch.h" // Make sure that MinHook.h is included in pch.h, or directly included here.
 
-class Hooks
+class UFunctions
 {
-private:
+public:
 
-	// Static offsets used for reference
-	class OFF
-	{
-	public:
-		inline static uintptr_t PreLogin{0x13CB710};
-		inline static uintptr_t Login{0x13C6A20};
-		inline static uintptr_t AJBPreLogin{0x049E570};
-		inline static uintptr_t UConsole{0x178A450};
-		inline static uintptr_t Browse{0x1750750};
-		inline static uintptr_t SpawnActor{0x1488440};
-
-		// Pointer array to all the offsets
-		inline static std::vector<uintptr_t*> Offsets = { &PreLogin, &Login, &AJBPreLogin, &UConsole, &Browse, &SpawnActor };
-	};
-	
-
-	// Function Addresses (FA) are the calculation of the GBA + the offsets, initialized empty of course.
-	class FA
-	{
-	public:
-		inline static uintptr_t PreLogin{0};
-		inline static uintptr_t Login{0};
-		inline static uintptr_t AJBPreLogin{0};
-		inline static uintptr_t UConsole{0};
-		inline static uintptr_t Browse{0};
-		inline static uintptr_t SpawnActor{0};
-
-		// Pointer array to all of the function addresses via GBA + Offset
-		inline static std::vector<uintptr_t*> Addresses = { &PreLogin, &Login, &AJBPreLogin, &UConsole, &Browse, &SpawnActor };
-	};
-
-
-	// Typedefinitions for all function pointers
+	// Typedefinition and Function Call [FC]
 	class PTR
 	{
 	public:
-		typedef void(__thiscall* PreLogin)(SDK::AGameModeBase* Var, SDK::FString* Options, SDK::FString* Address, SDK::FUniqueNetIdRepl* UniqueId, SDK::FString* ErrorMessage); 
-		typedef void(__thiscall* Login)(SDK::UPlayer* NewPlayer, SDK::ENetRole* InRemoteRole, const SDK::FString& Portal, const SDK::FString& Options, const SDK::FUniqueNetIdRepl* UniqueId, SDK::FString* ErrorMessage);
-		typedef void(__thiscall* UConsole)(SDK::UConsole* Var, SDK::FString* Command);
-		typedef bool(__thiscall* Browse)(SDK::UEngine* Engine, SDK::FWorldContext& WorldContext, SDK::FURL, SDK::FString&);
-		typedef void(__thiscall* SpawnActor)(SDK::UWorld* World, SDK::UClass* Class, const SDK::FVector* Location, const SDK::FRotator* Rotation, const FActorSpawnParameters* SpawnParameters);
-		
-		// Function Calls (FC) are pointers to the original functions, allowing us to call them if we're simply debugging, and/or to unhook them. 
-
-		inline static PreLogin FC_PreLogin{0};
-		inline static Login FC_Login{0};
-		inline static PreLogin FC_AJBPreLogin{0}; // This PreLogin gets used when the gamemode is of any AJB type and not overridden to be custom.
+		typedef void(__thiscall* UConsole)(SDK::UConsole* Var, SDK::FString* Command); 
 		inline static UConsole FC_UConsole{0};
+
+		typedef void(__thiscall* PreLogin)(SDK::AGameModeBase* Var, SDK::FString* Options, SDK::FString* Address, SDK::FUniqueNetIdRepl* UniqueId, SDK::FString* ErrorMessage);
+		inline static UConsole FC_PreLogin{0};
+		inline static PreLogin FC_AJBPreLogin{0}; // This PreLogin gets used when the gamemode is of any AJB type and not overridden to be custom.
+
+		typedef void(__thiscall* Login)(SDK::UPlayer* NewPlayer, SDK::ENetRole* InRemoteRole, const SDK::FString& Portal, const SDK::FString& Options, const SDK::FUniqueNetIdRepl* UniqueId, SDK::FString* ErrorMessage);
+		inline static Login FC_Login{0};
+
+		typedef bool(__thiscall* Browse)(SDK::UEngine* Engine, SDK::FWorldContext& WorldContext, SDK::FURL, SDK::FString&);
 		inline static Browse FC_Browse{0};
+
+		typedef void(__thiscall* SpawnActor)(SDK::UWorld* World, SDK::UClass* Class, const SDK::FVector* Location, const SDK::FRotator* Rotation, const FActorSpawnParameters* SpawnParameters);
 		inline static SpawnActor FC_SpawnActor{0};
 
-		inline static std::vector<LPVOID> Function_Calls = { &FC_PreLogin, &FC_Login, &FC_AJBPreLogin, &FC_UConsole, &FC_Browse, &FC_SpawnActor };
+
 	};
-	
-	// These custom functions will be called in replacement to the originals when we hook them.
-	class Functions
-	{
-	public:
-		inline static void PreLogin(SDK::AGameModeBase* Var, SDK::FString* Options, SDK::FString* Address, SDK::FUniqueNetIdRepl* UniqueId, SDK::FString* ErrorMessage) {
-			LogA("Hooks::Functions::PreLogin()", "PreLogin has been called with Options =   " + Options->ToString());
 
-			/* Authentication will be added later */
-		}
+	inline static void PreLogin(SDK::AGameModeBase* Var, SDK::FString* Options, SDK::FString* Address, SDK::FUniqueNetIdRepl* UniqueId, SDK::FString* ErrorMessage) {
+		LogA("Hooks::Functions::PreLogin()", "PreLogin has been called with Options =   " + Options->ToString());
 
-		inline static SDK::APlayerController* Login(SDK::UPlayer* NewPlayer, SDK::ENetRole* InRemoteRole, const SDK::FString& Portal, const SDK::FString& Options, const SDK::FUniqueNetIdRepl* UniqueId, SDK::FString* ErrorMessage) {
-			LogA("World", UWorld()->GetFullName());
+		/* Authentication will be added later */
+	}
 
-			if (!CheckNull(Instance)) { Instance->SetMaxConsumePP(0); Instance->AMSystemObject->PP = 1170; }
-			if (UWorld()->GetFullName() == "World AJBSimpleMatch_P.AJBSimpleMatch_P") LoadLevelInstance(L"/Game/Aeyth8/Blueprints/WB/ShowCursor");
+	inline static SDK::APlayerController* Login(SDK::UPlayer* NewPlayer, SDK::ENetRole* InRemoteRole, const SDK::FString& Portal, const SDK::FString& Options, const SDK::FUniqueNetIdRepl* UniqueId, SDK::FString* ErrorMessage) {
+		LogA("World", UWorld()->GetFullName());
 
-			LogA("Hooks::Functions::Login()", "Login has been called.");
+		if (!CheckNull(Instance)) { Instance->SetMaxConsumePP(0); Instance->AMSystemObject->PP = 1170; }
+		if (UWorld()->GetFullName() == "World AJBSimpleMatch_P.AJBSimpleMatch_P") LoadLevelInstance(L"/Game/Aeyth8/Blueprints/WB/ShowCursor");
 
-			/* Add custom logic here (not needed) */
-			PTR::FC_Login(NewPlayer, InRemoteRole, Portal, Options, UniqueId, ErrorMessage);
-		}
+		LogA("Hooks::Functions::Login()", "Login has been called.");
 
-		inline static void UConsole(SDK::UConsole* Var, SDK::FString* Command) {
-			LogA("Hooks::Functions::UConsole", Command->ToString());
-			//A8CL::CC::IsCustomCommand(*Command);
-			// If the captured command matches our custom command it will call custom logic.
-			for (size_t i{0}; i < A8CL::CustomCommands.size(); ++i) { 
-				if (Command->ToString() == A8CL::CustomCommands[i]) { A8CL::ExecuteLogic(i, Command->ToString()); return; }
-			} // NEEDS PROPER PARSE LOGIC FOR DYNAMIC COMMANDS WITH PARAMETERS.
+		/* Add custom logic here (not needed) */
+		PTR::FC_Login(NewPlayer, InRemoteRole, Portal, Options, UniqueId, ErrorMessage);
+	}
 
-			PTR::FC_UConsole(Var, Command);
-		}
+	inline static void UConsole(SDK::UConsole* Var, SDK::FString* Command) {
+		LogA("Hooks::Functions::UConsole", Command->ToString());
+		//A8CL::CC::IsCustomCommand(*Command);
+		// If the captured command matches our custom command it will call custom logic.
+		for (size_t i{0}; i < A8CL::CustomCommands.size(); ++i) { 
+			if (Command->ToString() == A8CL::CustomCommands[i]) { A8CL::ExecuteLogic(i, Command->ToString()); return; }
+		} // NEEDS PROPER PARSE LOGIC FOR DYNAMIC COMMANDS WITH PARAMETERS.
 
-		inline static int Browse(SDK::UEngine* Engine, SDK::FWorldContext& WorldContext, SDK::FURL FURL, SDK::FString& Error) {
-			std::string Info;
-			Log("<FunctionHooks.hpp> / Hooks::Functions::Browse():: BEGIN");
-			for (size_t i{0}; i < FURL.Op.Num(); ++i) Info += FURL.Op[i].ToString();
-			Log("Host: " + FURL.Host.ToString() + " | Port: " + std::to_string(FURL.Port));
-			Log("Protocol: " + FURL.Protocol.ToString() + " | Map: " + FURL.Map.ToString() + " | RedirectURL: " + FURL.RedirectURL.ToString() + " | Portal: " + FURL.Portal.ToString());
-			if (!Info.empty()) Log("Op: " + Info);
-			if (Error.IsValid()) Log("Error: " + Error.ToString());
-			Log("<FunctionHooks.hpp> / Hooks::Functions::Browse():: END");
-			return PTR::FC_Browse(Engine, WorldContext, FURL, Error);
-		}
+		PTR::FC_UConsole(Var, Command);
+	}
 
-		inline static void SpawnActor(SDK::UWorld* World, SDK::UClass* Class, const SDK::FVector* Location, const SDK::FRotator* Rotation, FActorSpawnParameters* SpawnParameters) {
-			SpawnParameters->SpawnCollisionHandlingOverride = static_cast<SDK::ESpawnActorCollisionHandlingMethod>(2);
-			int Param = static_cast<int>(SpawnParameters->SpawnCollisionHandlingOverride);
-			//Log("<FunctionHooks.hpp> / Hooks::Functions::SpawnActor():: " + Class->GetFullName() + " :: FActorSpawnParameters->SpawnCollisionHandlingOverride = " + std::to_string(Param));
-			//Log("<FunctionHooks.hpp> / Hooks::Functions::SpawnActor():: Owner = " + SpawnParameters->Owner->GetFullName());
+	inline static int Browse(SDK::UEngine* Engine, SDK::FWorldContext& WorldContext, SDK::FURL FURL, SDK::FString& Error) {
+		std::string Info;
+		Log("<FunctionHooks.hpp> / Hooks::Functions::Browse():: BEGIN");
+		for (size_t i{0}; i < FURL.Op.Num(); ++i) Info += FURL.Op[i].ToString();
+		Log("Host: " + FURL.Host.ToString() + " | Port: " + std::to_string(FURL.Port));
+		Log("Protocol: " + FURL.Protocol.ToString() + " | Map: " + FURL.Map.ToString() + " | RedirectURL: " + FURL.RedirectURL.ToString() + " | Portal: " + FURL.Portal.ToString());
+		if (!Info.empty()) Log("Op: " + Info);
+		if (Error.IsValid()) Log("Error: " + Error.ToString());
+		Log("<FunctionHooks.hpp> / Hooks::Functions::Browse():: END");
+		return PTR::FC_Browse(Engine, WorldContext, FURL, Error);
+	}
+
+	inline static void SpawnActor(SDK::UWorld* World, SDK::UClass* Class, const SDK::FVector* Location, const SDK::FRotator* Rotation, FActorSpawnParameters* SpawnParameters) {
+		SpawnParameters->SpawnCollisionHandlingOverride = static_cast<SDK::ESpawnActorCollisionHandlingMethod>(2);
+		int Param = static_cast<int>(SpawnParameters->SpawnCollisionHandlingOverride);
+		//Log("<FunctionHooks.hpp> / Hooks::Functions::SpawnActor():: " + Class->GetFullName() + " :: FActorSpawnParameters->SpawnCollisionHandlingOverride = " + std::to_string(Param));
+		//Log("<FunctionHooks.hpp> / Hooks::Functions::SpawnActor():: Owner = " + SpawnParameters->Owner->GetFullName());
 			
-			PTR::FC_SpawnActor(World, Class, Location, Rotation, SpawnParameters);
-		}
+		PTR::FC_SpawnActor(World, Class, Location, Rotation, SpawnParameters);
+	}
 
-		// Pointer array to all function hooks.
-		inline static std::vector<LPVOID> Table = { &PreLogin, &Login, &PreLogin, &UConsole, &Browse, &SpawnActor };
+
+};
+
+class Hooks
+{
+private:
+	struct HookStructure { uintptr_t Offset; LPVOID DetourFunction; LPVOID FunctionCall{0}; const std::string& HookName;  uintptr_t CalculatedAddress{0}; };
+	inline static HookStructure Instance[] =
+	{
+		{0x178A450, UFunctions::UConsole, &UFunctions::PTR::FC_UConsole, "UConsole"},
+		{0x13CB710, UFunctions::PreLogin, &UFunctions::PTR::FC_PreLogin, "PreLogin"},
+		{0x049E570, UFunctions::PreLogin, &UFunctions::PTR::FC_AJBPreLogin, "AJBPreLogin"},
+		{0x13C6A20, UFunctions::Login, &UFunctions::PTR::FC_Login, "Login"},
+		{0x1750750, UFunctions::Browse, &UFunctions::PTR::FC_Browse, "Browse"},
+		{0x1488440, UFunctions::SpawnActor, &UFunctions::PTR::FC_SpawnActor, "SpawnActor"},
 	};
+
+	// Handles the log messages and behavior for CreateAndEnableAllHooks()
+	inline static bool HookStatus(MH_STATUS& Status, std::string HookName, int Message, LPVOID FunctionCall = 0) { if (Status == MH_STATUS::MH_ERROR_NOT_INITIALIZED) { Log("MinHook not initialized!"); return false; }
+		if (Status == MH_OK) {
+			if (Message == 0) Log("Successfully created a hook for " + HookName + ".");
+			else if (Message == 1) { Log("Successfully enabled a hook for " + HookName + ". Pointer = " + HexToString(reinterpret_cast<uintptr_t>(FunctionCall))); }
+			else { Log("Successfully disabled hook for" + HookName + "."); }
+			return true;
+		}
+		else { 
+			if (Message == 0) Log("Failed to create a hook for " + HookName + ".");
+			else if (Message == 1) { Log("Failed to enable a hook for " + HookName + "."); }
+			else { Log("Failed to disable hook for" + HookName + "."); }
+			return false;
+		}
+	}
 
 	// Idiot proofing.
 	inline static bool MH_INIT{false};
-
-	// Much easier to compare with an external function.
-	inline static bool Hook_Status(const MH_STATUS & Var) { return Var == MH_STATUS::MH_OK; }
 
 	// Used in CreateAndEnableHook()
 	inline static int NamelessIteration{0};
 	
 public:
-
-	inline static void SpawnActor(SDK::UWorld* World, SDK::UClass* Class, const SDK::FVector* Location, const SDK::FRotator* Rotation, FActorSpawnParameters* SpawnParameters) { Functions::SpawnActor(World, Class, Location, Rotation, SpawnParameters); }
-	/*
-			SDK::FVector V = SDK::FVector(1800, 0, 400);
-			SDK::FRotator R = SDK::FRotator(0, 0, 0);
-			FActorSpawnParameters A = FActorSpawnParameters();
-			Hooks::SpawnActor(UWorld(), SDK::UObject::FindObject<SDK::UClass>("BP_AJBInGameCharacter_DIO.BP_AJBInGameCharacter_DIO_C"), &V, &R, &A);
-	*/
-
-	// Calls the function FMemory::MallocExternal to allocate memory for FStrings in certain instances.
-	inline static SDK::FString AllocateFString(const wchar_t* Str) {
-		SDK::FString* String = new SDK::FString(Str);
-		// INCOMPLETE FUNCTION, CURRENTLY NOT NEEDED.
-
-	}
 
 	// Must be called only once before any hooks are initiated.
 	inline static void Init() {
@@ -149,10 +125,10 @@ public:
 		MH_STATUS Status = MH_Initialize();
 
 		if (Status != MH_STATUS::MH_OK && Status != MH_STATUS::MH_ERROR_ALREADY_INITIALIZED) {
-			ErrorBox(L"! FATAL ERROR !", L"MinHook has failed to initialize! Please restart the game and try again.\nIf the problem persists, try restarting your computer, refer to the source code, or ask me by filing an issue on my GitHub (Aeyth8)", MB_OK, true);
+			ErrorBox(L"! FATAL ERROR !", L"MinHook has failed to initialize! Please restart the game and try again.\nIf the problem persists, try restarting your computer, refer to the source code, or ask me by filing an issue on my GitHub (Aeyth8)", MB_OK);
 		}
 
-		LogA("Hooks::Init", "MinHook has been initialized.");
+		Log("MinHook has been initialized.");
 		MH_INIT = true;
 	}
 
@@ -162,53 +138,51 @@ public:
 		MH_STATUS Status = MH_Uninitialize();
 
 		if (Status != MH_STATUS::MH_OK && Status != MH_STATUS::MH_ERROR_NOT_INITIALIZED) { Log("Failed to uninitialize MinHook, this isn't too important so don't worry about it."); return; }
-		LogA("Hooks::Uninit", "MinHook has been uninitialized.");
+		Log("MinHook has been uninitialized.");
 		MH_INIT = false;
 	}
 
-	// GBA + Offset
-	inline static void CalculateAllOffsets() { for (size_t i{0}; i < OFF::Offsets.size(); ++i) if (i < FA::Addresses.size()) *FA::Addresses[i] = GBA + *OFF::Offsets[i]; }
-
-	// Creates and enables any hook, useful for debugging. 
+	// Manually create and enable any hook. 
 	inline static bool CreateAndEnableHook(uintptr_t TargetAddress, LPVOID DetourFunction, LPVOID OriginalFunction, std::string HookName = "") {
 		if (HookName == "") { HookName = "NO_NAME_" + std::to_string(NamelessIteration); NamelessIteration++; }
 		
 		MH_STATUS Status = MH_CreateHook(reinterpret_cast<LPVOID*>(TargetAddress), DetourFunction, reinterpret_cast<LPVOID*>(OriginalFunction));
-		if (Hook_Status(Status)) {
-			LogA("Hooks::CreateAndEnableHook", "Successfully created hook " + HookName);
-			Status = MH_EnableHook(reinterpret_cast<LPVOID*>(TargetAddress));
-			if (Hook_Status(Status)) LogA("Hooks::CreateAndEnableHook", "Successfully enabled hook " + HookName + " || Pointer = " + HexToString(reinterpret_cast<uintptr_t>(OriginalFunction)));
-			else { LogA("Hooks::CreateAndEnableHook", "Failed to enable hook " + HookName); return false; }
-		}
-		else { LogA("Hooks::CreateAndEnableHook", "Failed to create hook " + HookName); return false; }
+		if (!HookStatus(Status, HookName, 0)) return false;
 		
-		return true;
-	}
-
-	// Manually disable certain hooks, great for debugging.
-	inline static bool DisableHook(uintptr_t TargetAddress, std::string HookName) {
-		MH_STATUS Status = MH_DisableHook(reinterpret_cast<LPVOID*>(TargetAddress));
-		if (Hook_Status(Status)) { LogA("Hooks::DisableHook", "Successfully disabled hook " + HookName + "."); return true; }
-		else { LogA("Hooks::DisableHook", "Failed to disable hook " + HookName + "."); return false; }
+		Status = MH_EnableHook(reinterpret_cast<LPVOID*>(TargetAddress));
+		
+		if (HookStatus(Status, HookName, 1, OriginalFunction)) return true;
 	}
 
 	// Main hooking function which iterates through all hooks, creating and enabling them while handling errors.
-	inline static void CreateAndEnableAllHooks() {  
-		for (size_t i{0}; i < FA::Addresses.size(); ++i) {
-			if (*FA::Addresses[i] != 0 && i < Functions::Table.size()) {
-				MH_STATUS Status = MH_CreateHook(reinterpret_cast<LPVOID*>(*FA::Addresses[i]), Functions::Table[i], reinterpret_cast<LPVOID*>(PTR::Function_Calls[i]));
-				if (Hook_Status(Status)) {
-					LogA("Hooks::CreateAndEnableAllHooks", "Successfully created Hook #" + std::to_string(i));
-					Status = MH_EnableHook(reinterpret_cast<LPVOID*>(*FA::Addresses[i]));
-					Hook_Status(Status) ? LogA("Hooks::CreateAndEnableAllHooks", "Successfully enabled Hook #" + std::to_string(i) + " || Pointer = " + HexToString(reinterpret_cast<uintptr_t>(PTR::Function_Calls[i]))) : LogA("Hooks::CreateAndEnableAllHooks", "Failed to enable Hook #" + std::to_string(i));
-				}
-				else { LogA("Hooks::CreateAndEnableAllHooks", "Failed to create Hook #" + std::to_string(i)); }
-			}
+	// > Contains an optional int vector to exclude certain hooks specified by the iterator within HookStructure Instance[] 
+	inline static void CreateAndEnableAllHooks(const std::vector<int>& ExceptFor = {}) {
+		for (int i{0}; i < std::size(Instance); ++i) {
+			// If an exception list was provided, it will make sure to skip it.
+			if (!ExceptFor.empty() && std::find(ExceptFor.begin(), ExceptFor.end(), i) != ExceptFor.end()) continue;
+
+			// Calculate all addresses to be dynamically used. 
+			Instance[i].CalculatedAddress = (GBA + Instance[i].Offset);
+
+			MH_STATUS Status = MH_CreateHook(reinterpret_cast<LPVOID>(Instance[i].CalculatedAddress), Instance[i].DetourFunction, reinterpret_cast<LPVOID*>(Instance[i].FunctionCall));
+
+			if (!HookStatus(Status, Instance[i].HookName, 0, Instance[i].FunctionCall)) continue;
+
+			Status = MH_EnableHook(reinterpret_cast<LPVOID>(Instance[i].CalculatedAddress));
+
+			HookStatus(Status, Instance[i].HookName, 1, Instance[i].FunctionCall);
 		}
 	}
 
+	// Manually disable certain hooks.
+	inline static bool DisableHook(uintptr_t TargetAddress, std::string HookName) {
+		MH_STATUS Status = MH_DisableHook(reinterpret_cast<LPVOID*>(TargetAddress));
+		if (HookStatus(Status, HookName, 2)) return true;
+		return false;
+	}
+
 	// Disable everything, for end of runtime.
-	inline static void DisableAllHooks() { MH_DisableHook(MH_ALL_HOOKS); LogA("Hooks::DisableAllHooks", "Disabled all hooks."); }
+	inline static void DisableAllHooks() { MH_DisableHook(MH_ALL_HOOKS); Log("Disabled all hooks."); }
 
 };
 

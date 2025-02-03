@@ -63,8 +63,6 @@ void Init() {
 	ConstructUConsole();
 
 	Hooks::Init();
-
-	Hooks::CalculateAllOffsets();
 	Hooks::CreateAndEnableAllHooks();
 	
 	Debug::InitFunctions();
