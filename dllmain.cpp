@@ -16,7 +16,7 @@ typedef void(__thiscall* OutputText)(SDK::UConsole* Object, SDK::FString* Text);
 typedef void(__thiscall* IsNonPakFileNameAllowed)(SDK::FString* InFilename);
 IsNonPakFileNameAllowed This{0};
 
-
+void no() { Log("Called"); return; }
 
 void Init() {
 
@@ -67,7 +67,7 @@ void Init() {
 	
 	Debug::InitFunctions();
 	Debug::HookEngineExit();
-
+	Hooks::CreateAndEnableHook((GBA + 0x0518BC0), no, 0, "StartConsumePP"); // this works
 	//Hooks::CreateAndEnableHook((GBA + 0x0AF1AE0), "PakThing");
 
 	
