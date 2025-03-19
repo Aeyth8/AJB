@@ -32,7 +32,7 @@ extern inline uintptr_t GBA{0};
     }*/
 
 inline void LogA(const std::string& Header, const std::string& Text) { std::cout << Header << " :: " << Text << "\n"; Logger::DebugLog(Header, Text); Logger::Log.flush(); }
-inline void Log(const std::string& Text) { std::cout << Text << "\n"; Logger::DebugLog("Debug", Text); Logger::Log.flush(); }
+inline void Log(const std::string& Text) { std::cout << Text << "\n"; Logger::DebugLog("Debug", Text); }
 
 inline std::string HexToString(const uintptr_t& Hex) {
     std::ostringstream O;

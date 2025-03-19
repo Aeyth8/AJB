@@ -1,4 +1,6 @@
 #include "pch.h"
+#include "Aeyth8/Proxy/Proxy.hpp"
+#include "Aeyth8/Hooks/Logic.hpp"
 
 SDK::AGameMode* Game;
 SDK::AHUD* HUD;
@@ -9,22 +11,17 @@ SDK::UAJBAMSystemObject* System;
 SDK::AAJBOutGameProxy* AProxy;
 
 
-//ProcessUserConsoleInput AOB (48 8B C4 4C 89 48 20 4C 89 40 18 48 89 48 08 55 48 8D)
-typedef void(__thiscall* ProcessUserConsoleInput)(const TCHAR* InInput, FOutputDevice& Ar, SDK::UWorld* InWorld);
-typedef void(__thiscall* OutputText)(SDK::UConsole* Object, SDK::FString* Text);
 
-typedef void(__thiscall* IsNonPakFileNameAllowed)(SDK::FString* InFilename);
-IsNonPakFileNameAllowed This{0};
+static void Init() {
 
-void no() { Log("Called"); return; }
-
-void Init() {
-
-	// Retrieves the Global Base Address (GBA) by getting the module handle typedefined as a uintptr_t
+	// Retrieves the Global Base Address (GBA) by getting the module handle casted as a uintptr_t
 	GBA = (uintptr_t)GetModuleHandleA("AJB-Win64-Shipping.exe");
 
 	LogWin();
-	Logger::Init();
+
+	A8CL::AJB::InitHooks();
+	
+	if (!(!CheckNull(UWorld()) && !CheckNull(Player0()))) Sleep(10000);
 
 	LogA("INITIALIZED", "The Global Base Address [GBA] is " + HexToString(GBA));
 
@@ -39,41 +36,36 @@ void Init() {
 	System = Instance->AMSystemObject;
 	Garbage = GetLastOf<SDK::AAJBAMErrorObserverActor>();
 
+	// Assigning a pointer to PP
+	A8CL::AJB::PP = (&System->PP);
+	Log("PP Pointer = " + HexToString((uintptr_t)(A8CL::AJB::PP)));
+	*A8CL::AJB::PP = 1170;
+
+	A8CL::Debug::KillPP();
+
 	// Disabling proprietary arcade garbage.
-	if (!CheckNull(Settings, "UAJBAMSystemSettings", " :: Enabled CoinOptions.FreePlay")) Settings->CoinOptions.FreePlay = true;
-	if (!CheckNull(Instance, "SDK::UAJBGameInstance", " :: Set ECloseScheduleType::OFF")) Instance->SetCloseScheduleType(SDK::ECloseScheduleType::OFF);
-	if (!CheckNull(System, "SDK::UAJBAMSystemObject", " :: Set PP and disabled consumption.")) { System->PP = 1170; Instance->SetMaxConsumePP(0); }
+	//if (!CheckNull(Settings, "UAJBAMSystemSettings", " :: Enabled CoinOptions.FreePlay")) Settings->CoinOptions.FreePlay = true;
+	//if (!CheckNull(Instance, "SDK::UAJBGameInstance", " :: Set ECloseScheduleType::OFF")) Instance->SetCloseScheduleType(SDK::ECloseScheduleType::OFF);
+	//if (!CheckNull(System, "SDK::UAJBAMSystemObject", " :: Set PP and disabled consumption.")) { System->PP = 1170; Instance->SetMaxConsumePP(0); }
 
 
-	/*UC::TArray<SDK::FAJBClosedAlertArcadeTimeSchedule> CloseTimes = Instance->ArcadeTimeManager->ClosedAlertArcadeTimeSchedule;
-	for (const SDK::FAJBClosedAlertArcadeTimeSchedule& Schedule : CloseTimes)
-	{
-		int Start = Schedule.Start;
-		int Stop = Schedule.End;
-
-		COUT << "Start Time " + std::to_string(Start) + " : End Time " + std::to_string(Stop) + "\n";
-	}*/
-
-	//std::vector<SDK::AAJBAMErrorObserverActor*> Actors = FindObjects<SDK::AAJBAMErrorObserverActor>();
-	//for (int i{0}; i < Actors.size(); ++i) Log(Actors[i]->GetFullName());
+	if (!Global::bConstructedUConsole)
+	{	Global::bConstructedUConsole = true;
+		ConstructUConsole();
+	}
 
 	// This should not be within the game, I deleted the literal object from the files in my patch. The default object will still remain but can't/won't be used.
 	if (!Garbage->IsDefaultObject() && !CheckNull(Garbage, "SDK::AAJBAMErrorObserverActor", " :: Detected!")) ErrorBox(L"CRITICAL ALERT", L"An instance of [AAJBAMErrorObserverActor] has been found within your game!\nThis implicates that your current game is not properly patched, you will likely face issues and softlocks.\nIf you are not familiar with development in this game, I highly recommend you download the patched build.\n", MB_OK);
 
-	ConstructUConsole();
-
-	Hooks::Init();
-	Hooks::CreateAndEnableAllHooks();
 	
-	Debug::InitFunctions();
-	Debug::HookEngineExit();
-	Hooks::CreateAndEnableHook((GBA + 0x0518BC0), no, 0, "StartConsumePP"); // this works
+//	Hooks::CreateProxyHook((GBA + Offsets::StartConsumePP), "StartConsumePP");
+//	Hooks::EnableProxyHook((GBA + Offsets::StartConsumePP));
+//	Hooks::CreateAndEnableHook((GBA + 0x0518BC0), no, 0, "StartConsumePP"); // this works*/
 	//Hooks::CreateAndEnableHook((GBA + 0x0AF1AE0), "PakThing");
 
 	
 
-	//Debug::HookProcessEvent();
-
+	
 	//Hooks::CreateAndEnableHook((GBA + 0x047B220), GetAmwBuildType, &FC_GetAmwBuildType, "GetAmwBuildType");
 	//Hooks::CreateAndEnableHook((GBA + 0x053BE00), StartConsume, &FC_Consume, "StartConsumePP");
 
@@ -91,21 +83,13 @@ void Init() {
 	*/
 }
 
-
-BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ulReasonForCall, LPVOID lpReserved) {
+int __stdcall DllMain(HMODULE hModule, DWORD ulReasonForCall, LPVOID lpReserved) {
 	DisableThreadLibraryCalls(hModule);
 
 	if (ulReasonForCall != DLL_PROCESS_ATTACH)
-		return TRUE;
+		return 1;
 
-	if (ulReasonForCall == DLL_PROCESS_DETACH) 
-		return TRUE;
+	Proxy::Attach(hModule);
 
-	HANDLE hThread = CreateThread(nullptr, 0,
-		(LPTHREAD_START_ROUTINE)Init, hModule, 0, 0);
-	if (hThread != nullptr)
-		CloseHandle(hThread);
-
-
-	return TRUE;
+	return 1;
 }

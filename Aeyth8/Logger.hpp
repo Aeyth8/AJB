@@ -34,6 +34,7 @@ public:
 
 	inline static void DebugLog(const std::string& Header, const std::string& Text) {
 		Log << "[" + Timestamp() + "] " + "[" + Header + "] - " + Text << "\n";
+		Log.flush();
 	}
 
 	inline static void Init() {
