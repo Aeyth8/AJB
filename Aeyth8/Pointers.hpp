@@ -180,6 +180,21 @@ inline static void ConstructUConsole() {
 // Macro to allocating the console (not to be confused with the UConsole)
 inline static void LogWin() { AllocConsole(); FILE* Dummy; freopen_s(&Dummy, "CONOUT$", "w", stdout); freopen_s(&Dummy, "CONIN$", "r", stdin); }
 
+// Convert narrow-string to wide-string.
+inline static std::wstring StringToW(const std::string& Str) { 
+    std::wstring Return; 
+    Return.assign(Str.begin(), Str.end()); 
+    return Return; 
+}
+
+// Convert wide-string to narrow-string.
+inline static std::string WStringToN(const std::wstring& Str) { 
+    std::string Return; 
+    Return.assign(Str.begin(), Str.end()); 
+    return Return; 
+}
+
+
 inline static bool IsSafe{false};
 inline static int NullCount{0};
 

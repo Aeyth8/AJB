@@ -21,6 +21,9 @@ public:
 	OFFSET ActorGetNetMode{0x11AE3A0};					// AActor::InternalGetNetMode
 	OFFSET GetMaxFPS{0x175E440};						// UEngine::GetMaxFPS
 	OFFSET AppPreExit{0x01E24F0};						// FEngineLoop::AppPreExit
+	OFFSET IsNonPakFileNameAllowed{0x1913760};			// FPakPlatformFile::IsNonPakFilenameAllowed
+	OFFSET FindFileInPakFiles{0x1910650};				// FPakPlatformFile::FindFileInPakFiles
+	OFFSET FileExists{0x190FAB0};						// FPakPlatformFile::FileExists
 
 	// Native Game Functions
 

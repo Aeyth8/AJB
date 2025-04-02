@@ -127,6 +127,12 @@ public:
 
 		typedef void(__thiscall* ProcessEvent)(SDK::UObject* This, SDK::UFunction* Function, LPVOID Parms);
 		inline static ProcessEvent FC_ProcessEvent{0};
+
+		typedef bool(__thiscall* IsNonPakFilenameAllowed)(__int64* This, SDK::FString& InFilename);
+		inline static IsNonPakFilenameAllowed FC_IsNonPakFilenameAllowed{0};
+
+		typedef bool(__thiscall* FindFileInPakFiles)(__int64* This, const wchar_t* Filename, __int64** OutPakFile, __int64* OutEntry);
+		inline static FindFileInPakFiles FC_FindFileInPakFiles{0};
 	};
 
 	class Func
@@ -164,7 +170,7 @@ public:
 			LogA("InitListen", "[UIpNetDriver]: " + This->GetFullName());
 			LogA("InitListen", Helpers::FURLParser(LocalURL));
 
-			Decl::FC_InitListen(This, InNotify, LocalURL, bReuseAddressAndPort, Error);
+			return (*Decl::FC_InitListen)(This, InNotify, LocalURL, bReuseAddressAndPort, Error);
 		}
 
 		inline static void AppPreExit()
@@ -185,10 +191,31 @@ public:
 		inline static std::string PESpamCache{""};
 		inline static void ProcessEvent(SDK::UObject* This, SDK::UFunction* Function, LPVOID Parms)
 		{
+			//static int (*ShowCursor)() = decltype (ShowCursor)(GBA + Offsets::ShowCursor);
+			//ShowCursor();
 			/*LogA("PE", Function->GetFullName());
 			Logger::Log << Parms << "\n";
 			Logger::Log.flush();*/
 			Decl::FC_ProcessEvent(This, Function, Parms);
+		}
+
+		inline static bool IsNonPakFilenameAllowed(__int64* This, SDK::FString& InFilename)
+		{
+			return (*Decl::FC_IsNonPakFilenameAllowed)(This, InFilename);
+			//bool Result = Decl::FC_IsNonPakFilenameAllowed(This, InFilename);
+
+			//LogA(Result ? "IsNonPakFilenameAllowed [TRUE" : "IsNonPakFilenameAllowed [FALSE", InFilename.ToString());
+		}
+
+		inline static bool FindFileInPakFiles(__int64* This, const wchar_t* Filename, __int64** OutPakFile, __int64* OutEntry)
+		{
+			if (wcscmp(Filename, L"../../../AJB/..//SettingsClient.ini") == 0)
+			{
+				LogA("FindFileInPakFiles", "Overriding to use loose file...");
+				return false;
+			}
+
+			return (*Decl::FC_FindFileInPakFiles)(This, Filename, OutPakFile, OutEntry);
 		}
 
 	};
