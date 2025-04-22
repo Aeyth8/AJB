@@ -209,11 +209,15 @@ public:
 
 		inline static bool FindFileInPakFiles(__int64* This, const wchar_t* Filename, __int64** OutPakFile, __int64* OutEntry)
 		{
-			if (wcscmp(Filename, L"../../../AJB/..//SettingsClient.ini") == 0)
+			if (GetFileAttributesW(Filename) != INVALID_FILE_ATTRIBUTES) {
+				LogA("FileFileInPakFiles", "Using loose file for " + WStringToN(Filename));
+				return false;
+			}
+			/*if (wcscmp(Filename, L"../../../AJB/..//SettingsClient.ini") == 0)
 			{
 				LogA("FindFileInPakFiles", "Overriding to use loose file...");
 				return false;
-			}
+			}*/
 
 			return (*Decl::FC_FindFileInPakFiles)(This, Filename, OutPakFile, OutEntry);
 		}

@@ -113,6 +113,9 @@
     <ClCompile Include="SDK\BPF_AJBGameInstance_functions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Aeyth8\Hooks\UFunctions.cpp">
+      <Filter>Aeyth8\Hooks</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -199,12 +202,6 @@
     <ClInclude Include="Aeyth8\Hooks\Logic.hpp">
       <Filter>Aeyth8\Hooks</Filter>
     </ClInclude>
-    <ClInclude Include="Aeyth8\Hooks\Offsets.hpp">
-      <Filter>Aeyth8\Hooks</Filter>
-    </ClInclude>
-    <ClInclude Include="Aeyth8\Hooks\UFunctions.hpp">
-      <Filter>Aeyth8\Hooks</Filter>
-    </ClInclude>
     <ClInclude Include="Aeyth8\Proxy\Proxy.hpp">
       <Filter>Aeyth8\Proxy</Filter>
     </ClInclude>
@@ -216,6 +213,12 @@
     </ClInclude>
     <ClInclude Include="Aeyth8\InternalCommands.hpp">
       <Filter>SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\Offsets.hpp">
+      <Filter>Aeyth8</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\Hooks\UFunctions.hpp">
+      <Filter>Aeyth8\Hooks</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

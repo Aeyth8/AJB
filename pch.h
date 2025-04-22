@@ -15,7 +15,6 @@
 #include "Aeyth8/Global.hpp"
 #include "MinHook/MinHook.h"
 #include "SDK.hpp"
-#include "Aeyth8/Hooks/Offsets.hpp"
 
 #include "UnrealContainers.hpp"
 #include "PropertyFixup.hpp"
