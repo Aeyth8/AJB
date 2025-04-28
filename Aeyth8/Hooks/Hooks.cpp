@@ -1,5 +1,6 @@
 #include "Hooks.hpp"
 #include "../Global.hpp"
+#include "../Tools/Offsets.hpp"
 
 /*
 
@@ -10,6 +11,17 @@ https://github.com/Aeyth8
 */
 
 using namespace A8CL;
+
+
+const int& Hooks::Calculator(class OFFSET& Obj)
+{
+
+}
+
+
+/*
+		Public
+*/
 
 bool Hooks::Init()
 {	if (MH_INIT) return true;
@@ -28,7 +40,7 @@ bool Hooks::Uninit()
 
 	if (Status != MH_OK && Status != MH_ERROR_NOT_INITIALIZED)
 	{
-		Global::LogA("Failed to uninitialize MinHook, this isn't too important so don't worry about it.");
+		Global::LogA("MinHook", "Failed to uninitialize MinHook, this isn't too important so don't worry about it.");
 		return false;
 	}
 
@@ -37,12 +49,22 @@ bool Hooks::Uninit()
 }
 
 
-bool Hooks::CreateAndEnableHook()
+bool Hooks::CreateAndEnableHook(const uintptr_t TargetAddress, LPVOID DetourFunction, LPVOID FunctionCall)
 {
+	MH_STATUS Status = MH_CreateHook(reinterpret_cast<LPVOID*>(TargetAddress), DetourFunction, reinterpret_cast<LPVOID*>(FunctionCall));
+	if (!STAT(Status)) return false;
 
+	Status = MH_EnableHook(reinterpret_cast<LPVOID*>(TargetAddress));
+	return STAT(Status);
 }
 
-bool Hooks::CreateAndEnableHooks()
+bool Hooks::CreateAndEnableHook(class OFFSET& Obj, LPVOID DetourFunction) // I don't like how this is written at all, I'm tired so fix this when you wake up, I want to fix my OFFSET class to prevent GBA + each time, I somehow forgot that function call is different from the function call.
+// As in one of them is a pointer to the trampoline and the other is a direct pointer to the function, which would jump to the trampoline.
+{
+	return Hooks::CreateAndEnableHook((Global::GBA + Obj.Offset), DetourFunction, Obj.FunctionCall);
+}
+
+Hooks::HookNum Hooks::CreateAndEnableHooks()
 {
 
 }

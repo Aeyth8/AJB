@@ -14,9 +14,7 @@ https://github.com/Aeyth8
 namespace A8CL
 {
 
-// Static Offsets
-namespace OFF
-{
+
 
 
 
@@ -151,5 +149,5 @@ public:
 
 };
 
-}
+
 }

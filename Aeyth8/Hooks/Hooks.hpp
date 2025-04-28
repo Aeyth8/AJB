@@ -30,7 +30,9 @@ private:
 	// Anything else means that only some of them succeeded.
 	enum HookNum { ALL_FAILED = -1, ALL_SUCCEEDED = -2 };
 
-	static bool Status();
+
+	const static int& Calculator(class OFFSET& Obj);
+	inline static bool STAT(const MH_STATUS& Status) { return (Status == MH_OK); }
 
 	// Idiot proofing.
 	inline static bool MH_INIT{false};
@@ -42,8 +44,9 @@ public:
 	static bool Init();
 	static bool Uninit();
 
-	static bool CreateAndEnableHook();
-	static bool CreateAndEnableHooks();
+	static bool CreateAndEnableHook(const uintptr_t TargetAddress, LPVOID DetourFunction, LPVOID FunctionCall);
+	static bool CreateAndEnableHook(class OFFSET& Obj, LPVOID DetourFunction);
+	static HookNum CreateAndEnableHooks();
 
 	static bool CreateHook();
 	static HookNum CreateHooks();
@@ -64,17 +67,6 @@ public:
 
 };
 
-class Offsets
-{
-
-
-
-
-
-
-
-
-};
 
 
 
