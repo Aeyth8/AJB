@@ -155,13 +155,14 @@
     <ClInclude Include="Aeyth8\Hooks\Commands.hpp" />
     <ClInclude Include="Aeyth8\Hooks\Hooks.hpp" />
     <ClInclude Include="Aeyth8\Hooks\Logic.hpp" />
-    <ClInclude Include="Aeyth8\Hooks\UFunctions.hpp" />
     <ClInclude Include="Aeyth8\InternalCommands.hpp" />
     <ClInclude Include="Aeyth8\Logger.hpp" />
-    <ClInclude Include="Aeyth8\Offsets.hpp" />
     <ClInclude Include="Aeyth8\Pointers.hpp" />
     <ClInclude Include="Aeyth8\Proxy\Proxy.hpp" />
     <ClInclude Include="Aeyth8\Structs.hpp" />
+    <ClInclude Include="Aeyth8\Tools\Offsets.hpp" />
+    <ClInclude Include="Aeyth8\Tools\Tick.hpp" />
+    <ClInclude Include="Aeyth8\Tools\UFunctions.hpp" />
     <ClInclude Include="Kiero\ImGui\imconfig.h" />
     <ClInclude Include="Kiero\ImGui\imgui.h" />
     <ClInclude Include="Kiero\ImGui\imgui_impl_dx11.h" />
@@ -187,9 +188,9 @@
     <ClInclude Include="UnrealContainers.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Aeyth8\Hooks\UFunctions.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
+    <ClCompile Include="Aeyth8\Hooks\Hooks.cpp" />
+    <ClCompile Include="Aeyth8\Tools\Tick.cpp" />
+    <ClCompile Include="Aeyth8\Tools\UFunctions.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="Kiero\ImGui\imgui.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>

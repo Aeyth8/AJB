@@ -36,6 +36,9 @@
     <Filter Include="Aeyth8\Proxy">
       <UniqueIdentifier>{bc6cef1d-059f-440b-8b12-21f642ad88c8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Aeyth8\Tools">
+      <UniqueIdentifier>{26c0b87f-02cf-4103-93f9-beb74047b6b8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -113,8 +116,14 @@
     <ClCompile Include="SDK\BPF_AJBGameInstance_functions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Aeyth8\Hooks\UFunctions.cpp">
+    <ClCompile Include="Aeyth8\Hooks\Hooks.cpp">
       <Filter>Aeyth8\Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\Tools\Tick.cpp">
+      <Filter>Aeyth8\Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\Tools\UFunctions.cpp">
+      <Filter>Aeyth8\Tools</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -214,11 +223,14 @@
     <ClInclude Include="Aeyth8\InternalCommands.hpp">
       <Filter>SDK</Filter>
     </ClInclude>
-    <ClInclude Include="Aeyth8\Offsets.hpp">
-      <Filter>Aeyth8</Filter>
+    <ClInclude Include="Aeyth8\Tools\Offsets.hpp">
+      <Filter>Aeyth8\Tools</Filter>
     </ClInclude>
-    <ClInclude Include="Aeyth8\Hooks\UFunctions.hpp">
-      <Filter>Aeyth8\Hooks</Filter>
+    <ClInclude Include="Aeyth8\Tools\Tick.hpp">
+      <Filter>Aeyth8\Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\Tools\UFunctions.hpp">
+      <Filter>Aeyth8\Tools</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

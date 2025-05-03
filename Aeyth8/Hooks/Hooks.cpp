@@ -1,6 +1,6 @@
 #include "Hooks.hpp"
 #include "../Global.hpp"
-#include "../Tools/Offsets.hpp"
+//#include "../Tools/Offsets.hpp"
 
 /*
 
@@ -12,11 +12,6 @@ https://github.com/Aeyth8
 
 using namespace A8CL;
 
-
-const int& Hooks::Calculator(class OFFSET& Obj)
-{
-
-}
 
 
 /*
@@ -49,71 +44,117 @@ bool Hooks::Uninit()
 }
 
 
-bool Hooks::CreateAndEnableHook(const uintptr_t TargetAddress, LPVOID DetourFunction, LPVOID FunctionCall)
-{
-	MH_STATUS Status = MH_CreateHook(reinterpret_cast<LPVOID*>(TargetAddress), DetourFunction, reinterpret_cast<LPVOID*>(FunctionCall));
-	if (!STAT(Status)) return false;
 
-	Status = MH_EnableHook(reinterpret_cast<LPVOID*>(TargetAddress));
-	return STAT(Status);
+bool Hooks::CreateHook(const uintptr_t TargetAddress, LPVOID DetourFunction, LPVOID FunctionCall)
+{
+	return STAT(MH_CreateHook(reinterpret_cast<LPVOID*>(TargetAddress), DetourFunction, reinterpret_cast<LPVOID*>(FunctionCall)));
 }
 
-bool Hooks::CreateAndEnableHook(class OFFSET& Obj, LPVOID DetourFunction) // I don't like how this is written at all, I'm tired so fix this when you wake up, I want to fix my OFFSET class to prevent GBA + each time, I somehow forgot that function call is different from the function call.
-// As in one of them is a pointer to the trampoline and the other is a direct pointer to the function, which would jump to the trampoline.
+
+
+Hooks::HookNum Hooks::CreateHooks(std::vector<HookStructure>& Table)
+{
+	int Amount{0};
+
+	for (int i{0}; i < Table.size(); ++i)
+	{
+		if (Hooks::CreateHook(Table[i].Obj, Table[i].DetourFunction)) Amount++;
+	}
+
+	return ENUM(Amount, Table.size());
+}
+
+
+bool Hooks::EnableHook(const uintptr_t TargetAddress)
+{
+	return STAT(MH_EnableHook(reinterpret_cast<LPVOID*>(TargetAddress)));
+}
+
+
+Hooks::HookNum Hooks::EnableHooks(std::vector<OFFSET>& Table)
+{
+	int Amount{0};
+
+	for (int i{0}; i < Table.size(); ++i)
+	{
+		if (Hooks::EnableHook(Table[i])) Amount++;
+	}
+
+	return ENUM(Amount, Table.size());
+}
+
+void Hooks::EnableAllHooks() { MH_EnableHook(MH_ALL_HOOKS); }
+
+bool Hooks::CreateAndEnableHook(const uintptr_t TargetAddress, LPVOID DetourFunction, LPVOID FunctionCall)
+{
+	if (!CreateHook(TargetAddress, DetourFunction, FunctionCall)) return false;
+	return EnableHook(TargetAddress);
+}
+
+bool Hooks::CreateAndEnableHook(class OFFSET& Obj, LPVOID DetourFunction) 
 {
 	return Hooks::CreateAndEnableHook((Global::GBA + Obj.Offset), DetourFunction, Obj.FunctionCall);
 }
 
-Hooks::HookNum Hooks::CreateAndEnableHooks()
+Hooks::HookNum Hooks::CreateAndEnableHooks(std::vector<HookStructure>& Table)
 {
+	int Amount{0};
 
+	for (int i{0}; i < Table.size(); ++i)
+	{
+		if (Hooks::CreateAndEnableHook(Table[i].Obj, Table[i].DetourFunction)) Amount++;
+	}
+
+	return ENUM(Amount, Table.size());
+}
+
+bool Hooks::DisableHook(const uintptr_t TargetAddress)
+{
+	return STAT(MH_DisableHook(reinterpret_cast<LPVOID*>(TargetAddress)));
 }
 
 
-bool Hooks::CreateHook()
+Hooks::HookNum Hooks::DisableHooks(std::vector<OFFSET>& Table)
 {
+	int Amount{0};
 
+	for (int i{0}; i < Table.size(); ++i)
+	{
+		if (Hooks::DisableHook(Table[i])) Amount++;
+	}
+
+	return ENUM(Amount, Table.size());
 }
 
-Hooks::HookNum Hooks::CreateHooks()
-{
+void Hooks::DisableAllHooks() { MH_DisableHook(MH_ALL_HOOKS); }
 
+bool Hooks::RemoveHook(const uintptr_t TargetAddress)
+{
+	return STAT(MH_RemoveHook(reinterpret_cast<LPVOID*>(TargetAddress)));
 }
 
-
-bool Hooks::EnableHook()
+Hooks::HookNum Hooks::RemoveHooks(std::vector<OFFSET>& Table)
 {
+	int Amount{0};
 
+	for (int i{0}; i < Table.size(); ++i)
+	{
+		if (Hooks::RemoveHook(Table[i])) Amount++;
+	}
+
+	return ENUM(Amount, Table.size());
 }
 
-Hooks::HookNum Hooks::EnableHooks()
-{
+// Object-wrapped overloads
 
-}
-
-void Hooks::EnableAllHooks()
-{
-
-}
-
-
-bool Hooks::DisableHook()
-{
-
-}
-
-Hooks::HookNum Hooks::DisableHooks()
-{
-
-}
-
-void Hooks::DisableAllHooks()
-{
-
-}
+bool Hooks::CreateHook(class OFFSET& Obj, LPVOID DetourFunction) { return Hooks::CreateHook((Obj.PlusBase()), DetourFunction, &Obj.FunctionCall); }
+bool Hooks::EnableHook(class OFFSET& Obj) { return Hooks::EnableHook(Obj.PlusBase()); }
+bool Hooks::DisableHook(class OFFSET& Obj) { return Hooks::DisableHook(Obj.PlusBase()); }
+bool Hooks::RemoveHook(class OFFSET& Obj) { return Hooks::RemoveHook(Obj.PlusBase()); }
 
 
 bool Hooks::If(const HookNum& Result)
 {
-
+	return Result == ALL_SUCCEEDED ? true : false;
 }
+
