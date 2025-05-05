@@ -11,6 +11,7 @@ https://github.com/Aeyth8
 
 using namespace A8CL; using namespace Global;
 
+
 /*
 		Public
 */
@@ -51,7 +52,7 @@ bool Pointers::ConstructUConsole(SDK::UEngine* EngineOverride, const SDK::FStrin
 	if (!EngineOverride) Engine = Pointers::UEngine();
 	if (IsNull(Engine)) return false;
 
-	if (!IsNull(SDK::UInputSettings::GetDefaultObj()->ConsoleKeys[0]))
+	if (!IsNull(SDK::UInputSettings::GetDefaultObj()))
 	{
 		SDK::UInputSettings::GetDefaultObj()->ConsoleKeys[0].KeyName = Pointers::FString2FName(ConsoleKey);
 

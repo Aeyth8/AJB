@@ -1,6 +1,7 @@
 #pragma once
 #include "../MinHook/MinHook.h"
-
+#include <string>
+#include <vector>
 
 /*
 
@@ -20,7 +21,7 @@ class OFFSET
 {
 private:
 
-	static std::vector<std::string> StringIndexArray;
+	inline static std::vector<std::string> StringIndexArray{};
 	uint32_t StringIndex;
 
 public:

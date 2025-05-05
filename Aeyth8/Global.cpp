@@ -22,21 +22,6 @@ using namespace A8CL;
 		Utils
 */
 
-bool Global::IsNull(void* Pointer)
-{
-	return Pointer == nullptr;
-}
-
-bool Global::IsNull(auto Pointer)
-{
-	return Pointer == nullptr;
-}
-
-template <typename T>
-void Global::Declare(T& Type, const uintptr_t& Offset)
-{
-	Type = (T)(Global::GBA + Offset);
-}
 
 void Global::FatalErrorBox(const std::string& Message)
 {

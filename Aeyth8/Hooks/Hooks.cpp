@@ -1,7 +1,6 @@
 #include "Hooks.hpp"
 #include "../Global.hpp"
 
-#include <vector>
 
 /*
 
@@ -92,10 +91,6 @@ bool Hooks::CreateAndEnableHook(const uintptr_t TargetAddress, LPVOID DetourFunc
 	return EnableHook(TargetAddress);
 }
 
-bool Hooks::CreateAndEnableHook(class OFFSET& Obj, LPVOID DetourFunction) 
-{
-	return Hooks::CreateAndEnableHook((Global::GBA + Obj.Offset), DetourFunction, Obj.FunctionCall);
-}
 
 Hooks::HookNum Hooks::CreateAndEnableHooks(std::vector<HookStructure>& Table)
 {
@@ -152,6 +147,7 @@ bool Hooks::CreateHook(class OFFSET& Obj, LPVOID DetourFunction) { return Hooks:
 bool Hooks::EnableHook(class OFFSET& Obj) { return Hooks::EnableHook(Obj.PlusBase()); }
 bool Hooks::DisableHook(class OFFSET& Obj) { return Hooks::DisableHook(Obj.PlusBase()); }
 bool Hooks::RemoveHook(class OFFSET& Obj) { return Hooks::RemoveHook(Obj.PlusBase()); }
+bool Hooks::CreateAndEnableHook(class OFFSET& Obj, LPVOID DetourFunction) { return Hooks::CreateAndEnableHook((Obj.PlusBase()), DetourFunction, Obj.FunctionCall); }
 
 
 bool Hooks::If(const HookNum& Result)

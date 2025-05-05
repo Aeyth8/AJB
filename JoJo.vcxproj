@@ -147,32 +147,22 @@
       </AddModuleNamesToAssembly>
       <ModuleDefinitionFile>
       </ModuleDefinitionFile>
-      <AdditionalDependencies>$(OutDir)ReturnAddress.obj;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Aeyth8\Global.hpp" />
-    <ClInclude Include="Aeyth8\Hooks\Commands.hpp" />
     <ClInclude Include="Aeyth8\Hooks\Hooks.hpp" />
-    <ClInclude Include="Aeyth8\Hooks\Logic.hpp" />
     <ClInclude Include="Aeyth8\InternalCommands.hpp" />
     <ClInclude Include="Aeyth8\Logger.hpp" />
+    <ClInclude Include="Aeyth8\Logic\AJB.hpp" />
+    <ClInclude Include="Aeyth8\Offsets.hpp" />
     <ClInclude Include="Aeyth8\Pointers.hpp" />
     <ClInclude Include="Aeyth8\Proxy\Proxy.hpp" />
-    <ClInclude Include="Aeyth8\Structs.hpp" />
-    <ClInclude Include="Aeyth8\Tools\Offsets.hpp" />
+    <ClInclude Include="Aeyth8\SafeInit.h" />
+    <ClInclude Include="Aeyth8\Tools\Pointers.h" />
     <ClInclude Include="Aeyth8\Tools\Tick.hpp" />
     <ClInclude Include="Aeyth8\Tools\UFunctions.hpp" />
-    <ClInclude Include="Kiero\ImGui\imconfig.h" />
-    <ClInclude Include="Kiero\ImGui\imgui.h" />
-    <ClInclude Include="Kiero\ImGui\imgui_impl_dx11.h" />
-    <ClInclude Include="Kiero\ImGui\imgui_impl_win32.h" />
-    <ClInclude Include="Kiero\ImGui\imgui_internal.h" />
-    <ClInclude Include="Kiero\ImGui\imstb_rectpack.h" />
-    <ClInclude Include="Kiero\ImGui\imstb_textedit.h" />
-    <ClInclude Include="Kiero\ImGui\imstb_truetype.h" />
-    <ClInclude Include="Kiero\includes.h" />
-    <ClInclude Include="Kiero\kiero.h" />
     <ClInclude Include="MinHook\MinHook.h" />
     <ClInclude Include="MinHook\src\buffer.h" />
     <ClInclude Include="MinHook\src\hde\hde32.h" />
@@ -188,31 +178,28 @@
     <ClInclude Include="UnrealContainers.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Aeyth8\Hooks\Hooks.cpp" />
-    <ClCompile Include="Aeyth8\Tools\Tick.cpp" />
-    <ClCompile Include="Aeyth8\Tools\UFunctions.cpp" />
+    <ClCompile Include="Aeyth8\Global.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\Hooks\Hooks.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\Logic\AJB.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\SafeInit.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\Tools\Pointers.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\Tools\Tick.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\Tools\UFunctions.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="Kiero\ImGui\imgui.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="Kiero\ImGui\imgui_demo.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="Kiero\ImGui\imgui_draw.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="Kiero\ImGui\imgui_impl_dx11.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="Kiero\ImGui\imgui_impl_win32.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="Kiero\ImGui\imgui_widgets.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="Kiero\kiero.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="MinHook\src\buffer.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -276,12 +263,6 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </AdditionalIncludeDirectories>
     </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <MASM Include="Aeyth8\Hooks\ReturnAddress.asm">
-      <MakeAllSymbolsPublic Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</MakeAllSymbolsPublic>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(OutDir)%(FileName).obj</ObjectFileName>
-    </MASM>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

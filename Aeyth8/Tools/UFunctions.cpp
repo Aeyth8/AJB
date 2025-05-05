@@ -1,6 +1,7 @@
 #include "UFunctions.hpp"
-#include "Offsets.hpp"
+#include "../Offsets.hpp"
 #include "../Global.hpp"
+#include "../Tools/Pointers.h"
 
 /*
 
@@ -107,13 +108,24 @@ const T& TArrayParser(const SDK::TArray<T>& Array)
 }*/
 
 
+using namespace Global;
 
 
 
 
 
-
-
+template <typename T>
+T VerifyFC(OFFSET& Instance)
+{
+	if (!Instance.FunctionCall && Instance.Offset != 0)
+	{
+		LogA("VerifyFC", "Initializing " + Instance.GetName() + " : " + HexToString((uintptr_t)Instance.FunctionCall));
+		Instance.FunctionCall = reinterpret_cast<void*>(GBA + Instance.Offset);
+		if (Instance.FunctionCall == nullptr) FatalErrorBox(Instance.GetName() + "is a nullptr!");
+	}
+	LogA("VerifyFC", Instance.GetName() + " has been called!");
+	return reinterpret_cast<T>(Instance.FunctionCall);
+}
 
 
 
@@ -131,13 +143,13 @@ void UFunctions::Browse(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SD
 {
 	if (!Global::bConstructedUConsole)
 	{	Global::bConstructedUConsole = true;
-		// ConstructUConsole();
+		Pointers::ConstructUConsole();
 	}
-	//LogA("Browse", Helpers::FURLParser(URL));
-	//LogA("Browse", Helpers::FWorldContextParser(WorldContext));
+	LogA("Browse", Helpers::FURLParser(URL));
+	LogA("Browse", Helpers::FWorldContextParser(WorldContext));
 
 	//OFF::Browse.VerifyFC<Decl::Browse>()(This, WorldContext, URL, Error);
-
+	//VerifyFC<Decl::Browse>(OFF::Browse)(This, WorldContext, URL, Error);
 }
 
 bool UFunctions::InitListen(SDK::UIpNetDriver* This, SDK::UObject* InNotify, SDK::FURL& LocalURL, bool bReuseAddressAndPort, SDK::FString& Error)

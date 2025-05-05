@@ -25,10 +25,16 @@ namespace AJB
 	extern SDK::AAJBOutGameProxy* OutGameProxy;
 
 
+	// -- Tables
+
+
+
+
+
 	// -- Functions
 
-	static void Init_Hooks();
-	static void Init_Vars();
+	void Init_Hooks();
+	void Init_Vars();
 
 
 

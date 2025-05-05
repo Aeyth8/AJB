@@ -47,7 +47,7 @@ static void Init() {
 
 	LogWin();
 
-	A8CL::AJB::Init_Hooks();
+	AJB::Init_Hooks();
 	//A8CL::Debug::KillPP();
 
 	/*Hooks::CreateAndEnableHook((GBA + Offsets::IsNonPakFileNameAllowed), UFunctions::Func::IsNonPakFilenameAllowed, &UFunctions::Decl::FC_IsNonPakFilenameAllowed, "IsNonPakFilenameAllowed");
@@ -55,12 +55,12 @@ static void Init() {
 	Hooks::CreateAndEnableHook((GBA + 0x047B680), GetCreaditNumHook, &FC_GetCreaditNum, "GetCreaditNum");*/
 	//Hooks::CreateAndEnableHook((GBA + 0x008174F0), UFunctions::Func::ProcessEvent, &UFunctions::Decl::FC_ProcessEvent, "PE");
 	
-	if (!(!CheckNull(UWorld()) && !CheckNull(Player0()))) Sleep(10000);
+	//if (!(!CheckNull(UWorld()) && !CheckNull(Player0()))) Sleep(10000);
 
 	LogA("INITIALIZED", "The Global Base Address [GBA] is " + HexToString(GBA));
 
 	// Allocates local pointers
-	Engine = UEngine(); World = UWorld(); KismetSys = UKismetSys();
+	//Engine = UEngine(); World = UWorld(); KismetSys = UKismetSys();
 
 	// These pointers should remain the same across the entirety of an instance's runtime.
 	/*Game = static_cast<SDK::AGameMode*>(World->AuthorityGameMode);
@@ -77,7 +77,7 @@ static void Init() {
 	//Log(Game->GetFullName());
 
 	// Assigning a pointer to PP
-	A8CL::AJB::PP = (&System->PP);
+	/*A8CL::AJB::PP = (&System->PP);
 	Log("PP Pointer = " + HexToString((uintptr_t)(A8CL::AJB::PP)));
 	*A8CL::AJB::PP = 1170;
 
@@ -98,7 +98,7 @@ static void Init() {
 
 	// This should not be within the game, I deleted the literal object from the files in my patch. The default object will still remain but can't/won't be used.
 	if (Garbage && !Garbage->IsDefaultObject() && !CheckNull(Garbage, "SDK::AAJBAMErrorObserverActor", " :: Detected!")) ErrorBox(L"CRITICAL ALERT", L"An instance of [AAJBAMErrorObserverActor] has been found within your game!\nThis implicates that your current game is not properly patched, you will likely face issues and softlocks.\nIf you are not familiar with development in this game, I highly recommend you download the patched build.\n", MB_OK);
-
+*/
 
 	/*uintptr_t Process = GBA + 0x1A77CC0;
 	uintptr_t OutputText = GBA + 0x0811C50;

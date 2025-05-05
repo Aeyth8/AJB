@@ -18,12 +18,6 @@
     <Filter Include="Version">
       <UniqueIdentifier>{4f616dc7-8577-4658-9118-8a7701b86086}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Kiero">
-      <UniqueIdentifier>{ae5ce2fd-8659-47fa-920a-46f14379ca6f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Kiero\ImGui">
-      <UniqueIdentifier>{01c1c601-fd62-4a76-9b0a-7b3092690e5e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="MinHook\src">
       <UniqueIdentifier>{61445420-869b-4d83-ab8c-924f3a6ca840}</UniqueIdentifier>
     </Filter>
@@ -38,6 +32,9 @@
     </Filter>
     <Filter Include="Aeyth8\Tools">
       <UniqueIdentifier>{26c0b87f-02cf-4103-93f9-beb74047b6b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Aeyth8\Logic">
+      <UniqueIdentifier>{483fa044-0979-4c2b-8565-d4a8236606d2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -77,27 +74,6 @@
     <ClCompile Include="SDK\BP_AJBGameInstance_functions.cpp">
       <Filter>SDK</Filter>
     </ClCompile>
-    <ClCompile Include="Kiero\kiero.cpp">
-      <Filter>Kiero</Filter>
-    </ClCompile>
-    <ClCompile Include="Kiero\ImGui\imgui.cpp">
-      <Filter>Kiero\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="Kiero\ImGui\imgui_demo.cpp">
-      <Filter>Kiero\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="Kiero\ImGui\imgui_draw.cpp">
-      <Filter>Kiero\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="Kiero\ImGui\imgui_impl_dx11.cpp">
-      <Filter>Kiero\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="Kiero\ImGui\imgui_impl_win32.cpp">
-      <Filter>Kiero\ImGui</Filter>
-    </ClCompile>
-    <ClCompile Include="Kiero\ImGui\imgui_widgets.cpp">
-      <Filter>Kiero\ImGui</Filter>
-    </ClCompile>
     <ClCompile Include="MinHook\src\buffer.c">
       <Filter>MinHook\src</Filter>
     </ClCompile>
@@ -113,9 +89,6 @@
     <ClCompile Include="MinHook\src\hde\hde64.c">
       <Filter>MinHook\src\hde</Filter>
     </ClCompile>
-    <ClCompile Include="SDK\BPF_AJBGameInstance_functions.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Aeyth8\Hooks\Hooks.cpp">
       <Filter>Aeyth8\Hooks</Filter>
     </ClCompile>
@@ -123,6 +96,21 @@
       <Filter>Aeyth8\Tools</Filter>
     </ClCompile>
     <ClCompile Include="Aeyth8\Tools\UFunctions.cpp">
+      <Filter>Aeyth8\Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\BPF_AJBGameInstance_functions.cpp">
+      <Filter>SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\Logic\AJB.cpp">
+      <Filter>Aeyth8\Logic</Filter>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\Tools\Pointers.cpp">
+      <Filter>Aeyth8\Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\Global.cpp">
+      <Filter>Aeyth8</Filter>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\SafeInit.cpp">
       <Filter>Aeyth8\Tools</Filter>
     </ClCompile>
   </ItemGroup>
@@ -151,36 +139,6 @@
     <ClInclude Include="resource.h">
       <Filter>SDK</Filter>
     </ClInclude>
-    <ClInclude Include="Kiero\kiero.h">
-      <Filter>Kiero</Filter>
-    </ClInclude>
-    <ClInclude Include="Kiero\ImGui\imconfig.h">
-      <Filter>Kiero\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="Kiero\ImGui\imgui.h">
-      <Filter>Kiero\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="Kiero\ImGui\imgui_impl_dx11.h">
-      <Filter>Kiero\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="Kiero\ImGui\imgui_impl_win32.h">
-      <Filter>Kiero\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="Kiero\ImGui\imgui_internal.h">
-      <Filter>Kiero\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="Kiero\ImGui\imstb_rectpack.h">
-      <Filter>Kiero\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="Kiero\ImGui\imstb_textedit.h">
-      <Filter>Kiero\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="Kiero\ImGui\imstb_truetype.h">
-      <Filter>Kiero\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="Kiero\includes.h">
-      <Filter>Kiero</Filter>
-    </ClInclude>
     <ClInclude Include="MinHook\src\buffer.h">
       <Filter>MinHook\src</Filter>
     </ClInclude>
@@ -202,13 +160,7 @@
     <ClInclude Include="MinHook\src\hde\table64.h">
       <Filter>MinHook\src\hde</Filter>
     </ClInclude>
-    <ClInclude Include="Aeyth8\Structs.hpp">
-      <Filter>Aeyth8</Filter>
-    </ClInclude>
     <ClInclude Include="Aeyth8\Hooks\Hooks.hpp">
-      <Filter>Aeyth8\Hooks</Filter>
-    </ClInclude>
-    <ClInclude Include="Aeyth8\Hooks\Logic.hpp">
       <Filter>Aeyth8\Hooks</Filter>
     </ClInclude>
     <ClInclude Include="Aeyth8\Proxy\Proxy.hpp">
@@ -217,20 +169,26 @@
     <ClInclude Include="Aeyth8\Global.hpp">
       <Filter>Aeyth8</Filter>
     </ClInclude>
-    <ClInclude Include="Aeyth8\Hooks\Commands.hpp">
-      <Filter>Aeyth8\Hooks</Filter>
-    </ClInclude>
     <ClInclude Include="Aeyth8\InternalCommands.hpp">
       <Filter>SDK</Filter>
-    </ClInclude>
-    <ClInclude Include="Aeyth8\Tools\Offsets.hpp">
-      <Filter>Aeyth8\Tools</Filter>
     </ClInclude>
     <ClInclude Include="Aeyth8\Tools\Tick.hpp">
       <Filter>Aeyth8\Tools</Filter>
     </ClInclude>
     <ClInclude Include="Aeyth8\Tools\UFunctions.hpp">
       <Filter>Aeyth8\Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\Logic\AJB.hpp">
+      <Filter>Aeyth8\Logic</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\Tools\Pointers.h">
+      <Filter>Aeyth8\Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\SafeInit.h">
+      <Filter>Aeyth8\Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\Offsets.hpp">
+      <Filter>Aeyth8</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -242,10 +200,5 @@
     <ResourceCompile Include="Version\JoJo.rc">
       <Filter>Version</Filter>
     </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <MASM Include="Aeyth8\Hooks\ReturnAddress.asm">
-      <Filter>Aeyth8\Hooks</Filter>
-    </MASM>
   </ItemGroup>
 </Project>

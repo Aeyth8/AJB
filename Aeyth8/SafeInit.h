@@ -8,4 +8,70 @@ https://github.com/Aeyth8
 
 */
 
-using namespace A8CL;
+namespace A8CL
+{
+
+
+	// Designed to seamlessly initialize internal game modifications
+	namespace SafeInit
+	{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+

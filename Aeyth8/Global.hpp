@@ -36,33 +36,39 @@ namespace Global
 	inline bool bConstructedUConsole{false};
 
 	// Return value is true if null.
-	static bool IsNull(void* Pointer);
-	static bool IsNull(auto Pointer);
+	template <typename T>
+	bool IsNull(T* Pointer)
+	{
+		return Pointer == nullptr;
+	}
 
 	// Easily cast a type-variable to a memory address.
 	template <typename T>
-	static void Declare(T& Type, const uintptr_t& Offset);
+	void Declare(T& Type, const uintptr_t& Offset)
+	{
+		Type = (T)(Global::GBA + Offset);
+	}
 
 	// Makes a message box to warn you of your impending doom...
-	static void FatalErrorBox(const std::string& Message);
+	void FatalErrorBox(const std::string& Message);
 
 	// Allocates the Windows console for output.
-	static void LogWin();
+	void LogWin();
 
-	static std::string HexToString(const uintptr_t& Hex); 
+	std::string HexToString(const uintptr_t& Hex); 
 
-	static DWORD __stdcall ConstructThread(LPVOID Function, LPVOID Parameter = 0);
+	DWORD __stdcall ConstructThread(LPVOID Function, LPVOID Parameter = 0);
 
 	/*
 		Define your custom logger here or in the cpp file, mine's just a wrapper to Logger.hpp 
 	*/
 
 	// The log will flush every call, use this for important debugging.
-	static void LogA(const std::string& Header, const std::string& Body);
+	void LogA(const std::string& Header, const std::string& Body);
 
 	// The log will flush when needed, use this for casual logging.
-	static void Log(const std::string& Header, const std::string& Body);
-	static void Log(const std::string& Body);
+	void Log(const std::string& Header, const std::string& Body);
+	void Log(const std::string& Body);
 
 
 
