@@ -114,21 +114,6 @@ using namespace Global;
 
 
 
-template <typename T>
-T VerifyFC(OFFSET& Instance)
-{
-	if (!Instance.FunctionCall && Instance.Offset != 0)
-	{
-		LogA("VerifyFC", "Initializing " + Instance.GetName() + " : " + HexToString((uintptr_t)Instance.FunctionCall));
-		Instance.FunctionCall = reinterpret_cast<void*>(GBA + Instance.Offset);
-		if (Instance.FunctionCall == nullptr) FatalErrorBox(Instance.GetName() + "is a nullptr!");
-	}
-	LogA("VerifyFC", Instance.GetName() + " has been called!");
-	return reinterpret_cast<T>(Instance.FunctionCall);
-}
-
-
-
 /*
 		UFunctions
 */
