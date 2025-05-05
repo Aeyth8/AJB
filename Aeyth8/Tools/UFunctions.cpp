@@ -11,7 +11,6 @@ https://github.com/Aeyth8
 */
 
 using namespace A8CL;
-using namespace OFF;
 
 /*
 		Helpers
@@ -125,7 +124,7 @@ const T& TArrayParser(const SDK::TArray<T>& Array)
 void UFunctions::UConsole(SDK::UConsole* This, SDK::FString& Command)
 {
 	//LogA("UConsole", Command.ToString());
-	VerifyFC<Decl::UConsole>(OFF::UConsole)(This, Command);
+	//VerifyFC<Decl::UConsole>(OFF::UConsole)(This, Command);
 }
 
 void UFunctions::Browse(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SDK::FURL URL, SDK::FString& Error)
@@ -137,7 +136,7 @@ void UFunctions::Browse(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SD
 	//LogA("Browse", Helpers::FURLParser(URL));
 	//LogA("Browse", Helpers::FWorldContextParser(WorldContext));
 
-	OFF::Browse.VerifyFC<Decl::Browse>()(This, WorldContext, URL, Error);
+	//OFF::Browse.VerifyFC<Decl::Browse>()(This, WorldContext, URL, Error);
 
 }
 
@@ -146,10 +145,15 @@ bool UFunctions::InitListen(SDK::UIpNetDriver* This, SDK::UObject* InNotify, SDK
 	//return VerifyFC<Decl::InitListen>(OFF::InitListen)(This, InNotify, LocalURL, bReuseAddressAndPort, Error);
 }
 
+void UFunctions::PreLogin(SDK::AGameModeBase* This, SDK::FString* Options, SDK::FString* Address, SDK::FUniqueNetIdRepl* UniqueId, SDK::FString* ErrorMessage)
+{
+
+}
+
 void UFunctions::AppPreExit()
 {
 	Helpers::ProcessEnd();
-	OFF::AppPreExit.VerifyFC<Decl::AppPreExit>()();
+	//OFF::AppPreExit.VerifyFC<Decl::AppPreExit>()();
 }
 
 void UFunctions::SpawnActor(SDK::UWorld* This, SDK::UClass* Class, const SDK::FVector* Location, const SDK::FRotator* Rotation, FActorSpawnParameters* SpawnParameters)

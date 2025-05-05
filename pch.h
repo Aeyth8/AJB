@@ -12,17 +12,13 @@
 #include <ranges>
 #include <map>
 
-#include "Aeyth8/Global.hpp"
-#include "MinHook/MinHook.h"
+#include "Aeyth8/Hooks/Hooks.hpp"
 #include "SDK.hpp"
 
 #include "UnrealContainers.hpp"
 #include "PropertyFixup.hpp"
 #include "NameCollisions.inl"
 
-#include "Aeyth8/Structs.hpp"
-#include "Aeyth8/Logger.hpp"
-#include "Aeyth8/Pointers.hpp"
-#include "Aeyth8/Hooks/Hooks.hpp"
+
 
 #endif //PCH_H

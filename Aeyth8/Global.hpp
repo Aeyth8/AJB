@@ -1,9 +1,6 @@
 #pragma once
 #include <Windows.h>
-#include <iostream>
-#include <fstream>
 #include <string>
-#include <vector>
 
 /*
 
@@ -20,34 +17,41 @@ namespace A8CL
 // Global variables and functions used almost everywhere within the program.
 namespace Global
 {
+	typedef int8_t  int8;
+	typedef int16_t int16;
+	typedef int32_t int32;
+	typedef int64_t int64;
+
+	typedef uint8_t  uint8;
+	typedef uint16_t uint16;
+	typedef uint32_t uint32;
+	typedef uint64_t uint64;
+
+
 
 	// Global Base Address [GBA]
-	inline static uintptr_t GBA{0};
+	inline uintptr_t GBA{0};
 
 	// Useful way to construct the console from hooking UEngine::Browse
-	inline static bool bConstructedUConsole{false};
+	inline bool bConstructedUConsole{false};
 
 	// Return value is true if null.
-	static bool IsNull(void* Pointer)
-	{
-		return Pointer == nullptr;
-	}
-	static bool IsNull(auto Pointer)
-	{
-		return Pointer == nullptr;
-	}
+	static bool IsNull(void* Pointer);
+	static bool IsNull(auto Pointer);
 
 	// Easily cast a type-variable to a memory address.
 	template <typename T>
-	static void Declare(T& Type, const uintptr_t& Offset)
-	{
-		Type = (T)(Global::GBA + Offset);
-	}
+	static void Declare(T& Type, const uintptr_t& Offset);
 
-	static void FatalErrorBox(const std::string& Message)
-	{
-		const int Box = MessageBoxA(0, "Fatal Error!", Message.c_str(), MB_OK);
-	}
+	// Makes a message box to warn you of your impending doom...
+	static void FatalErrorBox(const std::string& Message);
+
+	// Allocates the Windows console for output.
+	static void LogWin();
+
+	static std::string HexToString(const uintptr_t& Hex); 
+
+	static DWORD __stdcall ConstructThread(LPVOID Function, LPVOID Parameter = 0);
 
 	/*
 		Define your custom logger here or in the cpp file, mine's just a wrapper to Logger.hpp 
@@ -62,7 +66,7 @@ namespace Global
 
 
 
-}
+};
 
 
 

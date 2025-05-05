@@ -46,7 +46,7 @@ public:
 	LPVOID FunctionCall;
 
 	std::string& GetName() const { return StringIndexArray[StringIndex]; }
-	std::wstring GetNameW() { return std::wstring(StringIndexArray[StringIndex].begin(), StringIndexArray[StringIndex].end()); }
+	std::wstring GetNameW() const { return std::wstring(StringIndexArray[StringIndex].begin(), StringIndexArray[StringIndex].end()); }
 	uintptr_t& PlusBase() { return Address == 0 ? Address = Offset + (uintptr_t)GetModuleHandle(0) : Address; }
 
 	template <typename T>

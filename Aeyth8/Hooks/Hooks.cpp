@@ -1,6 +1,7 @@
 #include "Hooks.hpp"
 #include "../Global.hpp"
-//#include "../Tools/Offsets.hpp"
+
+#include <vector>
 
 /*
 

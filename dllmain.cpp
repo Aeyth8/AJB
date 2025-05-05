@@ -1,14 +1,21 @@
 #include "pch.h"
-#include "Aeyth8/Proxy/Proxy.hpp"
-#include "Aeyth8/Hooks/Logic.hpp"
 
-SDK::AGameMode* Game;
-SDK::AHUD* HUD;
-SDK::UBP_AJBGameInstance_C* Instance; // Originally SDK::UAJBGameInstance but this is a parent class. 
-SDK::UAJBAMSystemSettings* Settings;
-SDK::AAJBAMErrorObserverActor* Garbage;
-SDK::UAJBAMSystemObject* System;
-SDK::AAJBOutGameProxy* AProxy;
+#include "Aeyth8/Global.hpp"
+#include "Aeyth8/Proxy/Proxy.hpp"
+#include "Aeyth8/Logic/AJB.hpp"
+
+/*
+
+Written by Aeyth8
+
+https://github.com/Aeyth8
+
+*/
+
+
+// My entire codebase has been designed to use namespaces like this.
+using namespace A8CL; using namespace Global;
+
 
 typedef int32(__thiscall* GetCreaditNum)(SDK::UAJBGameInstance* This);
 static GetCreaditNum FC_GetCreaditNum{0};
@@ -16,7 +23,7 @@ static GetCreaditNum FC_GetCreaditNum{0};
 // I was hoping "Creadits" were equivalent to PP and that I could spoof the original value, but this is credits and or IRL money used to buy PP, so it's a halfway freeplay spoof which isn't needed I don't think.
 // However after further consideration this hook will be useful as it gets called immediately when entering AJBSimpleMatch_P, therefore I can retrieve the UAJBGameInstance pointer directly from the hook.
 // If that sounds stupid it's simply because I previously retrieved and set the PP after 10 seconds from launch, causing it to guaranteed crash if you were to switch levels right beforehand.  
-static int32 GetCreaditNumHook(SDK::UAJBGameInstance* This)
+/*static int32 GetCreaditNumHook(SDK::UAJBGameInstance* This)
 {
 	A8CL::AJB::PP = (&This->AMSystemObject->PP);
 	*A8CL::AJB::PP = 1170;
@@ -31,7 +38,7 @@ template <class PointerT, class BaseT, class MemberT>
 auto PointerCast(PointerT& Pointer, BaseT* Base, MemberT BaseT::*Member) 
 {
 	return (Base && Base->*Member) ? decltype(Pointer)(Base->*Member) : nullptr;
-}
+}*/
 
 static void Init() {
 
@@ -40,12 +47,12 @@ static void Init() {
 
 	LogWin();
 
-	A8CL::AJB::InitHooks();
-	A8CL::Debug::KillPP();
+	A8CL::AJB::Init_Hooks();
+	//A8CL::Debug::KillPP();
 
-	Hooks::CreateAndEnableHook((GBA + Offsets::IsNonPakFileNameAllowed), UFunctions::Func::IsNonPakFilenameAllowed, &UFunctions::Decl::FC_IsNonPakFilenameAllowed, "IsNonPakFilenameAllowed");
+	/*Hooks::CreateAndEnableHook((GBA + Offsets::IsNonPakFileNameAllowed), UFunctions::Func::IsNonPakFilenameAllowed, &UFunctions::Decl::FC_IsNonPakFilenameAllowed, "IsNonPakFilenameAllowed");
 	Hooks::CreateAndEnableHook((GBA + Offsets::FindFileInPakFiles), UFunctions::Func::FindFileInPakFiles, &UFunctions::Decl::FC_FindFileInPakFiles, "FindFileInPakFiles");
-	Hooks::CreateAndEnableHook((GBA + 0x047B680), GetCreaditNumHook, &FC_GetCreaditNum, "GetCreaditNum");
+	Hooks::CreateAndEnableHook((GBA + 0x047B680), GetCreaditNumHook, &FC_GetCreaditNum, "GetCreaditNum");*/
 	//Hooks::CreateAndEnableHook((GBA + 0x008174F0), UFunctions::Func::ProcessEvent, &UFunctions::Decl::FC_ProcessEvent, "PE");
 	
 	if (!(!CheckNull(UWorld()) && !CheckNull(Player0()))) Sleep(10000);
@@ -62,8 +69,8 @@ static void Init() {
 	System = Instance->AMSystemObject;
 	Garbage = GetLastOf<SDK::AAJBAMErrorObserverActor>();
 */
-	Game = PointerCast(Game, World, &SDK::UWorld::AuthorityGameMode);
-	Instance = PointerCast(Instance, World, &SDK::UWorld::OwningGameInstance);
+	//Game = PointerCast(Game, World, &SDK::UWorld::AuthorityGameMode);
+	//Instance = PointerCast(Instance, World, &SDK::UWorld::OwningGameInstance);
 	//Settings = PointerCast(Settings, Instance, &SDK::UAJBGameInstance::AMSystemSettings);
 	//System = PointerCast(System, Instance, &SDK::UAJBGameInstance::AMSystemObject);
 
