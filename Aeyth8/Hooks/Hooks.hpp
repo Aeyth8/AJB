@@ -68,6 +68,11 @@ private:
 	// Anything else means that only some of them succeeded.
 	enum HookNum { ALL_FAILED = -1, ALL_SUCCEEDED = -2 };
 
+	// Used for logging the action type. 
+	enum HookType { CREATE = 0, ENABLE = 1, DISABLE = 2, REMOVE = 3 };
+
+	const inline static std::string HookTypeS[] = { "create", "enable", "disable", "remove" };
+
 	// Used to decide/output the flags.
 	// A is the amount succeeded | B is the total amount.
 	const inline static HookNum ENUM(const int& A, const int& B)
@@ -79,6 +84,9 @@ private:
 
 	// Converts the enum into a bool
 	inline static bool STAT(const MH_STATUS& Status) { return (Status == MH_OK); }
+
+	static void HookLog(const bool& Status, const HookType& Type, class OFFSET& Obj);
+	static void HookLog(const bool& Status, const HookType& Type, uintptr_t TargetAddress, LPVOID FunctionCall = 0);
 
 	// Idiot proofing.
 	inline static bool MH_INIT{false};

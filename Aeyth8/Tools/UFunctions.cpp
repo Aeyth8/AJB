@@ -133,6 +133,7 @@ void UFunctions::Browse(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SD
 	LogA("Browse", Helpers::FURLParser(URL));
 	LogA("Browse", Helpers::FWorldContextParser(WorldContext));
 
+	((Decl::Browse)(OFF::Browse.FunctionCall))(This, WorldContext, URL, Error);
 	//OFF::Browse.VerifyFC<Decl::Browse>()(This, WorldContext, URL, Error);
 	//VerifyFC<Decl::Browse>(OFF::Browse)(This, WorldContext, URL, Error);
 }

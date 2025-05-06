@@ -239,6 +239,7 @@ namespace Proxy
 		
 		if (!IsInitialized && AttachCounter > 0) { IsInitialized = true;
 			Logger::Log << "[Proxy] - Starting up AJB...\n";
+			Logger::Log.flush();
 			Proxy::ConstructThread(Init);
 		}
 

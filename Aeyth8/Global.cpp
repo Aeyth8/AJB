@@ -1,4 +1,5 @@
 #include "Global.hpp"
+#include "Logger.hpp"
 
 #include <sstream>
 
@@ -62,7 +63,7 @@ DWORD __stdcall Global::ConstructThread(LPVOID Function, LPVOID Parameter)
 
 void Global::LogA(const std::string& Header, const std::string& Body)
 {
-
+	Logger::DebugLog(Header, Body);
 }
 
 void Global::Log(const std::string& Header, const std::string& Body)

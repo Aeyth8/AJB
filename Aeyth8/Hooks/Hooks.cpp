@@ -1,6 +1,13 @@
 #include "Hooks.hpp"
 #include "../Global.hpp"
 
+#ifndef A8CL_LOGGER_GLOBAL
+#define Global MissingHeader
+namespace MissingHeader { 
+	static void LogA(...){} 
+	static void FatalErrorBox(...){}
+}
+#endif
 
 /*
 
@@ -12,6 +19,25 @@ https://github.com/Aeyth8
 
 using namespace A8CL;
 
+
+
+void Hooks::HookLog(const bool& Status, const HookType& Type, class OFFSET& Obj)
+{
+	std::string Output;
+	Status ? Output = "Successfully " + HookTypeS[Type] + "d a hook for " + Obj.GetName() : Output = "Failed to " + HookTypeS[Type] + " a hook for " + Obj.GetName();
+
+	if (Type == CREATE) Output += " || Trampoline = " + Global::HexToString(reinterpret_cast<uintptr_t>(Obj.FunctionCall));
+	Global::LogA("Hooks", Output);
+}
+
+void Hooks::HookLog(const bool& Status, const HookType& Type, uintptr_t TargetAddress, LPVOID FunctionCall)
+{
+	std::string Output;
+	Status ? Output = "Successfully " + HookTypeS[Type] + "d a hook for " + Global::HexToString(TargetAddress) : Output = "Failed to " + HookTypeS[Type] + " a hook for " + Global::HexToString(TargetAddress);
+
+	if (Type == CREATE) Output += " || Trampoline = " + Global::HexToString(reinterpret_cast<uintptr_t>(FunctionCall));
+	Global::LogA("Hooks", Output);
+}
 
 
 /*
@@ -47,7 +73,10 @@ bool Hooks::Uninit()
 
 bool Hooks::CreateHook(const uintptr_t TargetAddress, LPVOID DetourFunction, LPVOID FunctionCall)
 {
-	return STAT(MH_CreateHook(reinterpret_cast<LPVOID*>(TargetAddress), DetourFunction, reinterpret_cast<LPVOID*>(FunctionCall)));
+	bool Result = STAT(MH_CreateHook(reinterpret_cast<LPVOID>(TargetAddress), DetourFunction, &FunctionCall));
+	Hooks::HookLog(Result, CREATE, TargetAddress, FunctionCall);
+
+	return Result;
 }
 
 
@@ -67,7 +96,10 @@ Hooks::HookNum Hooks::CreateHooks(std::vector<HookStructure>& Table)
 
 bool Hooks::EnableHook(const uintptr_t TargetAddress)
 {
-	return STAT(MH_EnableHook(reinterpret_cast<LPVOID*>(TargetAddress)));
+	bool Result = STAT(MH_EnableHook(reinterpret_cast<LPVOID>(TargetAddress)));
+	Hooks::HookLog(Result, ENABLE, TargetAddress);
+
+	return Result;
 }
 
 
@@ -106,7 +138,10 @@ Hooks::HookNum Hooks::CreateAndEnableHooks(std::vector<HookStructure>& Table)
 
 bool Hooks::DisableHook(const uintptr_t TargetAddress)
 {
-	return STAT(MH_DisableHook(reinterpret_cast<LPVOID*>(TargetAddress)));
+	bool Result = STAT(MH_DisableHook(reinterpret_cast<LPVOID>(TargetAddress)));
+	Hooks::HookLog(Result, DISABLE, TargetAddress);
+
+	return Result;
 }
 
 
@@ -126,7 +161,10 @@ void Hooks::DisableAllHooks() { MH_DisableHook(MH_ALL_HOOKS); }
 
 bool Hooks::RemoveHook(const uintptr_t TargetAddress)
 {
-	return STAT(MH_RemoveHook(reinterpret_cast<LPVOID*>(TargetAddress)));
+	bool Result = STAT(MH_RemoveHook(reinterpret_cast<LPVOID>(TargetAddress)));
+	Hooks::HookLog(Result, REMOVE, TargetAddress);
+
+	return Result;
 }
 
 Hooks::HookNum Hooks::RemoveHooks(std::vector<OFFSET>& Table)
@@ -143,11 +181,40 @@ Hooks::HookNum Hooks::RemoveHooks(std::vector<OFFSET>& Table)
 
 // Object-wrapped overloads
 
-bool Hooks::CreateHook(class OFFSET& Obj, LPVOID DetourFunction) { return Hooks::CreateHook((Obj.PlusBase()), DetourFunction, &Obj.FunctionCall); }
-bool Hooks::EnableHook(class OFFSET& Obj) { return Hooks::EnableHook(Obj.PlusBase()); }
-bool Hooks::DisableHook(class OFFSET& Obj) { return Hooks::DisableHook(Obj.PlusBase()); }
-bool Hooks::RemoveHook(class OFFSET& Obj) { return Hooks::RemoveHook(Obj.PlusBase()); }
-bool Hooks::CreateAndEnableHook(class OFFSET& Obj, LPVOID DetourFunction) { return Hooks::CreateAndEnableHook((Obj.PlusBase()), DetourFunction, Obj.FunctionCall); }
+// Originally these were designed to call the base function, but once I added the logging logic it would've overcomplicated it if I implemented it with the original system.
+
+bool Hooks::CreateHook(class OFFSET& Obj, LPVOID DetourFunction) {  
+	bool Result = STAT(MH_CreateHook(reinterpret_cast<LPVOID>(Obj.PlusBase()), DetourFunction, &Obj.FunctionCall));
+	Hooks::HookLog(Result, CREATE, Obj);
+
+	return Result;
+}
+
+bool Hooks::EnableHook(class OFFSET& Obj) {
+	bool Result = STAT(MH_EnableHook(reinterpret_cast<LPVOID>(Obj.PlusBase())));
+	Hooks::HookLog(Result, ENABLE, Obj);
+
+	return Result;
+}
+
+bool Hooks::DisableHook(class OFFSET& Obj) { 
+	bool Result = STAT(MH_DisableHook(reinterpret_cast<LPVOID>(Obj.PlusBase())));
+	Hooks::HookLog(Result, DISABLE, Obj);
+
+	return Result;
+}
+
+bool Hooks::RemoveHook(class OFFSET& Obj) { 
+	bool Result = STAT(MH_RemoveHook(reinterpret_cast<LPVOID>(Obj.PlusBase())));
+	Hooks::HookLog(Result, REMOVE, Obj);
+
+	return Result;
+}
+
+bool Hooks::CreateAndEnableHook(class OFFSET& Obj, LPVOID DetourFunction) { 
+	if (!CreateHook(Obj, DetourFunction)) return false;
+	return EnableHook(Obj);
+}
 
 
 bool Hooks::If(const HookNum& Result)

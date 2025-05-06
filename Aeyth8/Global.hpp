@@ -2,6 +2,8 @@
 #include <Windows.h>
 #include <string>
 
+#define A8CL_LOGGER_GLOBAL
+
 /*
 
 Written by Aeyth8
