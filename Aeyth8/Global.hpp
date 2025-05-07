@@ -15,10 +15,6 @@ https://github.com/Aeyth8
 namespace A8CL
 {
 
-
-// Global variables and functions used almost everywhere within the program.
-namespace Global
-{
 	typedef int8_t  int8;
 	typedef int16_t int16;
 	typedef int32_t int32;
@@ -30,6 +26,9 @@ namespace Global
 	typedef uint64_t uint64;
 
 
+// Global variables and functions used almost everywhere within the program.
+namespace Global
+{
 
 	// Global Base Address [GBA]
 	inline uintptr_t GBA{0};
@@ -72,7 +71,7 @@ namespace Global
 	void Log(const std::string& Header, const std::string& Body);
 	void Log(const std::string& Body);
 
-
+	void CloseLog();
 
 };
 

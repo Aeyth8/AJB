@@ -36,6 +36,9 @@
     <Filter Include="Aeyth8\Logic">
       <UniqueIdentifier>{483fa044-0979-4c2b-8565-d4a8236606d2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Aeyth8\WinUI">
+      <UniqueIdentifier>{f543c4d9-4f65-4c0e-ac6e-cda13d38d14c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -113,6 +116,9 @@
     <ClCompile Include="Aeyth8\SafeInit.cpp">
       <Filter>Aeyth8\Tools</Filter>
     </ClCompile>
+    <ClCompile Include="Aeyth8\WinUI\WinUI.cpp">
+      <Filter>Aeyth8\WinUI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -189,6 +195,9 @@
     </ClInclude>
     <ClInclude Include="Aeyth8\Offsets.hpp">
       <Filter>Aeyth8</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\WinUI\WinUI.hpp">
+      <Filter>Aeyth8\WinUI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

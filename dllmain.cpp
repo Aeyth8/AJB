@@ -3,6 +3,7 @@
 #include "Aeyth8/Global.hpp"
 #include "Aeyth8/Proxy/Proxy.hpp"
 #include "Aeyth8/Logic/AJB.hpp"
+#include "Aeyth8/Tools/Pointers.h"
 
 /*
 
@@ -14,7 +15,7 @@ https://github.com/Aeyth8
 
 
 // My entire codebase has been designed to use namespaces like this.
-using namespace A8CL; using namespace Global;
+using namespace A8CL; using namespace Global; using namespace Pointers;
 
 
 typedef int32(__thiscall* GetCreaditNum)(SDK::UAJBGameInstance* This);
@@ -39,6 +40,7 @@ auto PointerCast(PointerT& Pointer, BaseT* Base, MemberT BaseT::*Member)
 {
 	return (Base && Base->*Member) ? decltype(Pointer)(Base->*Member) : nullptr;
 }*/
+int NullWorld;
 
 static void Init() {
 
@@ -46,8 +48,10 @@ static void Init() {
 	GBA = (uintptr_t)GetModuleHandleA("AJB-Win64-Shipping.exe");
 
 	LogWin();
+	LogA("INITIALIZED", "The Global Base Address [GBA] is " + HexToString(GBA));
 
 	AJB::Init_Hooks();
+	AJB::Init_Vars();
 	//A8CL::Debug::KillPP();
 
 	/*Hooks::CreateAndEnableHook((GBA + Offsets::IsNonPakFileNameAllowed), UFunctions::Func::IsNonPakFilenameAllowed, &UFunctions::Decl::FC_IsNonPakFilenameAllowed, "IsNonPakFilenameAllowed");
@@ -55,10 +59,16 @@ static void Init() {
 	Hooks::CreateAndEnableHook((GBA + 0x047B680), GetCreaditNumHook, &FC_GetCreaditNum, "GetCreaditNum");*/
 	//Hooks::CreateAndEnableHook((GBA + 0x008174F0), UFunctions::Func::ProcessEvent, &UFunctions::Decl::FC_ProcessEvent, "PE");
 	
-	//if (!(!CheckNull(UWorld()) && !CheckNull(Player0()))) Sleep(10000);
+	
+	while (UWorld() == nullptr)
+	{
+		++NullWorld;
+		if (NullWorld >= 30) LogA("Init", "It has been a minute and the game has still not loaded, try restarting.");
+		//LogA("Initialization", "Sleeping..");
+		Sleep(2000);
+	}
 
-	LogA("INITIALIZED", "The Global Base Address [GBA] is " + HexToString(GBA));
-
+	if (!bConstructedUConsole) bConstructedUConsole = ConstructUConsole();
 	// Allocates local pointers
 	//Engine = UEngine(); World = UWorld(); KismetSys = UKismetSys();
 

@@ -53,7 +53,8 @@ public:
 	template <typename T>
 	T VerifyFC()
 	{
-
+		if (!this->FunctionCall) return reinterpret_cast<T>(PlusBase());
+		return reinterpret_cast<T>(this->FunctionCall);
 	}
 
 };
@@ -95,7 +96,7 @@ public:
 
 	//struct HookStructure { const uintptr_t Offset; LPVOID DetourFunction; LPVOID FunctionCall{0}; const std::string HookName;  uintptr_t CalculatedAddress{0}; };
 
-	struct HookStructure { class OFFSET Obj; LPVOID DetourFunction; };
+	struct HookStructure { class OFFSET& Obj; LPVOID DetourFunction; };
 
 	// Must be called before hooking anything.
 	static bool Init();

@@ -89,9 +89,9 @@ const std::string& UFunctions::Helpers::FWorldContextParser(SDK::FWorldContext& 
 
 void UFunctions::Helpers::ProcessEnd()
 {
-	/*Hooks::DisableAllHooks();
+	Hooks::DisableAllHooks();
 	Hooks::Uninit(); 
-	Logger::Close();*/
+	Global::CloseLog();
 }
 
 
@@ -120,22 +120,20 @@ using namespace Global;
 
 void UFunctions::UConsole(SDK::UConsole* This, SDK::FString& Command)
 {
-	//LogA("UConsole", Command.ToString());
-	//VerifyFC<Decl::UConsole>(OFF::UConsole)(This, Command);
+	LogA("UConsole", Command.ToString());
+	OFF::UConsole.VerifyFC<Decl::UConsole>()(This, Command);
 }
 
 void UFunctions::Browse(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SDK::FURL URL, SDK::FString& Error)
 {
-	if (!Global::bConstructedUConsole)
-	{	Global::bConstructedUConsole = true;
-		Pointers::ConstructUConsole();
+	if (!Global::bConstructedUConsole) { Global::bConstructedUConsole = Pointers::ConstructUConsole();
+		LogA("Browse", "Constructed UConsole early.");
 	}
-	LogA("Browse", Helpers::FURLParser(URL));
-	LogA("Browse", Helpers::FWorldContextParser(WorldContext));
 
-	((Decl::Browse)(OFF::Browse.FunctionCall))(This, WorldContext, URL, Error);
-	//OFF::Browse.VerifyFC<Decl::Browse>()(This, WorldContext, URL, Error);
-	//VerifyFC<Decl::Browse>(OFF::Browse)(This, WorldContext, URL, Error);
+	LogA("Browse", Helpers::FURLParser(URL));
+	//LogA("Browse", Helpers::FWorldContextParser(WorldContext));
+
+	OFF::Browse.VerifyFC<Decl::Browse>()(This, WorldContext, URL, Error);
 }
 
 bool UFunctions::InitListen(SDK::UIpNetDriver* This, SDK::UObject* InNotify, SDK::FURL& LocalURL, bool bReuseAddressAndPort, SDK::FString& Error)
@@ -145,13 +143,13 @@ bool UFunctions::InitListen(SDK::UIpNetDriver* This, SDK::UObject* InNotify, SDK
 
 void UFunctions::PreLogin(SDK::AGameModeBase* This, SDK::FString* Options, SDK::FString* Address, SDK::FUniqueNetIdRepl* UniqueId, SDK::FString* ErrorMessage)
 {
-
+	LogA("PreLogin", "Options: " + Options->ToString() + "Address: " + Address->ToString());
 }
 
 void UFunctions::AppPreExit()
 {
-	Helpers::ProcessEnd();
-	//OFF::AppPreExit.VerifyFC<Decl::AppPreExit>()();
+	Global::ConstructThread(Helpers::ProcessEnd);
+	OFF::AppPreExit.VerifyFC<Decl::AppPreExit>()();
 }
 
 void UFunctions::SpawnActor(SDK::UWorld* This, SDK::UClass* Class, const SDK::FVector* Location, const SDK::FRotator* Rotation, FActorSpawnParameters* SpawnParameters)

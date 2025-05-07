@@ -16,21 +16,19 @@ namespace A8CL
 
 
 
-class Pointers
+namespace Pointers
 {
-public:
-
-	static SDK::UEngine* UEngine();
-	static SDK::UWorld* UWorld();
+	SDK::UEngine* UEngine();
+	SDK::UWorld* UWorld();
 	
 	// Returns Player0 by default.
 	// * * A replicated client only has access to their PlayerController. 
-	static SDK::APlayerController* Player(const int Index = 0);
+	SDK::APlayerController* Player(const int Index = 0);
 
-	static const SDK::FName& FString2FName(const SDK::FString& String);
+	const SDK::FName& FString2FName(const SDK::FString& String);
 
-	static bool ConstructUConsole(SDK::UEngine* EngineOverride, const SDK::FString ConsoleKey = L"Tilde");
-	static bool ConstructUConsole(const SDK::FString ConsoleKey = L"Tilde");
+	bool ConstructUConsole(SDK::UEngine* EngineOverride, const SDK::FString ConsoleKey = L"Tilde");
+	bool ConstructUConsole(const SDK::FString ConsoleKey = L"Tilde");
 
 	template <typename UClass>
 	std::vector<UClass>& FindObjects(bool IncludeDefaultObjects = true);

@@ -75,3 +75,8 @@ void Global::Log(const std::string& Body)
 {
 
 }
+
+void Global::CloseLog()
+{
+	Logger::Close();
+}

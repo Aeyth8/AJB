@@ -157,7 +157,11 @@ Hooks::HookNum Hooks::DisableHooks(std::vector<OFFSET>& Table)
 	return ENUM(Amount, Table.size());
 }
 
-void Hooks::DisableAllHooks() { MH_DisableHook(MH_ALL_HOOKS); }
+void Hooks::DisableAllHooks() 
+{ 
+	MH_DisableHook(MH_ALL_HOOKS); 
+	Global::LogA("Hooks", "Disabled all hooks.");
+}
 
 bool Hooks::RemoveHook(const uintptr_t TargetAddress)
 {

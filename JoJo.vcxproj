@@ -163,6 +163,7 @@
     <ClInclude Include="Aeyth8\Tools\Pointers.h" />
     <ClInclude Include="Aeyth8\Tools\Tick.hpp" />
     <ClInclude Include="Aeyth8\Tools\UFunctions.hpp" />
+    <ClInclude Include="Aeyth8\WinUI\WinUI.hpp" />
     <ClInclude Include="MinHook\MinHook.h" />
     <ClInclude Include="MinHook\src\buffer.h" />
     <ClInclude Include="MinHook\src\hde\hde32.h" />
@@ -197,6 +198,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Aeyth8\Tools\UFunctions.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\WinUI\WinUI.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="dllmain.cpp" />
