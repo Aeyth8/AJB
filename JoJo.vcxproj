@@ -159,7 +159,6 @@
     <ClInclude Include="Aeyth8\Offsets.hpp" />
     <ClInclude Include="Aeyth8\Pointers.hpp" />
     <ClInclude Include="Aeyth8\Proxy\Proxy.hpp" />
-    <ClInclude Include="Aeyth8\SafeInit.h" />
     <ClInclude Include="Aeyth8\Tools\Pointers.h" />
     <ClInclude Include="Aeyth8\Tools\Tick.hpp" />
     <ClInclude Include="Aeyth8\Tools\UFunctions.hpp" />
@@ -186,9 +185,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Aeyth8\Logic\AJB.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="Aeyth8\SafeInit.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Aeyth8\Tools\Pointers.cpp">

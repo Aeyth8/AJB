@@ -113,9 +113,6 @@
     <ClCompile Include="Aeyth8\Global.cpp">
       <Filter>Aeyth8</Filter>
     </ClCompile>
-    <ClCompile Include="Aeyth8\SafeInit.cpp">
-      <Filter>Aeyth8\Tools</Filter>
-    </ClCompile>
     <ClCompile Include="Aeyth8\WinUI\WinUI.cpp">
       <Filter>Aeyth8\WinUI</Filter>
     </ClCompile>
@@ -188,9 +185,6 @@
       <Filter>Aeyth8\Logic</Filter>
     </ClInclude>
     <ClInclude Include="Aeyth8\Tools\Pointers.h">
-      <Filter>Aeyth8\Tools</Filter>
-    </ClInclude>
-    <ClInclude Include="Aeyth8\SafeInit.h">
       <Filter>Aeyth8\Tools</Filter>
     </ClInclude>
     <ClInclude Include="Aeyth8\Offsets.hpp">

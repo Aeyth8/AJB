@@ -23,19 +23,17 @@ using namespace A8CL;
 
 void Hooks::HookLog(const bool& Status, const HookType& Type, class OFFSET& Obj)
 {
-	std::string Output;
-	Status ? Output = "Successfully " + HookTypeS[Type] + "d a hook for " + Obj.GetName() : Output = "Failed to " + HookTypeS[Type] + " a hook for " + Obj.GetName();
+	std::string Output = Status ? std::format("Successfully {}d a hook for {}", HookTypeS[Type], Obj.GetName()) : std::format("Failed to {} a hook for {}", HookTypeS[Type], Obj.GetName());
 
-	if (Type == CREATE) Output += " || Trampoline = " + Global::HexToString(reinterpret_cast<uintptr_t>(Obj.FunctionCall));
+	if (Type == CREATE && Status) Output += " || Trampoline = " + Global::HexToString(reinterpret_cast<uintptr_t>(Obj.FunctionCall));
 	Global::LogA("Hooks", Output);
 }
 
 void Hooks::HookLog(const bool& Status, const HookType& Type, uintptr_t TargetAddress, LPVOID FunctionCall)
 {
-	std::string Output;
-	Status ? Output = "Successfully " + HookTypeS[Type] + "d a hook for " + Global::HexToString(TargetAddress) : Output = "Failed to " + HookTypeS[Type] + " a hook for " + Global::HexToString(TargetAddress);
+	std::string Output = Status ? Output = std::format("Successfully {}d a hook for {}", HookTypeS[Type], Global::HexToString(TargetAddress)) : std::format("Failed to {} a hook for {}", HookTypeS[Type], Global::HexToString(TargetAddress));
 
-	if (Type == CREATE) Output += " || Trampoline = " + Global::HexToString(reinterpret_cast<uintptr_t>(FunctionCall));
+	if (Type == CREATE && Status) Output += " || Trampoline = " + Global::HexToString(reinterpret_cast<uintptr_t>(FunctionCall));
 	Global::LogA("Hooks", Output);
 }
 

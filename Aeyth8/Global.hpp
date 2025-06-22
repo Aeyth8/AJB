@@ -25,16 +25,20 @@ namespace A8CL
 	typedef uint32_t uint32;
 	typedef uint64_t uint64;
 
+	typedef uintptr_t uintptr;
+	typedef unsigned long long size_t;
+	typedef size_t size;
+
 
 // Global variables and functions used almost everywhere within the program.
 namespace Global
 {
 
 	// Global Base Address [GBA]
-	inline uintptr_t GBA{0};
+	extern uintptr_t GBA;
 
 	// Useful way to construct the console from hooking UEngine::Browse
-	inline bool bConstructedUConsole{false};
+	extern bool bConstructedUConsole;
 
 	// Return value is true if null.
 	template <typename T>

@@ -15,9 +15,9 @@ https://github.com/Aeyth8
 using namespace A8CL;
 
 
+uintptr_t Global::GBA{0};
 
-
-
+bool Global::bConstructedUConsole{false};
 
 /*
 		Utils
@@ -63,6 +63,7 @@ DWORD __stdcall Global::ConstructThread(LPVOID Function, LPVOID Parameter)
 
 void Global::LogA(const std::string& Header, const std::string& Body)
 {
+	std::cout << "[" + Header + "]" << " - [" + Body + "]\n";
 	Logger::DebugLog(Header, Body);
 }
 

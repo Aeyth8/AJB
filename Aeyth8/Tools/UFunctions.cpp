@@ -143,7 +143,7 @@ bool UFunctions::InitListen(SDK::UIpNetDriver* This, SDK::UObject* InNotify, SDK
 
 void UFunctions::PreLogin(SDK::AGameModeBase* This, SDK::FString* Options, SDK::FString* Address, SDK::FUniqueNetIdRepl* UniqueId, SDK::FString* ErrorMessage)
 {
-	LogA("PreLogin", "Options: " + Options->ToString() + "Address: " + Address->ToString());
+	LogA("PreLogin", "Options: " + Options->ToString() + " Address: " + Address->ToString());
 }
 
 void UFunctions::AppPreExit()

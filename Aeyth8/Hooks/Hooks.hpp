@@ -2,6 +2,7 @@
 #include "../MinHook/MinHook.h"
 #include <string>
 #include <vector>
+#include <format>
 
 /*
 
@@ -72,7 +73,7 @@ private:
 	// Used for logging the action type. 
 	enum HookType { CREATE = 0, ENABLE = 1, DISABLE = 2, REMOVE = 3 };
 
-	const inline static std::string HookTypeS[] = { "create", "enable", "disable", "remove" };
+	constexpr static const char* HookTypeS[] = { "create", "enable", "disable", "remove" };
 
 	// Used to decide/output the flags.
 	// A is the amount succeeded | B is the total amount.

@@ -31,10 +31,34 @@ namespace Pointers
 	bool ConstructUConsole(const SDK::FString ConsoleKey = L"Tilde");
 
 	template <typename UClass>
-	std::vector<UClass>& FindObjects(bool IncludeDefaultObjects = true);
+	std::vector<UClass*> FindObjects(bool IncludeDefaultObjects = true)
+	{
+		// Iterates through all of the GObjects array and returns a vector containing all found objects that match types.
+
+		SDK::UObject* CurrentObject;
+		std::vector<UClass*> ObjectsList;
+
+		for (int i{0}; i < SDK::UObject::GObjects->Num(); ++i)
+		{
+			CurrentObject = SDK::UObject::GObjects->GetByIndex(i);
+
+			if (!CurrentObject) continue;
+
+			if (CurrentObject->IsA(UClass::StaticClass()))
+			{
+				if (!IncludeDefaultObjects && CurrentObject->IsDefaultObject()) continue;
+				ObjectsList.push_back((UClass*)CurrentObject);
+			}
+		}
+
+		return ObjectsList;
+	}
 
 	template <typename UClass>
-	UClass* GetLastOf(bool IncludeDefaultObjects = true);
+	UClass* GetLastOf(bool IncludeDefaultObjects = true)
+	{
+		return Pointers::FindObjects<UClass>(IncludeDefaultObjects).back();
+	}
 
 
 
