@@ -68,6 +68,8 @@ namespace Global
 		Define your custom logger here or in the cpp file, mine's just a wrapper to Logger.hpp 
 	*/
 
+	void InitLog();
+
 	// The log will flush every call, use this for important debugging.
 	void LogA(const std::string& Header, const std::string& Body);
 

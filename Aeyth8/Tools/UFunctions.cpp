@@ -1,5 +1,6 @@
 #include "UFunctions.hpp"
-#include "../Offsets.hpp"
+#include "../Hooks/Hooks.hpp"
+#include "../Offsets.h"
 #include "../Global.hpp"
 #include "../Tools/Pointers.h"
 

@@ -61,6 +61,11 @@ DWORD __stdcall Global::ConstructThread(LPVOID Function, LPVOID Parameter)
 
 */
 
+void Global::InitLog()
+{
+	Logger::Init();
+}
+
 void Global::LogA(const std::string& Header, const std::string& Body)
 {
 	std::cout << "[" + Header + "]" << " - [" + Body + "]\n";

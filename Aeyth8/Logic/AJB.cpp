@@ -1,5 +1,6 @@
 #include "AJB.hpp"
-#include "../Offsets.hpp"
+#include "../Hooks/Hooks.hpp"
+#include "../Offsets.h"
 #include "../Tools/UFunctions.hpp"
 
 /*

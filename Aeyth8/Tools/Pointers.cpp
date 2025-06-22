@@ -60,7 +60,7 @@ bool Pointers::ConstructUConsole(SDK::UEngine* EngineOverride, const SDK::FStrin
 
 		if (IsNull(ConsoleObj)) return false;
 
-		return (IsNull(Engine->GameViewport->ViewportConsole = static_cast<SDK::UConsole*>(ConsoleObj)));
+		return (!IsNull(Engine->GameViewport->ViewportConsole = static_cast<SDK::UConsole*>(ConsoleObj)));
 	}
 
 	return false;

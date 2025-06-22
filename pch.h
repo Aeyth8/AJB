@@ -15,6 +15,9 @@
 #include "Aeyth8/Hooks/Hooks.hpp"
 #include "SDK.hpp"
 
+#include "Aeyth8/Proxy8/ProxyTypes.h"
+
+
 #include "UnrealContainers.hpp"
 #include "PropertyFixup.hpp"
 #include "NameCollisions.inl"
