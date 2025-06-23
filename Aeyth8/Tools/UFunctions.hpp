@@ -54,13 +54,22 @@ public:
 
 	};
 
+	enum BrowseReturnVal
+	{
+		/** Successfully browsed to a new map. */
+		Success,
+		/** Immediately failed to browse. */
+		Failure,
+		/** A connection is pending. */
+		Pending,
+	};
 
 	class Decl
 	{
 	public:
 		typedef void(__thiscall* UConsole)(SDK::UConsole* This, SDK::FString& Command);
 
-		typedef void(__thiscall* Browse)(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SDK::FURL URL, SDK::FString& Error);
+		typedef BrowseReturnVal(__thiscall* Browse)(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SDK::FURL URL, SDK::FString& Error);
 
 		typedef bool(__thiscall* InitListen)(SDK::UIpNetDriver*, SDK::UObject*, SDK::FURL& LocalURL, bool bReuseAddressAndPort, SDK::FString& Error);
 
@@ -87,7 +96,7 @@ public:
 
 		SDK::APawn* Instigator;
 
-		class SDK::ULevel* OverrideLevel;
+		SDK::ULevel* OverrideLevel;
 
 		SDK::ESpawnActorCollisionHandlingMethod SpawnCollisionHandlingOverride;
 	};
@@ -96,7 +105,7 @@ public:
 
 	static void UConsole(SDK::UConsole* This, SDK::FString& Command);
 
-	static void Browse(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SDK::FURL URL, SDK::FString& Error);
+	static BrowseReturnVal Browse(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SDK::FURL URL, SDK::FString& Error);
 
 	static bool InitListen(SDK::UIpNetDriver* This, SDK::UObject* InNotify, SDK::FURL& LocalURL, bool bReuseAddressAndPort, SDK::FString& Error);
 

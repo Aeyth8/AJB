@@ -7,21 +7,12 @@
 #define WCOUT std::wcout
 #endif
 
-#include <windows.h>
+#include <Windows.h>
+#include <string>
 #include <vector>
-#include <ranges>
-#include <map>
-
-#include "Aeyth8/Hooks/Hooks.hpp"
-#include "SDK.hpp"
+#include <iostream>
 
 #include "Aeyth8/Proxy8/ProxyTypes.h"
-
-
-#include "UnrealContainers.hpp"
-#include "PropertyFixup.hpp"
-#include "NameCollisions.inl"
-
 
 
 #endif //PCH_H

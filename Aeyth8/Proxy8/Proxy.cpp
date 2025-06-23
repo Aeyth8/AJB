@@ -80,6 +80,7 @@ bool Proxy::Attach(HMODULE CurrentModule)
 		RealModule = LoadLibraryA(RealModulePath.c_str());
 		if (RealModule != nullptr)
 		{
+			A8CL::Global::LogA("Proxy", ProxyName);
 			Proxy::LoadProxyPointers(ProxyTypes::Proxies[ProxyIter].ProxyTable);
 			return true;
 		}		

@@ -3,6 +3,7 @@
 #include "../Offsets.h"
 #include "../Global.hpp"
 #include "../Tools/Pointers.h"
+#include "ConsoleCommands.h"
 
 /*
 
@@ -121,11 +122,19 @@ using namespace Global;
 
 void UFunctions::UConsole(SDK::UConsole* This, SDK::FString& Command)
 {
-	LogA("UConsole", Command.ToString());
+	std::string StrCommand = Command.ToString();
+
+	LogA("UConsole", StrCommand);
+
+	if (ConsoleCommands::IsValidCommand(StrCommand))
+	{
+
+	}
+
 	OFF::UConsole.VerifyFC<Decl::UConsole>()(This, Command);
 }
 
-void UFunctions::Browse(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SDK::FURL URL, SDK::FString& Error)
+UFunctions::BrowseReturnVal UFunctions::Browse(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SDK::FURL URL, SDK::FString& Error)
 {
 	if (!Global::bConstructedUConsole) { Global::bConstructedUConsole = Pointers::ConstructUConsole();
 		LogA("Browse", "Constructed UConsole early.");
@@ -134,7 +143,7 @@ void UFunctions::Browse(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SD
 	LogA("Browse", Helpers::FURLParser(URL));
 	//LogA("Browse", Helpers::FWorldContextParser(WorldContext));
 
-	OFF::Browse.VerifyFC<Decl::Browse>()(This, WorldContext, URL, Error);
+	return OFF::Browse.VerifyFC<Decl::Browse>()(This, WorldContext, URL, Error);
 }
 
 bool UFunctions::InitListen(SDK::UIpNetDriver* This, SDK::UObject* InNotify, SDK::FURL& LocalURL, bool bReuseAddressAndPort, SDK::FString& Error)

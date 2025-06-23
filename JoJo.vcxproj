@@ -155,10 +155,12 @@
     <ClInclude Include="Aeyth8\Hooks\Hooks.hpp" />
     <ClInclude Include="Aeyth8\InternalCommands.hpp" />
     <ClInclude Include="Aeyth8\Logger.hpp" />
-    <ClInclude Include="Aeyth8\Logic\AJB.hpp" />
+    <ClInclude Include="Aeyth8\Logic\AJB.h" />
     <ClInclude Include="Aeyth8\Offsets.h" />
     <ClInclude Include="Aeyth8\Proxy8\Proxy.h" />
     <ClInclude Include="Aeyth8\Proxy8\ProxyTypes.h" />
+    <ClInclude Include="Aeyth8\Tools\BytePatch.h" />
+    <ClInclude Include="Aeyth8\Tools\ConsoleCommands.h" />
     <ClInclude Include="Aeyth8\Tools\Pointers.h" />
     <ClInclude Include="Aeyth8\Tools\Tick.hpp" />
     <ClInclude Include="Aeyth8\Tools\UFunctions.hpp" />
@@ -195,6 +197,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">ProxyTypes.h</PrecompiledHeaderFile>
     </ClCompile>
+    <ClCompile Include="Aeyth8\Tools\BytePatch.cpp" />
+    <ClCompile Include="Aeyth8\Tools\ConsoleCommands.cpp" />
     <ClCompile Include="Aeyth8\Tools\Pointers.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>

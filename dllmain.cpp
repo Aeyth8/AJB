@@ -1,7 +1,7 @@
 #include "pch.h"
 
 #include "Aeyth8/Global.hpp"
-#include "Aeyth8/Logic/AJB.hpp"
+#include "Aeyth8/Logic/AJB.h"
 #include "Aeyth8/Tools/Pointers.h"
 
 /*
@@ -25,8 +25,7 @@ static void Init() {
 	LogA("GetCommandLineA", GetCommandLineA());
 	LogA("INITIALIZED", "The Global Base Address [GBA] is " + HexToString(GBA));
 
-	AJB::Init_Hooks();
-	AJB::Init_Vars();
+	AJB::Init_Hooks();	
 	
 	uint32 NullWorld{0};
 	while (UWorld() == nullptr)
@@ -36,6 +35,8 @@ static void Init() {
 		//LogA("Initialization", "Sleeping..");
 		Sleep(2000);
 	}
+
+	AJB::Init_Vars(UWorld());
 
 	if (!bConstructedUConsole) bConstructedUConsole = ConstructUConsole();
 }

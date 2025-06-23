@@ -119,6 +119,12 @@
     <ClCompile Include="Aeyth8\Offsets.cpp">
       <Filter>Aeyth8</Filter>
     </ClCompile>
+    <ClCompile Include="Aeyth8\Tools\ConsoleCommands.cpp">
+      <Filter>Aeyth8\Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\Tools\BytePatch.cpp">
+      <Filter>Aeyth8\Tools</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -178,7 +184,7 @@
     <ClInclude Include="Aeyth8\Tools\UFunctions.hpp">
       <Filter>Aeyth8\Tools</Filter>
     </ClInclude>
-    <ClInclude Include="Aeyth8\Logic\AJB.hpp">
+    <ClInclude Include="Aeyth8\Logic\AJB.h">
       <Filter>Aeyth8\Logic</Filter>
     </ClInclude>
     <ClInclude Include="Aeyth8\Tools\Pointers.h">
@@ -192,6 +198,12 @@
     </ClInclude>
     <ClInclude Include="Aeyth8\Offsets.h">
       <Filter>Aeyth8</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\Tools\ConsoleCommands.h">
+      <Filter>Aeyth8\Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\Tools\BytePatch.h">
+      <Filter>Aeyth8\Tools</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

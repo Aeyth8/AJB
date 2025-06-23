@@ -23,6 +23,7 @@ namespace AJB
 	extern SDK::AAJBAMErrorObserverActor* Garbage;
 	extern SDK::UAJBAMSystemObject* System;
 	extern SDK::AAJBOutGameProxy* OutGameProxy;
+	extern int32_t* PlayerPoints;
 
 
 	// -- Tables
@@ -34,7 +35,7 @@ namespace AJB
 	// -- Functions
 
 	void Init_Hooks();
-	void Init_Vars();
+	void Init_Vars(SDK::UWorld* GWorld);
 
 
 
