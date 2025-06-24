@@ -50,9 +50,11 @@ Copyright (C) 2025 Aeyth8
 //};
 
 
+
+
 // VERY VERY UNFINISHED PROTOTYPE
 
-// Dynamic memory byte-patching, prevents modification of the real binary.
+// [OOP] Dynamic memory byte-patching, prevents modification of the real binary.
 class BytePatch
 {
 public:

@@ -125,6 +125,9 @@
     <ClCompile Include="Aeyth8\Tools\BytePatch.cpp">
       <Filter>Aeyth8\Tools</Filter>
     </ClCompile>
+    <ClCompile Include="Aeyth8\Tools\BytePatcher.cpp">
+      <Filter>Aeyth8\Tools</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -203,6 +206,9 @@
       <Filter>Aeyth8\Tools</Filter>
     </ClInclude>
     <ClInclude Include="Aeyth8\Tools\BytePatch.h">
+      <Filter>Aeyth8\Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\Tools\BytePatcher.h">
       <Filter>Aeyth8\Tools</Filter>
     </ClInclude>
   </ItemGroup>

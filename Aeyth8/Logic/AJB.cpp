@@ -5,6 +5,7 @@
 #include "../Tools/UFunctions.hpp"
 #include "../Tools/Pointers.h"
 #include "../Tools/BytePatch.h"
+#include "../Tools/BytePatcher.h"
 
 /*
 
@@ -47,17 +48,20 @@ void AJB::Init_Hooks()
 		Hooks::CreateAndEnableHooks(StandaloneHooks);
 		//Hooks::CreateAndEnableHook(OFF::Browse, UFunctions::Browse);
 
-		//BYTE* StartConsumePP = (BYTE*)OFF::StartConsumePP.PlusBase();
-
-		BytePatch NoPP(OFF::StartConsumePP.PlusBase());
+		BYTE* StartConsumePP = (BYTE*)OFF::StartConsumePP.PlusBase();
+		LogA("Protection Status", BytePatcher::sGetProtectionStatus(OFF::StartConsumePP.PlusBase()));
+		/*BytePatch NoPP(OFF::StartConsumePP.PlusBase());
 		BytePatch ResetPP(OFF::ResetPP.PlusBase());
 
 		NoPP.Replace(Replacement);
-		ResetPP.Replace(Replacement);
+		ResetPP.Replace(Replacement);*/
 
-		//LogA("Byte", HexToString(*StartConsumePP));
-		//LogA("Byte", HexToString(*(StartConsumePP + 1)));
+		BytePatcher::ReplaceBytes(OFF::StartConsumePP.PlusBase(), Replacement);
 
+		LogA("Byte", HexToString(*StartConsumePP));
+		LogA("Byte", HexToString(*(StartConsumePP + 1)));
+
+		LogA("Protection Status", BytePatcher::sGetProtectionStatus(OFF::StartConsumePP.PlusBase()));
 
 
 

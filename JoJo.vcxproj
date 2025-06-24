@@ -160,6 +160,7 @@
     <ClInclude Include="Aeyth8\Proxy8\Proxy.h" />
     <ClInclude Include="Aeyth8\Proxy8\ProxyTypes.h" />
     <ClInclude Include="Aeyth8\Tools\BytePatch.h" />
+    <ClInclude Include="Aeyth8\Tools\BytePatcher.h" />
     <ClInclude Include="Aeyth8\Tools\ConsoleCommands.h" />
     <ClInclude Include="Aeyth8\Tools\Pointers.h" />
     <ClInclude Include="Aeyth8\Tools\Tick.hpp" />
@@ -198,6 +199,7 @@
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">ProxyTypes.h</PrecompiledHeaderFile>
     </ClCompile>
     <ClCompile Include="Aeyth8\Tools\BytePatch.cpp" />
+    <ClCompile Include="Aeyth8\Tools\BytePatcher.cpp" />
     <ClCompile Include="Aeyth8\Tools\ConsoleCommands.cpp" />
     <ClCompile Include="Aeyth8\Tools\Pointers.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
