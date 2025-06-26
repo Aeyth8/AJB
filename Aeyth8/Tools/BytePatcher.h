@@ -50,12 +50,11 @@ public:
 			Virtual Protect Wrappers
 	*/
 
-	static unsigned long long GetProtectionStatus(unsigned long long& StartingAddress);
+	static unsigned long GetProtectionStatus(unsigned long long& StartingAddress);
 	static EProtectionStatus EGetProtectionStatus(unsigned long long& StartingAddress);
 	static const char* sGetProtectionStatus(unsigned long long& StartingAddress);
 
-	static EResult SetProtectionStatus(unsigned long long& StartingAddress, size_t Size, const unsigned long long& NewStatus);
-	//static EResult SetProtectionStatus(unsigned long long& StartingAddress, size_t Size, const EProtectionStatus& NewStatus);
+	static EResult SetProtectionStatus(unsigned long long& StartingAddress, size_t Size, const unsigned long& NewStatus);
 
 	static void* __cdecl MemCopy(void* _Dst, void const* _Src, size_t _Size);
 
@@ -63,7 +62,7 @@ public:
 			Byte Patching
 	*/
 
-	static bool ReplaceByte(unsigned long long& StartingAddress, const unsigned char& ReplacementByte, bool bCheckProtection = true);
+	static bool ReplaceByte(unsigned long long& StartingAddress, const unsigned char& ReplacementByte, bool bRestoreProtection = true);
 
 	static bool ReplaceBytes(unsigned long long& StartingAddress, const unsigned char* ReplacementBytes, size_t Size, bool bRestoreProtection = true);
 

@@ -1,6 +1,5 @@
 #include "BytePatcher.h"
 #include <Windows.h>
-#include "../Global.hpp"
 
 /*
 
@@ -12,7 +11,7 @@ Copyright (C) 2025 Aeyth8
 
 */
 
-unsigned long long BytePatcher::GetProtectionStatus(unsigned long long& StartingAddress)
+unsigned long BytePatcher::GetProtectionStatus(unsigned long long& StartingAddress)
 {
 	MEMORY_BASIC_INFORMATION TempInfo;
 	VirtualQuery((void*)StartingAddress, &TempInfo, sizeof(TempInfo));
@@ -20,10 +19,12 @@ unsigned long long BytePatcher::GetProtectionStatus(unsigned long long& Starting
 	return TempInfo.Protect;
 }
 
+
 BytePatcher::EProtectionStatus BytePatcher::EGetProtectionStatus(unsigned long long& StartingAddress)
 {
-	return (EProtectionStatus)(BytePatcher::GetProtectionStatus(StartingAddress) & 0xFF);
+	return static_cast<EProtectionStatus>(BytePatcher::GetProtectionStatus(StartingAddress) & 0xFF);
 }
+
 
 const char* BytePatcher::sGetProtectionStatus(unsigned long long& StartingAddress)
 {
@@ -36,21 +37,18 @@ const char* BytePatcher::sGetProtectionStatus(unsigned long long& StartingAddres
 	return BytePatcher::ProtectionStatusString[Index];
 }
 
-BytePatcher::EResult BytePatcher::SetProtectionStatus(unsigned long long& StartingAddress, size_t Size, const unsigned long long& NewStatus)
+
+BytePatcher::EResult BytePatcher::SetProtectionStatus(unsigned long long& StartingAddress, size_t Size, const unsigned long& NewStatus)
 {
-	DWORD OldProtect{0};
-	if (!VirtualProtect((void*)StartingAddress, Size, static_cast<DWORD>(NewStatus), &OldProtect))
+	unsigned long OriginalProtection{0};
+	if (!VirtualProtect((void*)StartingAddress, Size, static_cast<unsigned long>(NewStatus), &OriginalProtection))
 	{
 		return FAILED;
 	}
 
-	return BytePatcher::GetProtectionStatus(StartingAddress) != OldProtect ? CHANGED : UNCHANGED;
+	return BytePatcher::GetProtectionStatus(StartingAddress) != OriginalProtection ? CHANGED : UNCHANGED;
 }
 
-//BytePatcher::EResult BytePatcher::SetProtectionStatus(unsigned long long& StartingAddress, size_t Size, const EProtectionStatus& NewStatus)
-//{
-//	return BytePatcher::SetProtectionStatus(StartingAddress, Size, NewStatus);
-//}
 
 void* __cdecl BytePatcher::MemCopy(void* _Dst, void const* _Src, size_t _Size)
 {
@@ -58,14 +56,29 @@ void* __cdecl BytePatcher::MemCopy(void* _Dst, void const* _Src, size_t _Size)
 }
 
 
-bool BytePatcher::ReplaceByte(unsigned long long& StartingAddress, const unsigned char& ReplacementByte, bool bCheckProtection)
+bool BytePatcher::ReplaceByte(unsigned long long& StartingAddress, const unsigned char& ReplacementByte, bool bRestoreProtection)
 {
+	unsigned long OriginalProtection = GetProtectionStatus(StartingAddress);
 
+	if (!bResult(SetProtectionStatus(StartingAddress, 1, EXECUTE_READWRITE)))
+	{
+		return false;
+	}
+
+	MemCopy((void*)StartingAddress, &ReplacementByte, 1);
+
+	if (bRestoreProtection)
+	{
+		return bResult(SetProtectionStatus(StartingAddress, 1, OriginalProtection));
+	}
+
+	return true;
 }
+
 
 bool BytePatcher::ReplaceBytes(unsigned long long& StartingAddress, const unsigned char* ReplacementBytes, size_t Size, bool bRestoreProtection)
 {
-	unsigned long long OriginalProtection = GetProtectionStatus(StartingAddress);
+	unsigned long OriginalProtection = GetProtectionStatus(StartingAddress);
 
 	if (!bResult(SetProtectionStatus(StartingAddress, Size, EXECUTE_READWRITE)))
 	{
@@ -73,7 +86,7 @@ bool BytePatcher::ReplaceBytes(unsigned long long& StartingAddress, const unsign
 	}
 
 	MemCopy((void*)StartingAddress, ReplacementBytes, Size);
-	A8CL::Global::LogA("BytePatcher", sGetProtectionStatus(StartingAddress));
+
 	if (bRestoreProtection)
 	{
 		return bResult(SetProtectionStatus(StartingAddress, Size, OriginalProtection));
