@@ -16,21 +16,48 @@ using namespace A8CL; using namespace Global;
 		Public
 */
 
-SDK::UEngine* Pointers::UEngine()
+SDK::UEngine* const& Pointers::UEngine()
 {
-	SDK::UEngine* Engine = SDK::UEngine::GetEngine();
+	static SDK::UEngine* Engine{nullptr};
+
+	if (!IsNull(Engine)) return Engine;
+
+	Engine = SDK::UEngine::GetEngine();
+
 	if (IsNull(Engine)) LogA("Pointers", "UEngine is a null pointer!");
 
 	return Engine;
 }
 
-SDK::UWorld* Pointers::UWorld()
+SDK::UWorld* const& Pointers::UWorld()
 {
-	SDK::UWorld* World = SDK::UWorld::GetWorld();
-	if (IsNull(World)) LogA("Pointers", "UWorld is a null pointer!");
+	static SDK::UWorld* World{nullptr};
+
+	if (!IsNull(World)) return World;
+	
+	if (SDK::Offsets::GWorld != 0)
+	{
+		if (!IsNull(World = *reinterpret_cast<SDK::UWorld**>(SDK::Offsets::GWorld + GBA)))
+		{
+			return World;
+		}
+
+		LogA("Pointers", "GWorld is a null pointer!");
+	}
+
+	SDK::UEngine* Engine = UEngine();
+
+	if (!IsNull(Engine) && !IsNull(Engine->GameViewport) && !IsNull(Engine->GameViewport->World))
+	{
+		World = Engine->GameViewport->World;
+	}
+	else
+	{
+		LogA("Pointers", "UWorld is a null pointer!");
+	}
 
 	return World;
-}
+}	
 
 SDK::APlayerController* Pointers::Player(const int Index)
 {

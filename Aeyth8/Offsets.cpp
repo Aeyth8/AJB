@@ -29,5 +29,8 @@ namespace OFF
 	OFFSET Response_UserLogout("UAJBNetAPI_Logout::Response_UserLogout", 0x04DD160);				// (May be incorrect) 
 	OFFSET LoadSettingsIni("UAJBAMSystemSettings::LoadSettingsIni", 0x0519FB0);
 	OFFSET SetAJBCoinLock("UAJBAMSystemObject::SetAJBCoinLock", 0x0518AB0);
+
+	OFFSET ShowDebugInputMode1("bShowDebugInputMode #1", 0x48FE70);
+	OFFSET ShowDebugInputMode2("bShowDebugInputMode #2", 0x48B300);
 }
 }

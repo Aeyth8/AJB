@@ -6,6 +6,7 @@
 #include "../Tools/Pointers.h"
 #include "../Tools/BytePatch.h"
 #include "../Tools/BytePatcher.h"
+#include "../../SDK/BPF_AJBGameInstance_classes.hpp"
 
 /*
 
@@ -32,13 +33,33 @@ std::vector<Hooks::HookStructure> StandaloneHooks =
 {
 	{OFF::UConsole, UFunctions::UConsole},
 	{OFF::Browse, UFunctions::Browse},
+	{OFF::Login, UFunctions::Login},
 	{OFF::PreLogin, UFunctions::PreLogin},
+	{OFF::AJBPreLogin, UFunctions::PreLogin},
 	{OFF::AppPreExit, UFunctions::AppPreExit},
 };
 
+typedef __int64(__fastcall* ShowDebugInputMode1_T)(__int64* This);
+typedef char(__fastcall* ShowDebugInputMode2_T)(__int64* This);
+
+__int64 ShowDebugInputMode1(__int64* This)
+{
+	LogA(OFF::ShowDebugInputMode1.GetName(), "Called.");
+	return OFF::ShowDebugInputMode1.VerifyFC<ShowDebugInputMode1_T>()(This);
+}
+
+char ShowDebugInputMode2(__int64* This)
+{
+	char Result = OFF::ShowDebugInputMode2.VerifyFC<ShowDebugInputMode2_T>()(This);
+	LogA(OFF::ShowDebugInputMode2.GetName(), "Called, " + std::to_string(Result));
+	return Result;
+}
+
+
 std::vector<Hooks::HookStructure> AJBHooks =
 {
-
+	{OFF::ShowDebugInputMode1, ShowDebugInputMode1},
+	{OFF::ShowDebugInputMode2, ShowDebugInputMode2},
 };
 
 void AJB::Init_Hooks()
@@ -46,6 +67,7 @@ void AJB::Init_Hooks()
 	if (Hooks::Init())
 	{
 		Hooks::CreateAndEnableHooks(StandaloneHooks);
+		//Hooks::CreateAndEnableHooks(AJBHooks);
 		//Hooks::CreateAndEnableHook(OFF::Browse, UFunctions::Browse);
 
 		BYTE* StartConsumePP = (BYTE*)OFF::StartConsumePP.PlusBase();
@@ -56,8 +78,9 @@ void AJB::Init_Hooks()
 		NoPP.Replace(Replacement);
 		ResetPP.Replace(Replacement);*/
 
+		BytePatcher::ReplaceBytes(OFF::ResetPP.PlusBase(), Replacement);
 		BytePatcher::ReplaceBytes(OFF::StartConsumePP.PlusBase(), Replacement);
-
+		
 		LogA("Byte", HexToString(*StartConsumePP));
 		LogA("Byte", HexToString(*(StartConsumePP + 1)));
 
@@ -85,7 +108,16 @@ void AJB::Init_Vars(SDK::UWorld* GWorld)
 		{
 			*PlayerPoints = 1170;
 		}
-		
+
+		if (Settings)
+		{
+			bool* Debug = (&Settings->bDebugInputMode);
+			//*Debug = true;
+			LogA("bDebugInputMode", HexToString((uintptr_t)Debug));
+		}
+
+		//SDK::ULevelStreamingKismet::GetDefaultObj()->LoadLevelInstance(GWorld, L"/Game/Aeyth8/UI/InGame/LVL_KeyListener", SDK::FVector(0, 0, 0), SDK::FRotator(0, 0, 0), 0);
+		//reinterpret_cast<SDK::UBPF_AJBGameInstance_C*>(SDK::UKismetSystemLibrary::GetDefaultObj())->SetPlayMode(SDK::EPlayMode::Pair, GWorld);
 	}
 
 

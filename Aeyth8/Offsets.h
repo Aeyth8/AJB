@@ -29,5 +29,8 @@ namespace OFF
 	extern OFFSET Response_UserLogout;
 	extern OFFSET LoadSettingsIni;
 	extern OFFSET SetAJBCoinLock;
+	
+	extern OFFSET ShowDebugInputMode1;
+	extern OFFSET ShowDebugInputMode2;
 }
 }
