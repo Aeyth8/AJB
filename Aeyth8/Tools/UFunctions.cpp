@@ -96,6 +96,30 @@ void UFunctions::Helpers::ProcessEnd()
 	Global::CloseLog();
 }
 
+bool UFunctions::Helpers::CheckForLocalDirectory(const wchar_t* Filename, unsigned char& Byte)
+{
+	while ((Byte & 0b11) < 3)
+	{
+		// 1,3,6								  // 2,4,7
+		if (Filename[((Byte & 0b11) * 3) + 0] != '.' || Filename[((Byte & 0b11) * 3) + 1] != '.')
+		{
+			break;
+		}
+
+		// 0,5,8 (due to iterators and arrays this is technically 1,6,9)
+		if (Filename[((Byte & 0b11) * 3) + 2] != '/' && Filename[((Byte & 0b11) * 3) + 2] != '\\')
+		{
+			break;
+		}
+
+		Byte |= (1 << ((Byte & 0b11) + 2));
+
+		Byte = (Byte & ~0b11) | ((Byte & 0b11) + 1);
+	}
+
+	// This logic ensures that we are only allowing file overrides from within the game directory, and disallowing from externals such as AppData\Local
+	return ((Byte & 0b00011100) == 0b00011100);
+}
 
 /*template <typename T>
 const T& TArrayParser(const SDK::TArray<T>& Array)
@@ -156,7 +180,7 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 {
 	LogA("Login", "Called.");
 
-	//SDK::ULevelStreamingKismet::GetDefaultObj()->LoadLevelInstance(Pointers::UWorld(), L"/Game/Aeyth8/UI/InGame/LVL_KeyListener", SDK::FVector(0, 0, 0), SDK::FRotator(0, 0, 0), 0);
+//	SDK::ULevelStreamingKismet::GetDefaultObj()->LoadLevelInstance(Pointers::UWorld(), L"/Game/Aeyth8/UI/InGame/LVL_KeyListener", SDK::FVector(0, 0, 0), SDK::FRotator(0, 0, 0), 0);
 
 	return OFF::Login.VerifyFC<Decl::Login>()(This, NewPlayer, InRemoteRole, Portal, Options, UniqueId, ErrorMessage);
 }
@@ -188,26 +212,24 @@ void UFunctions::ProcessEvent(SDK::UObject* This, SDK::UFunction* Function, LPVO
 
 bool UFunctions::IsNonPakFilenameAllowed(__int64* This, SDK::FString& InFilename)
 {
+	if (!InFilename) return false;
 
+	BYTE X{0};
 
+	X |= (OFF::IsNonPakFileNameAllowed.VerifyFC<Decl::IsNonPakFilenameAllowed>()(This, InFilename) << 5);
 
+	if (UFunctions::Helpers::CheckForLocalDirectory(InFilename.CStr(), X) && GetFileAttributesW(InFilename.CStr()) != INVALID_FILE_ATTRIBUTES)
+	{
+		//LogA("IsNonPakFilenameAllowed OVERRIDE", InFilename.ToString());
+		return true;
+	}
+	
+	// Returns the result of the actual function which is stored in the 6th bit.
+	return X & 0b00100000;
 }
 
 bool UFunctions::FindFileInPakFiles(__int64* This, const wchar_t* Filename, __int64** OutPakFile, __int64* OutEntry)
 {
-	// "../../../"
-	//static constexpr const wchar_t LocalDirectory[]{L'.',L'.',L'/',L'.',L'.',L'/',L'.',L'.',L'/'};
-	//static constexpr const wchar_t LocalDirectoryi[]{ L'.','/',L'\\' };
-
-	// Since this entire code is completely unreadable I will explain what it does:
-	// It checks to see if the first 9 characters in Filename start with ../../../ OR ..\..\..\
-	// It's an abomination simply because I wanted to learn bitshifting and wanted it to be as efficient as possible by cramming literally everything into one byte. (00111111)
-	// Is this actually more efficient? Maybe, maybe not, maybe I made it worse who knows, my future self can face the consequences.
-
-
-	// (0 * 2) , 1 || 2 
-	// x3  
-
 	// 00000000
 	BYTE X{0};
 
@@ -215,73 +237,16 @@ bool UFunctions::FindFileInPakFiles(__int64* This, const wchar_t* Filename, __in
 	// The return result of the real function (bool) 0/1 will be crammed into the 6th bit.
 	X |= (OFF::FindFileInPakFiles.VerifyFC<Decl::FindFileInPakFiles>()(This, Filename, OutPakFile, OutEntry) << 5);
 
-	
-
-	while ((X & 0b11) < 3)
-	{
-		// 1,3,6								  // 2,4,7
-		if (Filename[((X & 0b11) * 3) + 0] != '.' || Filename[((X & 0b11) * 3) + 1] != '.')
-		{
-			break;
-		}
-
-		// 0,5,8 (due to iterators and arrays this is technically 1,6,9)
-		if (Filename[((X & 0b11) * 3) + 2] != '/' && Filename[((X & 0b11) * 3) + 2] != '\\')
-		{
-			break;
-		}
-
-		X |= (1 << ((X & 0b11) + 2));
-
-		X = (X & ~0b11) | ((X & 0b11) + 1);
-	}
-
 	// This logic ensures that we are only allowing file overrides from within the game directory, and disallowing from externals such as AppData\Local
-	if ((X & 0b00011100) == 0b00011100)
+	if (UFunctions::Helpers::CheckForLocalDirectory(Filename, X))
 	{
-
-		// Finds the file extension dot and goes backwards to see if it has _P
-		// The rules are simple, if the file exists within the pak our loose file MUST have an _P, or we will not load it.
-		// If the file does not exist within the pak it does not matter if we have an _P it will be loaded anyways.
-		// This will make (adding) mods easier, if we want to (override) mod we need an _P, this rule is based on how Unreal Engine loads paks and loose files 
-		// (except it doesn't load loose files and paks at the same time which is why I made this)
-
-		if (Global::bAlwaysOverrideWithLooseFiles) return false;
-
 		// If the file already exists within the pak file
-		if (X & 0b00100000)
+		if (X & 0b00100000 && GetFileAttributesW(Filename) != INVALID_FILE_ATTRIBUTES)
 		{
-			if (GetFileAttributesW(Filename) != INVALID_FILE_ATTRIBUTES)
-			{
-				std::wstring WFile(Filename);
-				LogA("FindFileInPakFiles OVERRIDE", std::string(WFile.begin(), WFile.end()));
-				return false;
-			}
-
-			/*uint16 FileNameLength = wcslen(Filename);
-			while (FileNameLength-- > 1)
-			{
-				if (Filename[FileNameLength] == L'.')
-				{
-					break;
-				}
-			}
-
-			wchar_t FileNameCheck[260]{0};
-			wcsncpy_s(FileNameCheck, Filename, FileNameLength);
-			wcscat_s(FileNameCheck, L"_P");
-			wcscat_s(FileNameCheck, Filename + FileNameLength);
-
-			if (GetFileAttributesW(FileNameCheck) != INVALID_FILE_ATTRIBUTES)
-			{
-				std::wstring WFile(Filename);
-				LogA("FindFileInPakFiles OVERRIDE", std::string(WFile.begin(), WFile.end()));
-				return false;
-			}*/
-			
+			//std::wstring WFile(Filename);
+			//LogA("FindFileInPakFiles OVERRIDE", std::string(WFile.begin(), WFile.end()));
+			return false;
 		}
-
-		
 	}
 
 	// Returns the result of the actual function which is stored in the 6th bit.

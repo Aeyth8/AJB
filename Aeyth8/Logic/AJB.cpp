@@ -37,6 +37,7 @@ std::vector<Hooks::HookStructure> StandaloneHooks =
 	{OFF::PreLogin, UFunctions::PreLogin},
 	{OFF::AJBPreLogin, UFunctions::PreLogin},
 	{OFF::AppPreExit, UFunctions::AppPreExit},
+	{OFF::IsNonPakFileNameAllowed, UFunctions::IsNonPakFilenameAllowed},
 	{OFF::FindFileInPakFiles, UFunctions::FindFileInPakFiles},
 };
 
