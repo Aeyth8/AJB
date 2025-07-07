@@ -40,6 +40,9 @@ namespace Global
 	// Useful way to construct the console from hooking UEngine::Browse
 	extern bool bConstructedUConsole;
 
+	// If true it will always load loose files prioritized over pak-files without requiring '_P'
+	extern bool bAlwaysOverrideWithLooseFiles;
+
 	// Return value is true if null.
 	template <typename T>
 	bool IsNull(T* Pointer)

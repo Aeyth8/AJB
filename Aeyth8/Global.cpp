@@ -19,6 +19,8 @@ uintptr_t Global::GBA{0};
 
 bool Global::bConstructedUConsole{false};
 
+bool Global::bAlwaysOverrideWithLooseFiles{false};
+
 /*
 		Utils
 */
