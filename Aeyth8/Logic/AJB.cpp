@@ -37,6 +37,7 @@ std::vector<Hooks::HookStructure> StandaloneHooks =
 	{OFF::PreLogin, UFunctions::PreLogin},
 	{OFF::AJBPreLogin, UFunctions::PreLogin},
 	{OFF::AppPreExit, UFunctions::AppPreExit},
+	{OFF::FindFileInPakFiles, UFunctions::FindFileInPakFiles},
 };
 
 typedef __int64(__fastcall* ShowDebugInputMode1_T)(__int64* This);

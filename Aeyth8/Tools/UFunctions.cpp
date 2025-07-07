@@ -195,7 +195,71 @@ bool UFunctions::IsNonPakFilenameAllowed(__int64* This, SDK::FString& InFilename
 
 bool UFunctions::FindFileInPakFiles(__int64* This, const wchar_t* Filename, __int64** OutPakFile, __int64* OutEntry)
 {
+	// "../../../"
+	//static constexpr const wchar_t LocalDirectory[]{L'.',L'.',L'/',L'.',L'.',L'/',L'.',L'.',L'/'};
+	//static constexpr const wchar_t LocalDirectoryi[]{ L'.','/',L'\\' };
 
 
+	// (0 * 2) , 1 || 2 
+	// x3  
+
+	// We need to do bitwise operations (for most efficiency) and my brain hurts trying to think of it
+	// 0 0 0 0 | 0 0 0 0 
+
+	BYTE X{0};
+
+	while ((X & 0b11) < 3)
+	{
+		// 1,3,6					// 2,4,7
+		if (Filename[((X & 0b11) * 3) + 0] != '.' || Filename[((X & 0b11) * 3) + 1] != '.')
+		{
+			break;
+		}
+
+		// 0,5,8 (due to iterators and arrays this is technically 1,6,9)
+		if (Filename[((X & 0b11) * 3) + 2] != '/' && Filename[((X & 0b11) * 3) + 2] != '\\')
+		{
+			break;
+		}
+
+		X |= (1 << ((X & 0b11) + 2));
+
+		X = (X & ~0b11) | ((X & 0b11) + 1);
+	}
+
+	
+
+	// This logic ensures that we are only allowing file overrides from within the game directory, and disallowing from externals such as AppData\Local
+	if ((X & 0b00011100) == 0b00011100)
+	{
+		std::wstring WFile(Filename);
+		LogA("FindFileInPakFiles", std::string(WFile.begin(), WFile.end()));
+	}
+
+	/*for (BYTE x{0}; x < 3; ++x)
+	{
+		// 1,3,6					// 2,4,7
+		if (Filename[x * 3] != '.' || Filename[x * 3 + 1] != '.')
+		{
+			break;
+		}
+
+		// 0,5,8 (due to iterators and arrays this is technically 1,6,9)
+		if (Filename[x * 3 + 2] != '/' && Filename[x * 3 + 2] != '\\')
+		{
+			break;
+		}
+		++X;
+	}
+
+	// This logic ensures that we are only allowing file overrides from within the game directory, and disallowing from externals such as AppData\Local
+	if (X == 3)
+	{
+		std::wstring WFile(Filename);
+		LogA("FindFileInPakFiles", std::string(WFile.begin(), WFile.end()));
+	}*/
+
+	return OFF::FindFileInPakFiles.VerifyFC<Decl::FindFileInPakFiles>()(This, Filename, OutPakFile, OutEntry);
+	
 
 }

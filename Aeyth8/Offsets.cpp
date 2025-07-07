@@ -32,5 +32,11 @@ namespace OFF
 
 	OFFSET ShowDebugInputMode1("bShowDebugInputMode #1", 0x48FE70);
 	OFFSET ShowDebugInputMode2("bShowDebugInputMode #2", 0x48B300);
+
+	/*		
+	DebugInputMode1 = 0x48FE70 (cmp in 0x48FEE9)
+	DebugInputMode2 = 0x48B300 (cmp in 0x48B36C)
+	DebugInputMode3 = 0x48FE70 (cmp in 0x519EF0)
+	*/
 }
 }
