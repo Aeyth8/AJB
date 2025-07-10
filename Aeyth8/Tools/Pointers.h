@@ -19,7 +19,7 @@ namespace A8CL
 namespace Pointers
 {
 	SDK::UEngine* const& UEngine();
-	SDK::UWorld* const& UWorld();
+	SDK::UWorld* UWorld();
 	
 	// Returns Player0 by default.
 	// * * A replicated client only has access to their PlayerController. 

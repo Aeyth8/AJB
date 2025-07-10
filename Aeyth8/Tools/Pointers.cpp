@@ -29,17 +29,15 @@ SDK::UEngine* const& Pointers::UEngine()
 	return Engine;
 }
 
-SDK::UWorld* const& Pointers::UWorld()
+SDK::UWorld* Pointers::UWorld()
 {
-	static SDK::UWorld* World{nullptr};
-
-	if (!IsNull(World)) return World;
-	
 	if (SDK::Offsets::GWorld != 0)
 	{
-		if (!IsNull(World = *reinterpret_cast<SDK::UWorld**>(SDK::Offsets::GWorld + GBA)))
+		static uintptr_t GWorld = SDK::Offsets::GWorld + GBA;
+
+		if (!IsNull(*reinterpret_cast<SDK::UWorld**>(GWorld)))
 		{
-			return World;
+			return *reinterpret_cast<SDK::UWorld**>(GWorld);
 		}
 
 		LogA("Pointers", "GWorld is a null pointer!");
@@ -49,14 +47,13 @@ SDK::UWorld* const& Pointers::UWorld()
 
 	if (!IsNull(Engine) && !IsNull(Engine->GameViewport) && !IsNull(Engine->GameViewport->World))
 	{
-		World = Engine->GameViewport->World;
+		return Engine->GameViewport->World;
 	}
-	else
-	{
-		LogA("Pointers", "UWorld is a null pointer!");
-	}
+	
 
-	return World;
+	LogA("Pointers", "UWorld is a null pointer!");
+
+	return nullptr;
 }	
 
 SDK::APlayerController* Pointers::Player(const int Index)

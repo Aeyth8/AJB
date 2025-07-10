@@ -31,6 +31,7 @@ constexpr BYTE Replacement[] = { RETN, NOP };
 
 std::vector<Hooks::HookStructure> StandaloneHooks =
 {
+	//{OFF::ProcessEvent, UFunctions::ProcessEvent},
 	{OFF::UConsole, UFunctions::UConsole},
 	{OFF::Browse, UFunctions::Browse},
 	{OFF::Login, UFunctions::Login},
@@ -70,24 +71,15 @@ void AJB::Init_Hooks()
 	{
 		Hooks::CreateAndEnableHooks(StandaloneHooks);
 		//Hooks::CreateAndEnableHooks(AJBHooks);
-		//Hooks::CreateAndEnableHook(OFF::Browse, UFunctions::Browse);
-
-		BYTE* StartConsumePP = (BYTE*)OFF::StartConsumePP.PlusBase();
-		LogA("Protection Status", BytePatcher::sGetProtectionStatus(OFF::StartConsumePP.PlusBase()));
-		/*BytePatch NoPP(OFF::StartConsumePP.PlusBase());
-		BytePatch ResetPP(OFF::ResetPP.PlusBase());
-
-		NoPP.Replace(Replacement);
-		ResetPP.Replace(Replacement);*/
 
 		BytePatcher::ReplaceBytes(OFF::ResetPP.PlusBase(), Replacement);
 		BytePatcher::ReplaceBytes(OFF::StartConsumePP.PlusBase(), Replacement);
 		
-		LogA("Byte", HexToString(*StartConsumePP));
-		LogA("Byte", HexToString(*(StartConsumePP + 1)));
+		// Completely wipes out the HideCursorFunction and any trace (to be safe)
+		BYTE AntiAntiCursor[100]{RETN};
+		memset(&AntiAntiCursor[1], NOP, 99);
 
-		LogA("Protection Status", BytePatcher::sGetProtectionStatus(OFF::StartConsumePP.PlusBase()));
-
+		BytePatcher::ReplaceBytes(OFF::HideCursorCaller.PlusBase(), AntiAntiCursor);
 
 
 

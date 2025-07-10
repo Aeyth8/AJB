@@ -36,6 +36,9 @@
     <Filter Include="Aeyth8\Proxy8">
       <UniqueIdentifier>{bc6cef1d-059f-440b-8b12-21f642ad88c8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SDKv2">
+      <UniqueIdentifier>{e95478d3-a859-40c1-8a67-96f58875db32}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">

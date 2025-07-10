@@ -8,6 +8,7 @@ namespace OFF
 {
 	// Basic UE Functions
 
+	OFFSET ProcessEvent("ProcessEvent", 0x8174F0);
 	OFFSET UConsole("UConsole::ConsoleCommand", 0x178A450);
 	OFFSET PreLogin("AGameModeBase::PreLogin", 0x13CB710);
 	OFFSET AJBPreLogin("AJBPreLogin", 0x049E570);						// Used in the AJB GameMode(s)
@@ -29,6 +30,7 @@ namespace OFF
 	OFFSET Response_UserLogout("UAJBNetAPI_Logout::Response_UserLogout", 0x04DD160);				// (May be incorrect) 
 	OFFSET LoadSettingsIni("UAJBAMSystemSettings::LoadSettingsIni", 0x0519FB0);
 	OFFSET SetAJBCoinLock("UAJBAMSystemObject::SetAJBCoinLock", 0x0518AB0);
+	OFFSET HideCursorCaller("HideCursorCaller", 0x49B120);
 
 	OFFSET ShowDebugInputMode1("bShowDebugInputMode #1", 0x48FE70);
 	OFFSET ShowDebugInputMode2("bShowDebugInputMode #2", 0x48B300);

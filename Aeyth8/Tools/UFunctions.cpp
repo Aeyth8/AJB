@@ -180,7 +180,7 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 {
 	LogA("Login", "Called.");
 
-//	SDK::ULevelStreamingKismet::GetDefaultObj()->LoadLevelInstance(Pointers::UWorld(), L"/Game/Aeyth8/UI/InGame/LVL_KeyListener", SDK::FVector(0, 0, 0), SDK::FRotator(0, 0, 0), 0);
+	//SDK::ULevelStreamingKismet::GetDefaultObj()->LoadLevelInstance(Pointers::UWorld(), L"/Game/Aeyth8/UI/InGame/LVL_KeyListener", SDK::FVector(0, 0, 0), SDK::FRotator(0, 0, 0), 0);
 
 	return OFF::Login.VerifyFC<Decl::Login>()(This, NewPlayer, InRemoteRole, Portal, Options, UniqueId, ErrorMessage);
 }
@@ -205,9 +205,13 @@ void UFunctions::SpawnActor(SDK::UWorld* This, SDK::UClass* Class, const SDK::FV
 
 void UFunctions::ProcessEvent(SDK::UObject* This, SDK::UFunction* Function, LPVOID Parms)
 {
+	//LogA("PE", This->GetFullName() + " | " + std::to_string(This->Name.ComparisonIndex));
 
+	// We are blacklisting AJBCreadit.
+	//if (This->Name.ComparisonIndex == 89134) return;
+	// Result : Blacklisting it kills the whole menu
 
-
+	OFF::ProcessEvent.VerifyFC<Decl::ProcessEvent>()(This, Function, Parms);
 }
 
 bool UFunctions::IsNonPakFilenameAllowed(__int64* This, SDK::FString& InFilename)
