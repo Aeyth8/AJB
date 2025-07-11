@@ -60,6 +60,11 @@ namespace Global
 	// Allocates the Windows console for output.
 	void LogWin();
 
+	const inline BYTE& OffsetToByte(const uintptr_t& Offset)
+	{
+		return *reinterpret_cast<BYTE*>(Offset);
+	}
+
 	std::string HexToString(const uintptr_t& Hex); 
 
 	DWORD __stdcall ConstructThread(LPVOID Function, LPVOID Parameter = 0);

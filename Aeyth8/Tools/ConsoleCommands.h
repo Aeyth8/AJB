@@ -33,7 +33,7 @@ public:
 
 	
 
-	static bool IsValidCommand(const std::string& Command);
+	static bool IsValidCommand(const char* Command);
 
 
 

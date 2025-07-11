@@ -150,9 +150,9 @@ void UFunctions::UConsole(SDK::UConsole* This, SDK::FString& Command)
 
 	LogA("UConsole", StrCommand);
 
-	if (ConsoleCommands::IsValidCommand(StrCommand))
+	if (ConsoleCommands::IsValidCommand(StrCommand.c_str()))
 	{
-
+		LogA("IsValidCommand", "Correct!");
 	}
 
 	OFF::UConsole.VerifyFC<Decl::UConsole>()(This, Command);
