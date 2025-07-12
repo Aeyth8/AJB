@@ -9,6 +9,25 @@ https://github.com/Aeyth8
 
 */
 
+// This doesn't belong here but I don't have time to bother rearranging everything right now.
+
+struct FActorSpawnParameters
+{
+	SDK::FName Name;
+
+	SDK::AActor* Template;
+
+	SDK::AActor* Owner;
+
+	SDK::APawn* Instigator;
+
+	SDK::ULevel* OverrideLevel;
+
+	SDK::ESpawnActorCollisionHandlingMethod SpawnCollisionHandlingOverride;
+};
+
+typedef __int64*(__fastcall* SpawnActor_T)(SDK::UWorld* This, SDK::UClass* Class, const SDK::FVector& Location, const SDK::FRotator& Rotation, FActorSpawnParameters& SpawnParameters);
+
 namespace A8CL
 {
 
@@ -60,9 +79,19 @@ namespace Pointers
 		return Pointers::FindObjects<UClass>(IncludeDefaultObjects).back();
 	}
 
+	__int64* SpawnActorInternal(SDK::UWorld* This, SDK::UClass* Class, const SDK::FVector& Location, const SDK::FRotator& Rotation, struct FActorSpawnParameters& SpawnParameters);
 
+	template <typename UClass>
+	UClass* SpawnActor(SDK::UWorld* World = UWorld(), SDK::UClass* Class = UClass::StaticClass(), SDK::FVector Location = SDK::FVector(), SDK::FRotator Rotation = SDK::FRotator(), FActorSpawnParameters SpawnParameters = FActorSpawnParameters{})
+	{
+		return reinterpret_cast<UClass*>(SpawnActorInternal(World, Class, Location, Rotation, SpawnParameters));
+	}
 
-
+	template <typename UClass>
+	UClass* SpawnActor(struct FActorSpawnParameters& SpawnParameters)
+	{
+		return SpawnActor<UClass>(UWorld(), UClass::StaticClass(), SDK::FVector(), SDK::FRotator(), SpawnParameters);
+	}
 
 
 

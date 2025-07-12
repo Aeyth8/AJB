@@ -161,10 +161,12 @@
     <ClInclude Include="Aeyth8\Proxy8\ProxyTypes.h" />
     <ClInclude Include="Aeyth8\Tools\BytePatch.h" />
     <ClInclude Include="Aeyth8\Tools\BytePatcher.h" />
-    <ClInclude Include="Aeyth8\Tools\ConsoleCommands.h" />
     <ClInclude Include="Aeyth8\Tools\Pointers.h" />
     <ClInclude Include="Aeyth8\Tools\Tick.hpp" />
     <ClInclude Include="Aeyth8\Tools\UFunctions.hpp" />
+    <ClInclude Include="Aeyth8\Tools\UnrealTypes.h" />
+    <ClInclude Include="Aeyth8\UConsole\Commands\Command.h" />
+    <ClInclude Include="Aeyth8\UConsole\Core\ConsoleCommands.h" />
     <ClInclude Include="MinHook\MinHook.h" />
     <ClInclude Include="MinHook\src\buffer.h" />
     <ClInclude Include="MinHook\src\hde\hde32.h" />
@@ -200,7 +202,6 @@
     </ClCompile>
     <ClCompile Include="Aeyth8\Tools\BytePatch.cpp" />
     <ClCompile Include="Aeyth8\Tools\BytePatcher.cpp" />
-    <ClCompile Include="Aeyth8\Tools\ConsoleCommands.cpp" />
     <ClCompile Include="Aeyth8\Tools\Pointers.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -210,6 +211,8 @@
     <ClCompile Include="Aeyth8\Tools\UFunctions.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Aeyth8\UConsole\Commands\Command.cpp" />
+    <ClCompile Include="Aeyth8\UConsole\Core\ConsoleCommands.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="MinHook\src\buffer.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
@@ -244,12 +247,15 @@
     <ClCompile Include="SDK\BPF_AJBGameInstance_functions.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="SDK\BPF_AJBWwiseFunctionLibrary_functions.cpp" />
     <ClCompile Include="SDK\BP_AJBGameInstance_functions.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SDK\BP_AJBStartupHUD_functions.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="SDK\BP_AJBStartupPlayerController_functions.cpp" />
+    <ClCompile Include="SDK\BP_AJBWwiseManager_functions.cpp" />
     <ClCompile Include="SDK\CoreUObject_functions.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>

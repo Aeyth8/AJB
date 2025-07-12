@@ -36,8 +36,17 @@
     <Filter Include="Aeyth8\Proxy8">
       <UniqueIdentifier>{bc6cef1d-059f-440b-8b12-21f642ad88c8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="SDKv2">
-      <UniqueIdentifier>{e95478d3-a859-40c1-8a67-96f58875db32}</UniqueIdentifier>
+    <Filter Include="Aeyth8\UConsole">
+      <UniqueIdentifier>{d9ba78f5-ae64-4dca-9fa2-af7aa3b8db8e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Aeyth8\UConsole\Core">
+      <UniqueIdentifier>{df375495-402b-4ae7-a33c-1c9d3c502dc1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Aeyth8\UConsole\Commands">
+      <UniqueIdentifier>{aa495793-b747-4534-aa6f-b625bedcdb6e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Aeyth8\UConsole\ExecInternal">
+      <UniqueIdentifier>{e8ee9dbf-c92c-40c6-b897-b7f24e31523c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -122,14 +131,26 @@
     <ClCompile Include="Aeyth8\Offsets.cpp">
       <Filter>Aeyth8</Filter>
     </ClCompile>
-    <ClCompile Include="Aeyth8\Tools\ConsoleCommands.cpp">
-      <Filter>Aeyth8\Tools</Filter>
-    </ClCompile>
     <ClCompile Include="Aeyth8\Tools\BytePatch.cpp">
       <Filter>Aeyth8\Tools</Filter>
     </ClCompile>
     <ClCompile Include="Aeyth8\Tools\BytePatcher.cpp">
       <Filter>Aeyth8\Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\UConsole\Core\ConsoleCommands.cpp">
+      <Filter>Aeyth8\UConsole\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\UConsole\Commands\Command.cpp">
+      <Filter>Aeyth8\UConsole\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\BP_AJBWwiseManager_functions.cpp">
+      <Filter>SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\BP_AJBStartupPlayerController_functions.cpp">
+      <Filter>SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\BPF_AJBWwiseFunctionLibrary_functions.cpp">
+      <Filter>SDK</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -205,13 +226,19 @@
     <ClInclude Include="Aeyth8\Offsets.h">
       <Filter>Aeyth8</Filter>
     </ClInclude>
-    <ClInclude Include="Aeyth8\Tools\ConsoleCommands.h">
-      <Filter>Aeyth8\Tools</Filter>
-    </ClInclude>
     <ClInclude Include="Aeyth8\Tools\BytePatch.h">
       <Filter>Aeyth8\Tools</Filter>
     </ClInclude>
     <ClInclude Include="Aeyth8\Tools\BytePatcher.h">
+      <Filter>Aeyth8\Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\UConsole\Commands\Command.h">
+      <Filter>Aeyth8\UConsole\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\UConsole\Core\ConsoleCommands.h">
+      <Filter>Aeyth8\UConsole\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\Tools\UnrealTypes.h">
       <Filter>Aeyth8\Tools</Filter>
     </ClInclude>
   </ItemGroup>

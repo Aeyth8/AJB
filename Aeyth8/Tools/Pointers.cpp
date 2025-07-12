@@ -1,5 +1,7 @@
 #include "Pointers.h"
 #include "../Global.hpp"
+#include "../Hooks/Hooks.hpp"
+#include "../Offsets.h"
 
 /*
 
@@ -94,4 +96,10 @@ bool Pointers::ConstructUConsole(SDK::UEngine* EngineOverride, const SDK::FStrin
 bool Pointers::ConstructUConsole(const SDK::FString ConsoleKey)
 {
 	return Pointers::ConstructUConsole(nullptr, ConsoleKey);
+}
+
+
+__int64* Pointers::SpawnActorInternal(SDK::UWorld* This, SDK::UClass* Class, const SDK::FVector& Location, const SDK::FRotator& Rotation, FActorSpawnParameters& SpawnParameters)
+{
+	return OFF::SpawnActor.VerifyFC<SpawnActor_T>()(This, Class, Location, Rotation, SpawnParameters);
 }

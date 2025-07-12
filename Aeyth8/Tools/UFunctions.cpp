@@ -1,9 +1,13 @@
 #include "UFunctions.hpp"
+#include "Pointers.h"
+#include "../Global.hpp"
 #include "../Hooks/Hooks.hpp"
 #include "../Offsets.h"
-#include "../Global.hpp"
-#include "../Tools/Pointers.h"
-#include "ConsoleCommands.h"
+#include "../UConsole/Core/ConsoleCommands.h"
+#include "../Logic/AJB.h"
+#include "../../SDK/BP_AJBWwiseManager_classes.hpp"
+#include "../../SDK/BP_AJBStartupPlayerController_classes.hpp"
+#include "../../SDK/BPF_AJBWwiseFunctionLibrary_classes.hpp"
 
 /*
 
@@ -121,23 +125,8 @@ bool UFunctions::Helpers::CheckForLocalDirectory(const wchar_t* Filename, unsign
 	return ((Byte & 0b00011100) == 0b00011100);
 }
 
-/*template <typename T>
-const T& TArrayParser(const SDK::TArray<T>& Array)
-{
-	for (int i{0}; i < Array.Num(); ++i)
-	{
-	
-	
-	}
-
-
-}*/
-
 
 using namespace Global;
-
-
-
 
 
 /*
@@ -149,10 +138,21 @@ void UFunctions::UConsole(SDK::UConsole* This, SDK::FString& Command)
 	std::string StrCommand = Command.ToString();
 
 	LogA("UConsole", StrCommand);
-
-	if (ConsoleCommands::IsValidCommand(StrCommand.c_str()))
+	if (StrCommand == "play")
 	{
-		LogA("IsValidCommand", "Correct!");
+			
+			SDK::ABP_AJBWwiseManager_C* Manager{0}; 
+			if (!Manager)
+			Manager = Pointers::SpawnActor<SDK::ABP_AJBWwiseManager_C>();
+			
+			if (Manager)
+			reinterpret_cast<SDK::ABP_AJBWwiseManager_C*>(Manager)->PostWwiseBGMEvent({Pointers::FString2FName(L"Sound.BGM.Play.BGM02.Menu1")}, true);
+		
+	}
+
+	if (ConsoleCommands::ParseCommand(StrCommand.c_str()))
+	{
+		return;
 	}
 
 	OFF::UConsole.VerifyFC<Decl::UConsole>()(This, Command);
@@ -181,6 +181,8 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 	LogA("Login", "Called.");
 
 	//SDK::ULevelStreamingKismet::GetDefaultObj()->LoadLevelInstance(Pointers::UWorld(), L"/Game/Aeyth8/UI/InGame/LVL_KeyListener", SDK::FVector(0, 0, 0), SDK::FRotator(0, 0, 0), 0);
+	
+	//LogA("Last Played Event", AJB::Instance->LastPlayedWwiseBGMEventTag.TagName.ToString());
 
 	return OFF::Login.VerifyFC<Decl::Login>()(This, NewPlayer, InRemoteRole, Portal, Options, UniqueId, ErrorMessage);
 }
@@ -196,7 +198,7 @@ void UFunctions::AppPreExit()
 	OFF::AppPreExit.VerifyFC<Decl::AppPreExit>()();
 }
 
-void UFunctions::SpawnActor(SDK::UWorld* This, SDK::UClass* Class, const SDK::FVector* Location, const SDK::FRotator* Rotation, FActorSpawnParameters* SpawnParameters)
+__int64* UFunctions::SpawnActor(SDK::UWorld* This, SDK::UClass* Class, const SDK::FVector& Location, const SDK::FRotator& Rotation, FActorSpawnParameters& SpawnParameters)
 {
 
 

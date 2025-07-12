@@ -68,6 +68,21 @@ public:
 		Pending,
 	};
 
+	struct FActorSpawnParameters
+	{
+		SDK::FName Name;
+
+		SDK::AActor* Template;
+
+		SDK::AActor* Owner;
+
+		SDK::APawn* Instigator;
+
+		SDK::ULevel* OverrideLevel;
+
+		SDK::ESpawnActorCollisionHandlingMethod SpawnCollisionHandlingOverride;
+	};
+
 	class Decl
 	{
 	public:
@@ -85,6 +100,8 @@ public:
 
 		typedef void(__thiscall* AppPreExit)();
 
+		typedef __int64*(__fastcall* SpawnActor)(SDK::UWorld* This, SDK::UClass* Class, const SDK::FVector& Location, const SDK::FRotator& Rotation, FActorSpawnParameters& SpawnParameters);
+
 		typedef void(__thiscall* ProcessEvent)(SDK::UObject* This, SDK::UFunction* Function, LPVOID Parms);
 
 		typedef bool(__thiscall* IsNonPakFilenameAllowed)(__int64* This, SDK::FString& InFilename);
@@ -92,22 +109,7 @@ public:
 		typedef bool(__thiscall* FindFileInPakFiles)(__int64* This, const wchar_t* Filename, __int64** OutPakFile, __int64* OutEntry);
 	};
 
-	struct FActorSpawnParameters
-	{
-		SDK::FName Name;
-
-		SDK::AActor* Template;
-
-		SDK::AActor* Owner;
-
-		SDK::APawn* Instigator;
-
-		SDK::ULevel* OverrideLevel;
-
-		SDK::ESpawnActorCollisionHandlingMethod SpawnCollisionHandlingOverride;
-	};
-
-
+	
 
 	static void UConsole(SDK::UConsole* This, SDK::FString& Command);
 
@@ -121,7 +123,7 @@ public:
 
 	static void AppPreExit();
 
-	static void SpawnActor(SDK::UWorld* This, SDK::UClass* Class, const SDK::FVector* Location, const SDK::FRotator* Rotation, FActorSpawnParameters* SpawnParameters);
+	static __int64* SpawnActor(SDK::UWorld* This, SDK::UClass* Class, const SDK::FVector& Location, const SDK::FRotator& Rotation, FActorSpawnParameters& SpawnParameters);
 
 	static void ProcessEvent(SDK::UObject* This, SDK::UFunction* Function, LPVOID Parms);
 

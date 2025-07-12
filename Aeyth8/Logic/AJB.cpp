@@ -45,6 +45,8 @@ std::vector<Hooks::HookStructure> StandaloneHooks =
 typedef __int64(__fastcall* ShowDebugInputMode1_T)(__int64* This);
 typedef char(__fastcall* ShowDebugInputMode2_T)(__int64* This);
 
+
+
 __int64 ShowDebugInputMode1(__int64* This)
 {
 	LogA(OFF::ShowDebugInputMode1.GetName(), "Called.");
@@ -57,6 +59,7 @@ char ShowDebugInputMode2(__int64* This)
 	LogA(OFF::ShowDebugInputMode2.GetName(), "Called, " + std::to_string(Result));
 	return Result;
 }
+
 
 
 std::vector<Hooks::HookStructure> AJBHooks =
@@ -82,7 +85,7 @@ void AJB::Init_Hooks()
 		BytePatcher::ReplaceBytes(OFF::HideCursorCaller.PlusBase(), AntiAntiCursor);
 
 
-
+		//ABP_AJBStartupPlayerController_C
 
 	}
 
