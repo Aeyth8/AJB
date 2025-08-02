@@ -153,7 +153,6 @@
   <ItemGroup>
     <ClInclude Include="Aeyth8\Global.hpp" />
     <ClInclude Include="Aeyth8\Hooks\Hooks.hpp" />
-    <ClInclude Include="Aeyth8\InternalCommands.hpp" />
     <ClInclude Include="Aeyth8\Logger.hpp" />
     <ClInclude Include="Aeyth8\Logic\AJB.h" />
     <ClInclude Include="Aeyth8\Offsets.h" />
@@ -164,7 +163,6 @@
     <ClInclude Include="Aeyth8\Tools\Pointers.h" />
     <ClInclude Include="Aeyth8\Tools\Tick.hpp" />
     <ClInclude Include="Aeyth8\Tools\UFunctions.hpp" />
-    <ClInclude Include="Aeyth8\Tools\UnrealTypes.h" />
     <ClInclude Include="Aeyth8\UConsole\Commands\Command.h" />
     <ClInclude Include="Aeyth8\UConsole\Core\ConsoleCommands.h" />
     <ClInclude Include="MinHook\MinHook.h" />
@@ -235,6 +233,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="SDKv2\WB_GameOver_functions.cpp" />
     <ClCompile Include="SDK\AJB_functions.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>

@@ -48,6 +48,15 @@
     <Filter Include="Aeyth8\UConsole\ExecInternal">
       <UniqueIdentifier>{e8ee9dbf-c92c-40c6-b897-b7f24e31523c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SDK\V2">
+      <UniqueIdentifier>{9f04dd1b-718e-4b52-96d6-63eb32c7f936}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\CPP">
+      <UniqueIdentifier>{2fd86045-df54-4f4c-a817-dae76f4ba6fe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\V2\CPP">
+      <UniqueIdentifier>{9d83b48e-6492-43a2-a195-2d7005fe4e7d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -55,36 +64,6 @@
     </ClCompile>
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SDK\Basic.cpp">
-      <Filter>SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="SDK\Engine_functions.cpp">
-      <Filter>SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="SDK\CoreUObject_functions.cpp">
-      <Filter>SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="SDK\OnlineSubsystem_functions.cpp">
-      <Filter>SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="SDK\OnlineSubsystemUtils_functions.cpp">
-      <Filter>SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="SDK\AJB_functions.cpp">
-      <Filter>SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="SDK\BP_AJBStartupHUD_functions.cpp">
-      <Filter>SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="SDK\UMG_functions.cpp">
-      <Filter>SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="SDK\AmwPlugin_functions.cpp">
-      <Filter>SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="SDK\BP_AJBGameInstance_functions.cpp">
-      <Filter>SDK</Filter>
     </ClCompile>
     <ClCompile Include="MinHook\src\buffer.c">
       <Filter>MinHook\src</Filter>
@@ -109,9 +88,6 @@
     </ClCompile>
     <ClCompile Include="Aeyth8\Tools\UFunctions.cpp">
       <Filter>Aeyth8\Tools</Filter>
-    </ClCompile>
-    <ClCompile Include="SDK\BPF_AJBGameInstance_functions.cpp">
-      <Filter>SDK</Filter>
     </ClCompile>
     <ClCompile Include="Aeyth8\Logic\AJB.cpp">
       <Filter>Aeyth8\Logic</Filter>
@@ -143,14 +119,50 @@
     <ClCompile Include="Aeyth8\UConsole\Commands\Command.cpp">
       <Filter>Aeyth8\UConsole\Commands</Filter>
     </ClCompile>
-    <ClCompile Include="SDK\BP_AJBWwiseManager_functions.cpp">
-      <Filter>SDK</Filter>
+    <ClCompile Include="SDK\AJB_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\AmwPlugin_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\Basic.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\BP_AJBGameInstance_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\BP_AJBStartupHUD_functions.cpp">
+      <Filter>SDK\CPP</Filter>
     </ClCompile>
     <ClCompile Include="SDK\BP_AJBStartupPlayerController_functions.cpp">
-      <Filter>SDK</Filter>
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\BP_AJBWwiseManager_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\BPF_AJBGameInstance_functions.cpp">
+      <Filter>SDK\CPP</Filter>
     </ClCompile>
     <ClCompile Include="SDK\BPF_AJBWwiseFunctionLibrary_functions.cpp">
-      <Filter>SDK</Filter>
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\CoreUObject_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\Engine_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="SDKv2\WB_GameOver_functions.cpp">
+      <Filter>SDK\V2\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\OnlineSubsystemUtils_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\OnlineSubsystem_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\UMG_functions.cpp">
+      <Filter>SDK\CPP</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -202,9 +214,6 @@
     <ClInclude Include="Aeyth8\Global.hpp">
       <Filter>Aeyth8</Filter>
     </ClInclude>
-    <ClInclude Include="Aeyth8\InternalCommands.hpp">
-      <Filter>SDK</Filter>
-    </ClInclude>
     <ClInclude Include="Aeyth8\Tools\Tick.hpp">
       <Filter>Aeyth8\Tools</Filter>
     </ClInclude>
@@ -237,9 +246,6 @@
     </ClInclude>
     <ClInclude Include="Aeyth8\UConsole\Core\ConsoleCommands.h">
       <Filter>Aeyth8\UConsole\Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Aeyth8\Tools\UnrealTypes.h">
-      <Filter>Aeyth8\Tools</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

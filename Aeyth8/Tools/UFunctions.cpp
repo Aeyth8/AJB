@@ -149,11 +149,15 @@ void UFunctions::UConsole(SDK::UConsole* This, SDK::FString& Command)
 			reinterpret_cast<SDK::ABP_AJBWwiseManager_C*>(Manager)->PostWwiseBGMEvent({Pointers::FString2FName(L"Sound.BGM.Play.BGM02.Menu1")}, true);
 		
 	}
+	else if (StrCommand == "die")
+	{
 
-	if (ConsoleCommands::ParseCommand(StrCommand.c_str()))
+	}
+
+	/*if (ConsoleCommands::ParseCommand(StrCommand.c_str()))
 	{
 		return;
-	}
+	}*/
 
 	OFF::UConsole.VerifyFC<Decl::UConsole>()(This, Command);
 }
@@ -179,7 +183,7 @@ bool UFunctions::InitListen(SDK::UIpNetDriver* This, SDK::UObject* InNotify, SDK
 SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPlayer* NewPlayer, SDK::ENetRole InRemoteRole, SDK::FString& Portal, SDK::FString& Options, SDK::FUniqueNetIdRepl& UniqueId, SDK::FString& ErrorMessage)
 {
 	LogA("Login", "Called.");
-
+	SDK::ULevelStreamingKismet::GetDefaultObj()->LoadLevelInstance(Pointers::UWorld(), L"/Game/Aeyth8/UI/InGame/LVL_KeyListener", SDK::FVector(0, 0, 0), SDK::FRotator(0, 0, 0), 0);
 	//SDK::ULevelStreamingKismet::GetDefaultObj()->LoadLevelInstance(Pointers::UWorld(), L"/Game/Aeyth8/UI/InGame/LVL_KeyListener", SDK::FVector(0, 0, 0), SDK::FRotator(0, 0, 0), 0);
 	
 	//LogA("Last Played Event", AJB::Instance->LastPlayedWwiseBGMEventTag.TagName.ToString());

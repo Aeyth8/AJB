@@ -37,8 +37,21 @@ namespace Global
 	// Global Base Address [GBA]
 	extern uintptr_t GBA;
 
+	// Plus Base [PB]
+	inline uintptr_t PB(const uintptr_t& Offset)
+	{
+		return Offset + GBA;
+	}
+
 	// Useful way to construct the console from hooking UEngine::Browse
 	extern bool bConstructedUConsole;
+
+	// Directly call a function at a memory address
+	template <typename T>
+	T Call(const uintptr_t& Address)
+	{
+		return reinterpret_cast<T>(Address);
+	}
 
 	// Return value is true if null.
 	template <typename T>

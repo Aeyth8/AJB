@@ -20,10 +20,18 @@ using namespace A8CL;
 		Private
 */
 
+// I don't have time to constantly change things and make them complex and dynamic, for now it sits here, it just needs to work.
+
+const ConsoleCommands::CommandStructure InternalCommands[] =
+{
+	{"AJBExecInternal", 0},
+
+
+};
 
 const ConsoleCommands::CommandStructure ValidCommands[] =
 {
-	{"AJBExecInternal", 0},
+	{"Help", 0},
 
 
 };
@@ -105,9 +113,36 @@ int16 ConsoleCommands::IsValidCommand(const char*& Command)
 
 bool ConsoleCommands::ParseCommand(const char* Command)
 {
+	const int16 Result = ConsoleCommands::IsInternalCommand(Command);
 
+	if (Result != -1)
+	{
+		// Size of the prefix, we start right after the iterator of the matching command's string.
+		uint16 ParamStart = strlen(InternalCommands[Result].CommandPrefix);
 
-	const int16 Result = ConsoleCommands::IsValidCommand(Command);
+		// We subtract the entire command size to the size of when it starts.
+		uint16 ParamEnd = strlen(Command) - ParamStart;
+
+		if (ParamStart != ParamEnd)
+		{
+			for (uint16 i{ParamStart}; i < ParamEnd; ++i)
+			{
+				uint16 WhitespaceIndex{0};
+				if (Command[i] != ' ')
+				{
+
+				}
+			
+			}
+		}
+		
+	}
+
+	return false;
+
+	// I just need internal commands to work for now.
+
+	/*const int16 Result = ConsoleCommands::IsValidCommand(Command);
 	
 	if (Result == -1)
 	{
@@ -119,7 +154,7 @@ bool ConsoleCommands::ParseCommand(const char* Command)
 	{
 		ConsoleCommands::ExecuteCommand(Result);
 		return true;
-	}
+	}*/
 
 }
 
