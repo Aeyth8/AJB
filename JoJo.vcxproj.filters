@@ -152,9 +152,6 @@
     <ClCompile Include="SDK\Engine_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
-    <ClCompile Include="SDKv2\WB_GameOver_functions.cpp">
-      <Filter>SDK\V2\CPP</Filter>
-    </ClCompile>
     <ClCompile Include="SDK\OnlineSubsystemUtils_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
