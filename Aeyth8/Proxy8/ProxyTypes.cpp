@@ -1,5 +1,5 @@
 #include "ProxyTypes.h"
-
+#include <Windows.h>
 
 /*
 
@@ -190,7 +190,7 @@ namespace Shell32
 	typedef HINSTANCE(__stdcall* ShellExecute_)(HWND hwnd, LPCSTR lpOperation, LPCSTR lpFile, LPCSTR lpParameters, LPCSTR lpDirectory, INT nShowCmd);
 	ShellExecute_ ShellExecute_P{0};
 
-	EXPORT HINSTANCE ShellExecuteA(HWND hwnd, LPCSTR lpOperation, LPCSTR lpFile, LPCSTR lpParameters, LPCSTR lpDirectory, INT nShowCmd)
+	EXPORT HINSTANCE __stdcall ShellExecuteA(HWND hwnd, LPCSTR lpOperation, LPCSTR lpFile, LPCSTR lpParameters, LPCSTR lpDirectory, INT nShowCmd)
 	{ 
 		return ShellExecute_P(hwnd, lpOperation, lpFile, lpParameters, lpDirectory, nShowCmd); 
 	}

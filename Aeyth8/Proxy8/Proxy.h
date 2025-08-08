@@ -1,6 +1,4 @@
 #pragma once
-#include <Windows.h>
-#include <string>
 #include <vector>
 
 
@@ -24,6 +22,10 @@ Copyright (C) 2025 Aeyth8
 	#define B64 0
 #endif
 
+struct HINSTANCE__;
+typedef struct HINSTANCE__* HINSTANCE;
+typedef HINSTANCE HMODULE;
+
 class Proxy
 {
 public:
@@ -35,7 +37,7 @@ private:
 
 	static HMODULE RealModule;
 
-	static int ProxyExists(const std::string& Name);
+	static short ProxyExists(const char*& Name);
 	static void LoadProxyPointers(const std::vector<ProxyCallStructure>& Table);
 	
 	

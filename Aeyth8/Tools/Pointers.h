@@ -1,5 +1,5 @@
 #pragma once
-#include "../SDK/Engine_classes.hpp"
+#include "../../Dumper-7/SDK/Engine_classes.hpp"
 
 /*
 
@@ -37,12 +37,26 @@ namespace A8CL
 
 namespace Pointers
 {
-	SDK::UEngine* const& UEngine();
-	SDK::UWorld* UWorld();
+	SDK::UEngine* const& UEngine(const bool bLog = true);
+	SDK::UWorld* UWorld(const bool bLog = true);
 	
 	// Returns Player0 by default.
 	// * * A replicated client only has access to their PlayerController. 
 	SDK::APlayerController* Player(const int Index = 0);
+
+	// Much more convenient class casted template for custom controller classes.  
+	template <typename UClass>
+	UClass* const& Player(const int& Index = 0)
+	{
+		SDK::APlayerController* PlayerController = Player(Index);
+
+		if (PlayerController && PlayerController->IsA(UClass::StaticClass()))
+		{
+			return static_cast<UClass*>(PlayerController);
+		}
+
+		return nullptr;
+	}
 
 	const SDK::FName& FString2FName(const SDK::FString& String);
 

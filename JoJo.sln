@@ -7,14 +7,20 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JoJo", "JoJo.vcxproj", "{68
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Release|x64 = Release|x64
-		Release|x86 = Release|x86
+		Injectable|x64 = Injectable|x64
+		Injectable|x86 = Injectable|x86
+		Proxy|x64 = Proxy|x64
+		Proxy|x86 = Proxy|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{68C3D0CD-4F62-4156-88E0-72E3A5A0A9B7}.Release|x64.ActiveCfg = Release|x64
-		{68C3D0CD-4F62-4156-88E0-72E3A5A0A9B7}.Release|x64.Build.0 = Release|x64
-		{68C3D0CD-4F62-4156-88E0-72E3A5A0A9B7}.Release|x86.ActiveCfg = Release|Win32
-		{68C3D0CD-4F62-4156-88E0-72E3A5A0A9B7}.Release|x86.Build.0 = Release|Win32
+		{68C3D0CD-4F62-4156-88E0-72E3A5A0A9B7}.Injectable|x64.ActiveCfg = Injectable|x64
+		{68C3D0CD-4F62-4156-88E0-72E3A5A0A9B7}.Injectable|x64.Build.0 = Injectable|x64
+		{68C3D0CD-4F62-4156-88E0-72E3A5A0A9B7}.Injectable|x86.ActiveCfg = Injectable|Win32
+		{68C3D0CD-4F62-4156-88E0-72E3A5A0A9B7}.Injectable|x86.Build.0 = Injectable|Win32
+		{68C3D0CD-4F62-4156-88E0-72E3A5A0A9B7}.Proxy|x64.ActiveCfg = Proxy|x64
+		{68C3D0CD-4F62-4156-88E0-72E3A5A0A9B7}.Proxy|x64.Build.0 = Proxy|x64
+		{68C3D0CD-4F62-4156-88E0-72E3A5A0A9B7}.Proxy|x86.ActiveCfg = Proxy|Win32
+		{68C3D0CD-4F62-4156-88E0-72E3A5A0A9B7}.Proxy|x86.Build.0 = Proxy|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

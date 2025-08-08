@@ -1,5 +1,5 @@
 #pragma once
-#include "../MinHook/MinHook.h"
+#include "../../MinHook/MinHook.h"
 #include <string>
 #include <vector>
 #include <format>

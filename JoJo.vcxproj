@@ -1,20 +1,20 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Debug|Win32">
-      <Configuration>Debug</Configuration>
+    <ProjectConfiguration Include="Injectable|Win32">
+      <Configuration>Injectable</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|Win32">
-      <Configuration>Release</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Debug|x64">
-      <Configuration>Debug</Configuration>
+    <ProjectConfiguration Include="Injectable|x64">
+      <Configuration>Injectable</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|x64">
-      <Configuration>Release</Configuration>
+    <ProjectConfiguration Include="Proxy|Win32">
+      <Configuration>Proxy</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Proxy|x64">
+      <Configuration>Proxy</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
@@ -26,26 +26,28 @@
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Proxy|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Injectable|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
+    <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
@@ -58,39 +60,28 @@
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Proxy|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Injectable|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">
     <LibraryPath>$(SolutionDir)MinHook;$(LibraryPath)</LibraryPath>
     <TargetName>dxgi</TargetName>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;JOJO_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-    </ClCompile>
-    <Link>
-      <SubSystem>Windows</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <EnableUAC>false</EnableUAC>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">
+    <LibraryPath>$(SolutionDir)MinHook;$(LibraryPath)</LibraryPath>
+    <TargetName>dxgi</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Proxy|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -109,33 +100,65 @@
       <EnableUAC>false</EnableUAC>
     </Link>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Injectable|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;JOJO_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;JOJO_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
     </Link>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;JOJO_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PROXY;NDEBUG;JOJO_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)(MinHook);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+      <AddModuleNamesToAssembly>
+      </AddModuleNamesToAssembly>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>INJECTABLE;NDEBUG;JOJO_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -156,8 +179,12 @@
     <ClInclude Include="Aeyth8\Logger.hpp" />
     <ClInclude Include="Aeyth8\Logic\AJB.h" />
     <ClInclude Include="Aeyth8\Offsets.h" />
-    <ClInclude Include="Aeyth8\Proxy8\Proxy.h" />
-    <ClInclude Include="Aeyth8\Proxy8\ProxyTypes.h" />
+    <ClInclude Include="Aeyth8\Proxy8\Proxy.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\Proxy8\ProxyTypes.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="Aeyth8\Tools\BytePatch.h" />
     <ClInclude Include="Aeyth8\Tools\BytePatcher.h" />
     <ClInclude Include="Aeyth8\Tools\Pointers.h" />
@@ -165,6 +192,10 @@
     <ClInclude Include="Aeyth8\Tools\UFunctions.hpp" />
     <ClInclude Include="Aeyth8\UConsole\Commands\Command.h" />
     <ClInclude Include="Aeyth8\UConsole\Core\ConsoleCommands.h" />
+    <ClInclude Include="Dumper-7\PropertyFixup.hpp" />
+    <ClInclude Include="Dumper-7\SDK.hpp" />
+    <ClInclude Include="Dumper-7\UnrealContainers.hpp" />
+    <ClInclude Include="Dumper-7\UtfN.hpp" />
     <ClInclude Include="MinHook\MinHook.h" />
     <ClInclude Include="MinHook\src\buffer.h" />
     <ClInclude Include="MinHook\src\hde\hde32.h" />
@@ -173,111 +204,128 @@
     <ClInclude Include="MinHook\src\hde\table32.h" />
     <ClInclude Include="MinHook\src\hde\table64.h" />
     <ClInclude Include="MinHook\src\trampoline.h" />
-    <ClInclude Include="pch.h" />
-    <ClInclude Include="PropertyFixup.hpp" />
-    <ClInclude Include="resource.h" />
-    <ClInclude Include="SDK.hpp" />
-    <ClInclude Include="UnrealContainers.hpp" />
+    <ClInclude Include="Version\resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Aeyth8\Global.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Aeyth8\Hooks\Hooks.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Aeyth8\Logic\AJB.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Aeyth8\Offsets.cpp" />
     <ClCompile Include="Aeyth8\Proxy8\Proxy.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">ProxyTypes.h</PrecompiledHeaderFile>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">Use</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">ProxyTypes.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">ProxyTypes.h</PrecompiledHeaderFile>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="Aeyth8\Proxy8\ProxyTypes.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">ProxyTypes.h</PrecompiledHeaderFile>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">ProxyTypes.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">ProxyTypes.h</PrecompiledHeaderFile>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="Aeyth8\Tools\BytePatch.cpp" />
     <ClCompile Include="Aeyth8\Tools\BytePatcher.cpp" />
     <ClCompile Include="Aeyth8\Tools\Pointers.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Aeyth8\Tools\Tick.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Aeyth8\Tools\UFunctions.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Aeyth8\UConsole\Commands\Command.cpp" />
     <ClCompile Include="Aeyth8\UConsole\Core\ConsoleCommands.cpp" />
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="Dumper-7\SDK\BP_AJBBattleGameMode_functions.cpp" />
+    <ClCompile Include="Dumper-7\SDK\BP_AJBBattleGameState_functions.cpp" />
+    <ClCompile Include="Dumper-7\SDK\BP_AJBHighlightPlayerController_functions.cpp" />
+    <ClCompile Include="Dumper-7\SDK\BP_AJBInGamePlayerController_functions.cpp" />
+    <ClCompile Include="Dumper-7\SDK\BP_AJBOutGamePlayerController_functions.cpp" />
+    <ClCompile Include="Dumper-7\SDK\BP_AJBOutGameProxy_functions.cpp" />
+    <ClCompile Include="Dumper-7\SDK\BP_AJBSimpleMatchPlayerController_functions.cpp" />
+    <ClCompile Include="Dumper-7\SDK\CoreUObject_functions.cpp" />
+    <ClCompile Include="Dumper-7\SDK\Engine_functions.cpp" />
+    <ClCompile Include="Dumper-7\SDK\LoadingScreenSystem_functions.cpp" />
     <ClCompile Include="MinHook\src\buffer.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="MinHook\src\hde\hde32.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="MinHook\src\hde\hde64.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="MinHook\src\hook.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="MinHook\src\trampoline.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="pch.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    <ClCompile Include="Dumper-7\SDK\AJB_functions.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="SDK\AJB_functions.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    <ClCompile Include="Dumper-7\SDK\AmwPlugin_functions.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="SDK\AmwPlugin_functions.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    <ClCompile Include="Dumper-7\SDK\Basic.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="SDK\Basic.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    <ClCompile Include="Dumper-7\SDK\BPF_AJBGameInstance_functions.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="SDK\BPF_AJBGameInstance_functions.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    <ClCompile Include="Dumper-7\SDK\BPF_AJBWwiseFunctionLibrary_functions.cpp" />
+    <ClCompile Include="Dumper-7\SDK\BP_AJBGameInstance_functions.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="SDK\BPF_AJBWwiseFunctionLibrary_functions.cpp" />
-    <ClCompile Include="SDK\BP_AJBGameInstance_functions.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    <ClCompile Include="Dumper-7\SDK\BP_AJBWwiseManager_functions.cpp" />
+    <ClCompile Include="Dumper-7\SDK\OnlineSubsystemUtils_functions.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="SDK\BP_AJBStartupHUD_functions.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    <ClCompile Include="Dumper-7\SDK\OnlineSubsystem_functions.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="SDK\BP_AJBStartupPlayerController_functions.cpp" />
-    <ClCompile Include="SDK\BP_AJBWwiseManager_functions.cpp" />
-    <ClCompile Include="SDK\CoreUObject_functions.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    <ClCompile Include="Dumper-7\SDK\UMG_functions.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="SDK\Engine_functions.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="SDK\OnlineSubsystemUtils_functions.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="SDK\OnlineSubsystem_functions.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="SDK\UMG_functions.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="NameCollisions.inl" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Version\JoJo.rc">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">
+      </AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">
       </AdditionalIncludeDirectories>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Dumper-7\NameCollisions.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

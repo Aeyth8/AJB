@@ -5,9 +5,10 @@
 #include "../Offsets.h"
 #include "../UConsole/Core/ConsoleCommands.h"
 #include "../Logic/AJB.h"
-#include "../../SDK/BP_AJBWwiseManager_classes.hpp"
-#include "../../SDK/BP_AJBStartupPlayerController_classes.hpp"
-#include "../../SDK/BPF_AJBWwiseFunctionLibrary_classes.hpp"
+
+#include "../../Dumper-7/SDK/BP_AJBWwiseManager_classes.hpp"
+#include "../../Dumper-7/SDK/BPF_AJBWwiseFunctionLibrary_classes.hpp"
+#include "../../Dumper-7/SDK/GameplayTags_structs.hpp"
 
 /*
 
@@ -132,27 +133,59 @@ using namespace Global;
 /*
 		UFunctions
 */
+#include "../../Dumper-7/SDK/BP_AJBGameInstance_classes.hpp"
+#include "../../Dumper-7/SDK/BP_AJBOutGameProxy_classes.hpp"
+#include "../../Dumper-7/SDK/BP_AJBBattleGameMode_classes.hpp"
+#include "../../Dumper-7/SDK/BP_AJBOutGamePlayerController_classes.hpp"
+#include "../../Dumper-7/SDK/BP_AJBInGamePlayerController_classes.hpp"
+#include "../../Dumper-7/SDK/BP_AJBInGameCharacter_classes.hpp"
+#include "../../Dumper-7/SDK/LoadingScreenSystem_classes.hpp"
 
 void UFunctions::UConsole(SDK::UConsole* This, SDK::FString& Command)
 {
 	std::string StrCommand = Command.ToString();
 
-	LogA("UConsole", StrCommand);
-	if (StrCommand == "play")
-	{
-			
-			SDK::ABP_AJBWwiseManager_C* Manager{0}; 
-			if (!Manager)
-			Manager = Pointers::SpawnActor<SDK::ABP_AJBWwiseManager_C>();
-			
-			if (Manager)
-			reinterpret_cast<SDK::ABP_AJBWwiseManager_C*>(Manager)->PostWwiseBGMEvent({Pointers::FString2FName(L"Sound.BGM.Play.BGM02.Menu1")}, true);
-		
-	}
-	else if (StrCommand == "die")
-	{
+	// Sound.BGM.Play.BGM01.Attract is the title screen music
+	// Sound.BGM.Play.BGM02.Menu1 is the simple match music
 
+	LogA("UConsole", StrCommand);
+	
+	if (StrCommand == "play")
+	{			
+		SDK::ABP_AJBWwiseManager_C* Manager = Pointers::SpawnActor<SDK::ABP_AJBWwiseManager_C>();
+		
+		if (Manager)
+		{
+			reinterpret_cast<SDK::ABP_AJBWwiseManager_C*>(Manager)->PostWwiseBGMEvent(SDK::FGameplayTag{Pointers::FString2FName(L"Sound.BGM.Play.BGM02.Menu1")}, true);
+		}
 	}
+	else if (StrCommand == "song")
+	{
+		LogA("Song", AJB::Instance->LastPlayedWwiseBGMEventTag.TagName.ToString());
+	}
+	else if (StrCommand == "game")
+	{
+		LogA("Owning GameMode", AJB::GetGameMode()->GetFullName());
+	}
+	/*else if (StrCommand == "time")
+	{
+		Pointers::Player<SDK::ABP_AJBOutGamePlayerController_C>()->OutGameProxy->CharacterSelectTimeoutTimer.Handle = 999;
+	}
+	else if (StrCommand == "char")
+	{
+		SDK::FMatchingPlayerInfo* Info = (SDK::FMatchingPlayerInfo*)FMemory::Malloc(sizeof(SDK::FMatchingPlayerInfo));
+
+		SDK::ABP_AJBInGameCharacter_C* Char = AJB::GetCharacter();
+		if (Char) Char->TryGetMatchingPlayerInfo(Info);
+		else { LogA("HOW", "THE CHAR IS INVALID"); }
+		LogA("Info", std::to_string(Info->CharactorID));
+		LogA("Info", std::string(AJB::PlayerInfoParser(*Info)));
+		//LogA("Current Player", std::to_string(Pointers::Player<SDK::ABP_AJBInGamePlayerController_C>()->CharacterNo));
+	}
+	else if (StrCommand == "load")
+	{
+		AJB::GetBlueprintClass<SDK::ULoadingScreenSystemBPLibrary>()->EndManualLoadingScreen();
+	}*/
 
 	/*if (ConsoleCommands::ParseCommand(StrCommand.c_str()))
 	{
@@ -162,13 +195,46 @@ void UFunctions::UConsole(SDK::UConsole* This, SDK::FString& Command)
 	OFF::UConsole.VerifyFC<Decl::UConsole>()(This, Command);
 }
 
+SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FString* Result, SDK::FString* Command, bool bWriteToLog)
+{
+	std::string StrCommand = Command->ToString();
+
+	if (StrCommand == "AJBExecInternal PlayBG Sound.BGM.Play.BGM01.Attract") // Hardcoding this until I finish my console command parser (but this is a bad practice)
+	{
+		SDK::ABP_AJBWwiseManager_C* Manager = Pointers::SpawnActor<SDK::ABP_AJBWwiseManager_C>();
+		
+		Manager->PostWwiseBGMEvent(SDK::FGameplayTag{Pointers::FString2FName(L"Sound.BGM.Play.BGM01.Attract")}, true);
+		return OFF::ConsoleCommand.VerifyFC<Decl::ConsoleCommand>()(This, Result, Command, false);
+	}
+	else if (StrCommand == "AJBExecInternal PlayBG Sound.BGM.Play.BGM02.Menu1")
+	{
+		SDK::ABP_AJBWwiseManager_C* Manager = Pointers::SpawnActor<SDK::ABP_AJBWwiseManager_C>();
+		
+		Manager->PostWwiseBGMEvent(SDK::FGameplayTag{Pointers::FString2FName(L"Sound.BGM.Play.BGM02.Menu1")}, true);
+		return OFF::ConsoleCommand.VerifyFC<Decl::ConsoleCommand>()(This, Result, Command, false);
+	}
+
+	//LogA("ConsoleCommand", std::format("[Owning PlayerController]: {} | [Command]: {}", This->GetFullName(), StrCommand));
+
+	return OFF::ConsoleCommand.VerifyFC<Decl::ConsoleCommand>()(This, Result, Command, bWriteToLog);
+}
+
 UFunctions::BrowseReturnVal UFunctions::Browse(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SDK::FURL URL, SDK::FString& Error)
 {
+	constexpr const wchar_t* DefaultMap = L"/Game/Aeyth8/Maps/TitleScreen/PlaceholderTitleScreen";
+
 	if (!Global::bConstructedUConsole) { Global::bConstructedUConsole = Pointers::ConstructUConsole();
 		LogA("Browse", "Constructed UConsole early.");
 	}
 
+	if (wcscmp(URL.Map.CStr(), L"/Game/AJB/Maps/AJBStartUp_P") == 0 || wcscmp(URL.Map.CStr(), L"/Game/AJB/Maps/AJBTitle_P") == 0)
+	{
+		SDK::FString Redirect{DefaultMap};
+		Call<Decl::CopyString>(OFF::CopyString.PlusBase())(&URL.Map, &Redirect);
+	}
+
 	LogA("Browse", Helpers::FURLParser(URL));
+	
 	//LogA("Browse", Helpers::FWorldContextParser(WorldContext));
 
 	return OFF::Browse.VerifyFC<Decl::Browse>()(This, WorldContext, URL, Error);
@@ -183,7 +249,21 @@ bool UFunctions::InitListen(SDK::UIpNetDriver* This, SDK::UObject* InNotify, SDK
 SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPlayer* NewPlayer, SDK::ENetRole InRemoteRole, SDK::FString& Portal, SDK::FString& Options, SDK::FUniqueNetIdRepl& UniqueId, SDK::FString& ErrorMessage)
 {
 	LogA("Login", "Called.");
-	SDK::ULevelStreamingKismet::GetDefaultObj()->LoadLevelInstance(Pointers::UWorld(), L"/Game/Aeyth8/UI/InGame/LVL_KeyListener", SDK::FVector(0, 0, 0), SDK::FRotator(0, 0, 0), 0);
+
+	if (AJB::PlayerPoints) *AJB::PlayerPoints = 1170;
+	if (AJB::Instance && AJB::Instance->ArcadeTimeManager) AJB::Instance->ArcadeTimeManager = nullptr;
+
+	/*SDK::ABP_AJBBattleGameMode_C* Game = AJB::GetGameMode<SDK::ABP_AJBBattleGameMode_C>();
+	if (!IsNull(Game))
+	{
+		LogA(Game->GetFullName(), std::to_string(Game->bUseTimeLimit));
+		Game->bUseTimeLimit = false;
+	}
+	else
+	{
+		LogA("Owning GameMode", AJB::GetGameMode()->GetFullName());
+	}*/
+	//SDK::ULevelStreamingKismet::GetDefaultObj()->LoadLevelInstance(Pointers::UWorld(), L"/Game/Aeyth8/UI/InGame/LVL_KeyListener", SDK::FVector(0, 0, 0), SDK::FRotator(0, 0, 0), 0);
 	//SDK::ULevelStreamingKismet::GetDefaultObj()->LoadLevelInstance(Pointers::UWorld(), L"/Game/Aeyth8/UI/InGame/LVL_KeyListener", SDK::FVector(0, 0, 0), SDK::FRotator(0, 0, 0), 0);
 	
 	//LogA("Last Played Event", AJB::Instance->LastPlayedWwiseBGMEventTag.TagName.ToString());
@@ -253,7 +333,7 @@ bool UFunctions::FindFileInPakFiles(__int64* This, const wchar_t* Filename, __in
 		// If the file already exists within the pak file
 		if (X & 0b00100000 && GetFileAttributesW(Filename) != INVALID_FILE_ATTRIBUTES)
 		{
-			//std::wstring WFile(Filename);
+			std::wstring WFile(Filename);
 			//LogA("FindFileInPakFiles OVERRIDE", std::string(WFile.begin(), WFile.end()));
 			return false;
 		}

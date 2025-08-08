@@ -4,3 +4,5 @@ Release*
 x64*
 JoJo.vcxproj.user*
 Archive*
+DummyLibraries/x64*
+LaunchGame.bat

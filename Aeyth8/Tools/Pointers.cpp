@@ -18,7 +18,7 @@ using namespace A8CL; using namespace Global;
 		Public
 */
 
-SDK::UEngine* const& Pointers::UEngine()
+SDK::UEngine* const& Pointers::UEngine(const bool bLog)
 {
 	static SDK::UEngine* Engine{nullptr};
 
@@ -26,12 +26,12 @@ SDK::UEngine* const& Pointers::UEngine()
 
 	Engine = SDK::UEngine::GetEngine();
 
-	if (IsNull(Engine)) LogA("Pointers", "UEngine is a null pointer!");
+	if (bLog) if (IsNull(Engine)) LogA("Pointers", "UEngine is a null pointer!");
 
 	return Engine;
 }
 
-SDK::UWorld* Pointers::UWorld()
+SDK::UWorld* Pointers::UWorld(const bool bLog)
 {
 	if (SDK::Offsets::GWorld != 0)
 	{
@@ -42,7 +42,7 @@ SDK::UWorld* Pointers::UWorld()
 			return *reinterpret_cast<SDK::UWorld**>(GWorld);
 		}
 
-		LogA("Pointers", "GWorld is a null pointer!");
+		if (bLog) LogA("Pointers", "GWorld is a null pointer!");
 	}
 
 	SDK::UEngine* Engine = UEngine();
@@ -53,17 +53,23 @@ SDK::UWorld* Pointers::UWorld()
 	}
 	
 
-	LogA("Pointers", "UWorld is a null pointer!");
+	if (bLog) LogA("Pointers", "UWorld is a null pointer!");
 
 	return nullptr;
 }	
 
 SDK::APlayerController* Pointers::Player(const int Index)
 {
-	SDK::APlayerController* Player = UWorld()->OwningGameInstance->LocalPlayers[Index]->PlayerController;
-	if (IsNull(Player)) LogA("Pointers", "Player " + std::to_string(Index) + " is a null pointer!");
+	const SDK::UWorld* World = UWorld();
 
-	return Player;
+	if (!IsNull(World) && !IsNull(World->OwningGameInstance) && (World->OwningGameInstance->LocalPlayers.IsValid()))
+	{
+		return World->OwningGameInstance->LocalPlayers[Index]->PlayerController;
+	}
+	
+	LogA("Pointers", "Player " + std::to_string(Index) + " is a null pointer!");
+
+	return nullptr;
 }
 
 const SDK::FName& Pointers::FString2FName(const SDK::FString& String)

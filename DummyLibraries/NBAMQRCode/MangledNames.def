@@ -1,0 +1,9 @@
+LIBRARY "NBAMQRCode"
+EXPORTS
+?nbamQrConvertYUVtoRGB@@YA?AW4nbamQr_retval_t@@PEBEIW4nbamQr_yuv_t@@IIPEAE@Z = nbamQrConvertYUVtoRGB
+?nbamQrDecode@@YA?AW4nbamQr_retval_t@@PEAXPEAUnbamQr_imaging_param_t@@PEAUnbamQr_decode_info_t@@@Z = nbamQrDecode 
+?nbamQrEncode@@YA?AW4nbamQr_retval_t@@PEAXPEAUnbamQr_encode_info_t@@@Z = nbamQrEncode
+?nbamQrGetConvertedRGBBytes@@YAIIIW4nbamQr_yuv_t@@@Z = nbamQrGetConvertedRGBBytes
+?nbamQrGetQrImageSize@@YA?AW4nbamQr_retval_t@@PEAXPEAUnbamQr_encode_info_t@@@Z = nbamQrGetQrImageSize
+?nbamQrInitialize@@YA?AW4nbamQr_retval_t@@PEAPEAX@Z = nbamQrInitialize
+?nbamQrTerminate@@YA?AW4nbamQr_retval_t@@PEAX@Z = nbamQrTerminate

@@ -119,31 +119,31 @@
     <ClCompile Include="Aeyth8\UConsole\Commands\Command.cpp">
       <Filter>Aeyth8\UConsole\Commands</Filter>
     </ClCompile>
-    <ClCompile Include="SDK\AJB_functions.cpp">
+    <ClCompile Include="Dumper-7\SDK\AJB_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
-    <ClCompile Include="SDK\AmwPlugin_functions.cpp">
+    <ClCompile Include="Dumper-7\SDK\AmwPlugin_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
     <ClCompile Include="SDK\Basic.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
-    <ClCompile Include="SDK\BP_AJBGameInstance_functions.cpp">
+    <ClCompile Include="Dumper-7\SDK\BP_AJBGameInstance_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
-    <ClCompile Include="SDK\BP_AJBStartupHUD_functions.cpp">
+    <ClCompile Include="Dumper-7\SDK\BP_AJBStartupHUD_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
-    <ClCompile Include="SDK\BP_AJBStartupPlayerController_functions.cpp">
+    <ClCompile Include="Dumper-7\SDK\BP_AJBStartupPlayerController_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
-    <ClCompile Include="SDK\BP_AJBWwiseManager_functions.cpp">
+    <ClCompile Include="Dumper-7\SDK\BP_AJBWwiseManager_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
-    <ClCompile Include="SDK\BPF_AJBGameInstance_functions.cpp">
+    <ClCompile Include="Dumper-7\SDK\BPF_AJBGameInstance_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
-    <ClCompile Include="SDK\BPF_AJBWwiseFunctionLibrary_functions.cpp">
+    <ClCompile Include="Dumper-7\SDK\BPF_AJBWwiseFunctionLibrary_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
     <ClCompile Include="SDK\CoreUObject_functions.cpp">
@@ -152,13 +152,13 @@
     <ClCompile Include="SDK\Engine_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
-    <ClCompile Include="SDK\OnlineSubsystemUtils_functions.cpp">
+    <ClCompile Include="Dumper-7\SDK\OnlineSubsystemUtils_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
-    <ClCompile Include="SDK\OnlineSubsystem_functions.cpp">
+    <ClCompile Include="Dumper-7\SDK\OnlineSubsystem_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
-    <ClCompile Include="SDK\UMG_functions.cpp">
+    <ClCompile Include="Dumper-7\SDK\UMG_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,8 +1,10 @@
-#include "pch.h"
-
 #include "Aeyth8/Global.hpp"
 #include "Aeyth8/Logic/AJB.h"
 #include "Aeyth8/Tools/Pointers.h"
+
+#ifdef PROXY
+#include "Aeyth8/Proxy8/ProxyTypes.h"
+#endif
 
 /*
 
@@ -16,8 +18,11 @@ https://github.com/Aeyth8
 // My entire codebase has been designed to use namespaces like this.
 using namespace A8CL; using namespace Global; using namespace Pointers;
 
-static void Init() {
 
+// Called immediately before WinMainCRTStartup (entry), runs in-thread of entry to execute code before anything else begins.
+// 0x20773C4
+static void PreInit()
+{
 	// Retrieves the Global Base Address (GBA) by getting the module handle casted as a uintptr_t
 	GBA = (uintptr_t)GetModuleHandleA("AJB-Win64-Shipping.exe");
 
@@ -25,14 +30,15 @@ static void Init() {
 	LogA("GetCommandLineA", GetCommandLineA());
 	LogA("INITIALIZED", "The Global Base Address [GBA] is " + HexToString(GBA));
 
-	AJB::Init_Hooks();	
+	AJB::Init_Hooks();
+}
+
+static void Init() {
+
+	AJB::Init_Engine();
 	
-	uint32 NullWorld{0};
 	while (UWorld() == nullptr)
 	{
-		++NullWorld;
-		if (NullWorld >= 30) LogA("Init", "It has been a minute and the game has still not loaded, try restarting.");
-		//LogA("Initialization", "Sleeping..");
 		Sleep(2000);
 	}
 
@@ -44,13 +50,17 @@ static void Init() {
 int __stdcall DllMain(HMODULE hModule, DWORD ulReasonForCall, LPVOID lpReserved) {
 	DisableThreadLibraryCalls(hModule);
 
-	if (ulReasonForCall != DLL_PROCESS_ATTACH)
-		return 1;
+	if (ulReasonForCall == DLL_PROCESS_ATTACH) 
+	{
+		AJB::PCPortLib = hModule;
 
-	Global::InitLog();
+		Global::InitLog();
+		PreInit();
 
-	if (Proxy::Attach(hModule))
-		ConstructThread(Init);
-
+#ifdef PROXY
+		if (Proxy::Attach(hModule))
+#endif
+			ConstructThread(Init);
+	}
 	return 1;
 }

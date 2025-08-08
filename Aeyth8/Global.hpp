@@ -38,9 +38,10 @@ namespace Global
 	extern uintptr_t GBA;
 
 	// Plus Base [PB]
-	inline uintptr_t PB(const uintptr_t& Offset)
+	inline uintptr_t& PB(const uintptr_t& Offset)
 	{
-		return Offset + GBA;
+		uintptr_t Address = Offset + GBA;
+		return Address;
 	}
 
 	// Useful way to construct the console from hooking UEngine::Browse

@@ -1,6 +1,5 @@
 #include "ProxyTypes.h"
-#include "../Global.hpp"
-#include <format>
+#include <Windows.h>
 
 
 /*
@@ -24,11 +23,11 @@ Copyright (C) 2025 Aeyth8
 
 HMODULE Proxy::RealModule{nullptr};
 
-int Proxy::ProxyExists(const std::string& Name)
+short Proxy::ProxyExists(const char*& Name)
 {
-	for (int i{0}; i < ProxyTypes::Proxies.size(); ++i)
+	for (unsigned short i{0}; i < ProxyTypes::Proxies.size(); ++i)
 	{
-		if (Name == ProxyTypes::Proxies[i].ModuleName) return i;
+		if (strcmp(Name, ProxyTypes::Proxies[i].ModuleName) == 0) return i;
 	}
 
 	return -1;
@@ -38,10 +37,10 @@ void Proxy::LoadProxyPointers(const std::vector<Proxy::ProxyCallStructure>& Tabl
 {
 	if (RealModule == nullptr) return;
 
-	for (int i{0}; i < Table.size(); ++i)
+	for (const Proxy::ProxyCallStructure& ProxyCall : Table)
 	{
-		*Table[i].FunctionPointer = (void*)GetProcAddress(RealModule, Table[i].FunctionName);
-		A8CL::Global::LogA("Proxy", std::format("{} = {}", Table[i].FunctionName, A8CL::Global::HexToString((uintptr_t)Table[i].FunctionPointer)));
+		*ProxyCall.FunctionPointer = (void*)GetProcAddress(RealModule, ProxyCall.FunctionName);
+		//std::cout << Table[i].FunctionName << "|| " << std::hex << std::uppercase << Table[i].FunctionPointer << "\n";
 	}
 }
 
@@ -55,32 +54,29 @@ bool Proxy::Attach(HMODULE CurrentModule)
 
 	// Retrieves the name and relative path of 'this' DLL, the proxy.
 	if (!GetModuleFileNameA(CurrentModule, Path, _countof(Path))) return false;
-	std::string ProxyName(Path);
 
 	// Extracts the name alone.
-	ProxyName = ProxyName.substr(ProxyName.find_last_of("\\") + 1);
+	const char* ProxyName = strrchr(Path, '\\') + 1;
+	if (ProxyName == nullptr) return false;
 
 	// If there are no matching proxies in this database we fail. 
-	int ProxyIter = Proxy::ProxyExists(ProxyName);
+	const short& ProxyIter = Proxy::ProxyExists(ProxyName);
 	if (ProxyIter == -1) return false;
 
 	// Checks to see if we're even on Windows
 	if (GetWindowsDirectoryA(Path, _countof(Path)))
 	{
-		std::string RealModulePath(Path);
-
 		#if B64
-			RealModulePath += "\\System32\\";
+			strcat_s(Path, "\\System32\\");
 		#elif !B64
-			RealModulePath += "\\SysWOW64\\";
+			strcat_s(Path, "\\SysWOW64\\");
 		#endif
 
-		RealModulePath += ProxyName;
+		strcat_s(Path, ProxyName);
 
-		RealModule = LoadLibraryA(RealModulePath.c_str());
+		RealModule = LoadLibraryA(Path);
 		if (RealModule != nullptr)
 		{
-			A8CL::Global::LogA("Proxy", ProxyName);
 			Proxy::LoadProxyPointers(ProxyTypes::Proxies[ProxyIter].ProxyTable);
 			return true;
 		}		
@@ -90,9 +86,10 @@ bool Proxy::Attach(HMODULE CurrentModule)
 	// We will attempt to load the specified DLL within the relative path prefixed with "r_"
 	// Example : ProxyName == "dxgi.dll" || We attempt to load "r_dxgi.dll"
 
-	ProxyName = "r_" + ProxyName;
+	char Fallback[260]{0};
+	_snprintf_s(Fallback, sizeof(Fallback), _TRUNCATE, "r_%s", ProxyName);
 
-	RealModule = LoadLibraryA(ProxyName.c_str());
+	RealModule = LoadLibraryA(Fallback);
 	if (RealModule != nullptr)
 	{
 		Proxy::LoadProxyPointers(ProxyTypes::Proxies[ProxyIter].ProxyTable);

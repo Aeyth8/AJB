@@ -1,6 +1,6 @@
 #pragma once
-#include "../SDK/Engine_classes.hpp"
-#include "../../SDK/OnlineSubsystemUtils_classes.hpp"
+#include "../../Dumper-7/SDK/Engine_classes.hpp"
+#include "../../Dumper-7/SDK/OnlineSubsystemUtils_classes.hpp"
 
 
 /*
@@ -10,6 +10,8 @@ Written by Aeyth8
 https://github.com/Aeyth8
 
 */
+
+typedef void* LPVOID;
 
 namespace A8CL
 {
@@ -107,11 +109,21 @@ public:
 		typedef bool(__thiscall* IsNonPakFilenameAllowed)(__int64* This, SDK::FString& InFilename);
 
 		typedef bool(__thiscall* FindFileInPakFiles)(__int64* This, const wchar_t* Filename, __int64** OutPakFile, __int64* OutEntry);
+
+		typedef bool(__thiscall* DestroyActor)(SDK::UWorld* This, SDK::AActor* ThisActor, bool bNetForce, bool bShouldModifyLevel); // UWorld::DestroyActor
+
+		typedef bool(__thiscall* ActorDestroy)(SDK::AActor* This, bool bNetForce, bool bShouldModifyLevel); // AActor::Destroy
+
+		typedef SDK::FString*(__thiscall* CopyString)(SDK::FString* This, SDK::FString* NewString); // FString::FString
+
+		typedef SDK::FString*(__thiscall* ConsoleCommand)(SDK::APlayerController* This, SDK::FString* result, const SDK::FString* Cmd, bool bWriteToLog);
 	};
 
 	
 
 	static void UConsole(SDK::UConsole* This, SDK::FString& Command);
+
+	static SDK::FString* ConsoleCommand(SDK::APlayerController* This, SDK::FString* Result, SDK::FString* Command, bool bWriteToLog);
 
 	static BrowseReturnVal Browse(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SDK::FURL URL, SDK::FString& Error);
 
