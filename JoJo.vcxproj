@@ -132,6 +132,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>
       </AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -174,6 +175,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Aeyth8\CommandLine\CMLA.h" />
     <ClInclude Include="Aeyth8\Global.hpp" />
     <ClInclude Include="Aeyth8\Hooks\Hooks.hpp" />
     <ClInclude Include="Aeyth8\Logger.hpp" />
@@ -207,6 +209,7 @@
     <ClInclude Include="Version\resource.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Aeyth8\CommandLine\CMLA.cpp" />
     <ClCompile Include="Aeyth8\Global.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>

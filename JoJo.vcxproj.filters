@@ -48,21 +48,27 @@
     <Filter Include="Aeyth8\UConsole\ExecInternal">
       <UniqueIdentifier>{e8ee9dbf-c92c-40c6-b897-b7f24e31523c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="SDK\V2">
-      <UniqueIdentifier>{9f04dd1b-718e-4b52-96d6-63eb32c7f936}</UniqueIdentifier>
-    </Filter>
     <Filter Include="SDK\CPP">
       <UniqueIdentifier>{2fd86045-df54-4f4c-a817-dae76f4ba6fe}</UniqueIdentifier>
     </Filter>
-    <Filter Include="SDK\V2\CPP">
-      <UniqueIdentifier>{9d83b48e-6492-43a2-a195-2d7005fe4e7d}</UniqueIdentifier>
+    <Filter Include="SDK\Core">
+      <UniqueIdentifier>{00bd9153-e64d-4662-93a4-93154ce29337}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Aeyth8\Tools\CPP">
+      <UniqueIdentifier>{79217961-4235-4b9d-b09b-28fab7f3e02a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Aeyth8\Proxy8\CPP">
+      <UniqueIdentifier>{25258986-c527-4cfb-b00a-68a84287518c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Aeyth8\CommandLine">
+      <UniqueIdentifier>{da48f38b-c49b-4496-b9ce-0988e4fa95a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Aeyth8\CommandLine\Core">
+      <UniqueIdentifier>{bd9fdae9-ea10-4957-ac48-1c9d43e6033e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MinHook\src\buffer.c">
@@ -83,35 +89,14 @@
     <ClCompile Include="Aeyth8\Hooks\Hooks.cpp">
       <Filter>Aeyth8\Hooks</Filter>
     </ClCompile>
-    <ClCompile Include="Aeyth8\Tools\Tick.cpp">
-      <Filter>Aeyth8\Tools</Filter>
-    </ClCompile>
-    <ClCompile Include="Aeyth8\Tools\UFunctions.cpp">
-      <Filter>Aeyth8\Tools</Filter>
-    </ClCompile>
     <ClCompile Include="Aeyth8\Logic\AJB.cpp">
       <Filter>Aeyth8\Logic</Filter>
-    </ClCompile>
-    <ClCompile Include="Aeyth8\Tools\Pointers.cpp">
-      <Filter>Aeyth8\Tools</Filter>
     </ClCompile>
     <ClCompile Include="Aeyth8\Global.cpp">
       <Filter>Aeyth8</Filter>
     </ClCompile>
-    <ClCompile Include="Aeyth8\Proxy8\Proxy.cpp">
-      <Filter>Aeyth8\Proxy8</Filter>
-    </ClCompile>
-    <ClCompile Include="Aeyth8\Proxy8\ProxyTypes.cpp">
-      <Filter>Aeyth8\Proxy8</Filter>
-    </ClCompile>
     <ClCompile Include="Aeyth8\Offsets.cpp">
       <Filter>Aeyth8</Filter>
-    </ClCompile>
-    <ClCompile Include="Aeyth8\Tools\BytePatch.cpp">
-      <Filter>Aeyth8\Tools</Filter>
-    </ClCompile>
-    <ClCompile Include="Aeyth8\Tools\BytePatcher.cpp">
-      <Filter>Aeyth8\Tools</Filter>
     </ClCompile>
     <ClCompile Include="Aeyth8\UConsole\Core\ConsoleCommands.cpp">
       <Filter>Aeyth8\UConsole\Core</Filter>
@@ -125,16 +110,7 @@
     <ClCompile Include="Dumper-7\SDK\AmwPlugin_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
-    <ClCompile Include="SDK\Basic.cpp">
-      <Filter>SDK\CPP</Filter>
-    </ClCompile>
     <ClCompile Include="Dumper-7\SDK\BP_AJBGameInstance_functions.cpp">
-      <Filter>SDK\CPP</Filter>
-    </ClCompile>
-    <ClCompile Include="Dumper-7\SDK\BP_AJBStartupHUD_functions.cpp">
-      <Filter>SDK\CPP</Filter>
-    </ClCompile>
-    <ClCompile Include="Dumper-7\SDK\BP_AJBStartupPlayerController_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
     <ClCompile Include="Dumper-7\SDK\BP_AJBWwiseManager_functions.cpp">
@@ -146,12 +122,6 @@
     <ClCompile Include="Dumper-7\SDK\BPF_AJBWwiseFunctionLibrary_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
-    <ClCompile Include="SDK\CoreUObject_functions.cpp">
-      <Filter>SDK\CPP</Filter>
-    </ClCompile>
-    <ClCompile Include="SDK\Engine_functions.cpp">
-      <Filter>SDK\CPP</Filter>
-    </ClCompile>
     <ClCompile Include="Dumper-7\SDK\OnlineSubsystemUtils_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
@@ -161,28 +131,70 @@
     <ClCompile Include="Dumper-7\SDK\UMG_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\LoadingScreenSystem_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\BP_AJBBattleGameMode_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\BP_AJBBattleGameState_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\BP_AJBHighlightPlayerController_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\BP_AJBInGamePlayerController_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\BP_AJBOutGamePlayerController_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\BP_AJBOutGameProxy_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\BP_AJBSimpleMatchPlayerController_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\Basic.cpp">
+      <Filter>SDK\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\CoreUObject_functions.cpp">
+      <Filter>SDK\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\Engine_functions.cpp">
+      <Filter>SDK\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\Tools\BytePatch.cpp">
+      <Filter>Aeyth8\Tools\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\Tools\BytePatcher.cpp">
+      <Filter>Aeyth8\Tools\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\Tools\Pointers.cpp">
+      <Filter>Aeyth8\Tools\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\Tools\Tick.cpp">
+      <Filter>Aeyth8\Tools\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\Tools\UFunctions.cpp">
+      <Filter>Aeyth8\Tools\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\Proxy8\ProxyTypes.cpp">
+      <Filter>Aeyth8\Proxy8\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\Proxy8\Proxy.cpp">
+      <Filter>Aeyth8\Proxy8\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\CommandLine\CMLA.cpp">
+      <Filter>Aeyth8\CommandLine\Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="pch.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PropertyFixup.hpp">
-      <Filter>SDK</Filter>
-    </ClInclude>
-    <ClInclude Include="SDK.hpp">
-      <Filter>SDK</Filter>
-    </ClInclude>
-    <ClInclude Include="UnrealContainers.hpp">
-      <Filter>SDK</Filter>
-    </ClInclude>
     <ClInclude Include="Aeyth8\Logger.hpp">
       <Filter>Aeyth8</Filter>
     </ClInclude>
     <ClInclude Include="MinHook\MinHook.h">
       <Filter>MinHook</Filter>
-    </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>SDK</Filter>
     </ClInclude>
     <ClInclude Include="MinHook\src\buffer.h">
       <Filter>MinHook\src</Filter>
@@ -244,9 +256,27 @@
     <ClInclude Include="Aeyth8\UConsole\Core\ConsoleCommands.h">
       <Filter>Aeyth8\UConsole\Core</Filter>
     </ClInclude>
+    <ClInclude Include="Dumper-7\PropertyFixup.hpp">
+      <Filter>SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="Dumper-7\SDK.hpp">
+      <Filter>SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="Dumper-7\UnrealContainers.hpp">
+      <Filter>SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="Dumper-7\UtfN.hpp">
+      <Filter>SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="Version\resource.h">
+      <Filter>SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\CommandLine\CMLA.h">
+      <Filter>Aeyth8\CommandLine\Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="NameCollisions.inl">
+    <None Include="Dumper-7\NameCollisions.inl">
       <Filter>SDK</Filter>
     </None>
   </ItemGroup>

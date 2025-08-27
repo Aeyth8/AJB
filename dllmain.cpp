@@ -1,6 +1,7 @@
 #include "Aeyth8/Global.hpp"
 #include "Aeyth8/Logic/AJB.h"
 #include "Aeyth8/Tools/Pointers.h"
+#include "Aeyth8/CommandLine/CMLA.h"
 
 #ifdef PROXY
 #include "Aeyth8/Proxy8/ProxyTypes.h"
@@ -29,6 +30,8 @@ static void PreInit()
 	LogWin();
 	LogA("GetCommandLineA", GetCommandLineA());
 	LogA("INITIALIZED", "The Global Base Address [GBA] is " + HexToString(GBA));
+
+	//CommandLineArguments::ParseCommandLine(GetCommandLineW());
 
 	AJB::Init_Hooks();
 }
