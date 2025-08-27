@@ -175,7 +175,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Aeyth8\CommandLine\CMLA.h" />
+    <ClInclude Include="Aeyth8\CmdArgs\CommandLineArgs.h" />
+    <ClInclude Include="Aeyth8\CmdArgs\Core\CMLA.h" />
     <ClInclude Include="Aeyth8\Global.hpp" />
     <ClInclude Include="Aeyth8\Hooks\Hooks.hpp" />
     <ClInclude Include="Aeyth8\Logger.hpp" />
@@ -209,7 +210,14 @@
     <ClInclude Include="Version\resource.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Aeyth8\CommandLine\CMLA.cpp" />
+    <ClCompile Include="Aeyth8\CmdArgs\CommandLineArgs.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">CMLA.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\CmdArgs\Core\CMLA.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">CMLA.h</PrecompiledHeaderFile>
+    </ClCompile>
     <ClCompile Include="Aeyth8\Global.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>

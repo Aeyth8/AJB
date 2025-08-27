@@ -8,6 +8,8 @@
 #include "../Tools/UFunctions.hpp"
 #include "../Tools/BytePatcher.h"
 
+#include "../CmdArgs/CommandLineArgs.h"
+
 #include "../../Dumper-7/SDK/BP_AJBGameInstance_classes.hpp"
 #include "../../Dumper-7/SDK/EngineSettings_classes.hpp"
 #include "../../Dumper-7/SDK/BP_AJBOutGameProxy_classes.hpp"
@@ -149,9 +151,9 @@ void AJB::Init_Engine()
 
 	if (!IsNull(AJB::MapSettings = SDK::UGameMapsSettings::GetDefaultObj()))
 	{
-		AJB::MapSettings->GameDefaultMap.AssetPathName = FString2FName(L"/Game/Aeyth8/Maps/TitleScreen/PlaceholderTitleScreen.PlaceholderTitleScreen");
-		AJB::MapSettings->TransitionMap.AssetPathName = FString2FName(L"/Game/Aeyth8/Maps/LoadingWorld.LoadingWorld");
-		AJB::MapSettings->GlobalDefaultGameMode.AssetPathName = FString2FName(L"/Game/AJB/InGame/Core/BP_AJBBattleGameMode.BP_AJBBattleGameMode_C");		
+		AJB::MapSettings->GameDefaultMap.AssetPathName = FString2FName(CMLA::GameDefaultMap.GetArgumentAsString());
+		AJB::MapSettings->TransitionMap.AssetPathName = FString2FName(CMLA::TransitionMap.GetArgumentAsString());
+		AJB::MapSettings->GlobalDefaultGameMode.AssetPathName = FString2FName(CMLA::GlobalDefaultGameMode.GetArgumentAsString());
 	}
 
 	if (!IsNull(AJB::Version = SDK::UAJBVersion::GetDefaultObj()))

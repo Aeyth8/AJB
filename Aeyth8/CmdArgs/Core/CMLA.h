@@ -11,10 +11,8 @@ Copyright (C) 2025 Aeyth8
 
 */
 
-typedef unsigned __int8  uint8;
 typedef unsigned __int16 uint16;
 typedef unsigned __int32 uint32;
-typedef __int8  int8;
 typedef __int16 int16;
 typedef __int32 int32;
 
@@ -33,6 +31,13 @@ struct CArray
 
 	constexpr Type const* begin() { return Array; }
 	constexpr Type const* end()   { return Array + Count; }
+
+	// Half-baked last-minute implemented function to maintain a clean syntax (INCOMPLETE)
+	void Assign(const int& NewCount, Type*& NewArray)
+	{		
+		Count = NewCount;
+		Array = NewArray;
+	}
 };
 
 template <class Encoding>
@@ -110,7 +115,7 @@ class CommandLineArguments
 {
 public:
 
-	static void ParseCommandLine(wchar_t* CommandLineW, CArray<CommandLineParameter<wchar_t>>& GlobalCommands);
+	static void ParseCommandLine(wchar_t* CommandLineW, CArray<CommandLineParameter<wchar_t>*>& GlobalCommands, CArray<wchar_t*>* OutCommandLine = nullptr);
 
 
 

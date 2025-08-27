@@ -60,10 +60,10 @@
     <Filter Include="Aeyth8\Proxy8\CPP">
       <UniqueIdentifier>{25258986-c527-4cfb-b00a-68a84287518c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Aeyth8\CommandLine">
+    <Filter Include="Aeyth8\CmdArgs">
       <UniqueIdentifier>{da48f38b-c49b-4496-b9ce-0988e4fa95a1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Aeyth8\CommandLine\Core">
+    <Filter Include="Aeyth8\CmdArgs\Core">
       <UniqueIdentifier>{bd9fdae9-ea10-4957-ac48-1c9d43e6033e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -185,8 +185,11 @@
     <ClCompile Include="Aeyth8\Proxy8\Proxy.cpp">
       <Filter>Aeyth8\Proxy8\CPP</Filter>
     </ClCompile>
-    <ClCompile Include="Aeyth8\CommandLine\CMLA.cpp">
-      <Filter>Aeyth8\CommandLine\Core</Filter>
+    <ClCompile Include="Aeyth8\CmdArgs\Core\CMLA.cpp">
+      <Filter>Aeyth8\CmdArgs\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\CmdArgs\CommandLineArgs.cpp">
+      <Filter>Aeyth8\CmdArgs</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -271,8 +274,11 @@
     <ClInclude Include="Version\resource.h">
       <Filter>SDK</Filter>
     </ClInclude>
-    <ClInclude Include="Aeyth8\CommandLine\CMLA.h">
-      <Filter>Aeyth8\CommandLine\Core</Filter>
+    <ClInclude Include="Aeyth8\CmdArgs\Core\CMLA.h">
+      <Filter>Aeyth8\CmdArgs\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\CmdArgs\CommandLineArgs.h">
+      <Filter>Aeyth8\CmdArgs</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
