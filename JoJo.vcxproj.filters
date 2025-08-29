@@ -280,6 +280,9 @@
     <ClInclude Include="Aeyth8\CmdArgs\CommandLineArgs.h">
       <Filter>Aeyth8\CmdArgs</Filter>
     </ClInclude>
+    <ClInclude Include="Aeyth8\OffsetBase.h">
+      <Filter>Aeyth8</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Dumper-7\NameCollisions.inl">

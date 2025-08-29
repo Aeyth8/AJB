@@ -41,11 +41,11 @@ void CommandLineArguments::ParseCommandLine(wchar_t* CommandLineW, CArray<Comman
 			LowercaseStr(Param->GetNameAsString(), LowercaseName);
 			LowercaseStr(Arg, LowercaseArgName);
 
-			uint16 Len = EqualSign - Arg;
-			wchar_t buffer[200]{0};
+			uint16 Len = (EqualSign - Arg) - 1;
+			wchar_t buffer[260]{0};
 			Substring(LowercaseArgName, buffer, (uint16)1, Len);
 
-			//if (!StringCompare(buffer, LowercaseName)) continue;
+//			if (!StringCompare(buffer, LowercaseName)) continue;
 
 			/*
 			Debug Test 1
@@ -61,7 +61,7 @@ void CommandLineArguments::ParseCommandLine(wchar_t* CommandLineW, CArray<Comman
 			
 			char AName[260]{0};
 			wcstombs_s(0, AName, LowercaseName, Size);
-			Global::LogA("HELP ME", std::to_string((uint16)EqualSign));
+			Global::LogA("HELP ME", std::to_string((uint16)Len));
 
 
 

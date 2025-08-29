@@ -181,6 +181,7 @@
     <ClInclude Include="Aeyth8\Hooks\Hooks.hpp" />
     <ClInclude Include="Aeyth8\Logger.hpp" />
     <ClInclude Include="Aeyth8\Logic\AJB.h" />
+    <ClInclude Include="Aeyth8\OffsetBase.h" />
     <ClInclude Include="Aeyth8\Offsets.h" />
     <ClInclude Include="Aeyth8\Proxy8\Proxy.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">true</ExcludedFromBuild>
