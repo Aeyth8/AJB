@@ -291,11 +291,89 @@ __int64* UFunctions::SpawnActor(SDK::UWorld* This, SDK::UClass* Class, const SDK
 
 void UFunctions::ProcessEvent(SDK::UObject* This, SDK::UFunction* Function, LPVOID Parms)
 {
-	//LogA("PE", This->GetFullName() + " | " + std::to_string(This->Name.ComparisonIndex));
+	constexpr const int32 PEObjectBlacklist[] =
+	{
 
-	// We are blacklisting AJBCreadit.
-	//if (This->Name.ComparisonIndex == 89134) return;
-	// Result : Blacklisting it kills the whole menu
+
+		// Not UE Native
+
+		79194, // BP_CSMannequin_JSP_C
+		71490, // WB_SnapTouchScrollBox_C
+		71475, // WB_CharaSelectCard_C
+		116387, // WB_CharaSelectButton_C
+		133945, // WB_CharacterSelect_C
+	};
+
+	constexpr const int32 PEFunctionBlacklist[] =
+	{
+		8321, // ReceiveTick
+		7393, // Tick
+		7357, // Construct
+		7392, // Preconstruct
+		7358, // Destruct
+		8315, // ReceiveBeginPlay
+		8317, // ReceiveEndPlay
+		9903, // ReceiveDrawHUD
+		14310, // SetRenderOpacity
+		14313, // SetRenderTransform
+		15895, // SetColorAndOpacity
+		9033, // BlueprintModifyCamera
+		9034, // BlueprintModifyPostProcess
+		8483, // BlueprintUpdateAnimation
+		8482, // BlueprintPostEvaluateAnimation
+		8482, // BlueprintPostEvaluateAnimation
+		2052, // GetButton
+		2053, // GetTextBlock
+		14739, // GetValue
+		7361, // OnAnalogValueChanged
+		7362, // OnAnimationFinished
+		7363, // OnAnimationStarted
+		7380, // OnMouseEnter
+		7381, // OnMouseLeave
+		7382, // OnMouseMove
+		7384, // OnPaint
+		18127, // SetIntensity
+		17711, // SetFieldOfView
+		
+
+		// Not UE Native
+		135142, // Get_Img_AllNetIcon_Brush_0
+		135219, // Get_Img_AllNetIcon_Brush_0
+		136935, // OnCheckPP
+		119129, // ExecuteUbergraph_WB_ModeSelectButtonBase
+		119390, // ExecuteUbergraph_WB_ModeSelectButtonBase		
+	};
+
+	bool bLogPE{true};
+
+	for (const int32& ObjNameIndex : PEObjectBlacklist)
+	{
+		if (This->Name.ComparisonIndex == ObjNameIndex)
+		{
+			bLogPE = false;
+			break;
+		}
+	}
+	if (bLogPE)
+	{
+		for (const int32& FuncNameIndex : PEFunctionBlacklist)
+		{
+			if (Function->Name.ComparisonIndex == FuncNameIndex)
+			{
+				bLogPE = false;
+				break;
+			}
+		}
+	}
+	
+	
+	if (bLogPE) 
+	{
+		LogA("PE", std::format("[UObject]: Name = {} , ComparisonIndex = {} , Address = {} / {} / {} | [UFunction]: Name = {} , ComparisonIndex = {} , Address = {} / {} / {} | [Parms]: {} / {} |", 
+			This->GetFullName(), This->Name.ComparisonIndex, This ? HexToString(*(uintptr_t*)This - GBA) : "nullptr", This ? HexToString(*(uintptr_t*)This) : "nullptr", This ? HexToString((uintptr_t)This) : "nullptr",
+			Function->GetFullName(), Function->Name.ComparisonIndex, Function ? HexToString(*(uintptr_t*)Function - GBA) : "nullptr", Function ? HexToString(*(uintptr_t*)Function) : "nullptr", Function ? HexToString((uintptr_t)Function) : "nullptr",
+			Parms ? HexToString(*(uintptr_t*)Parms) : "nullptr", Parms ? HexToString((uintptr_t)Parms) : "nullptr"));
+	}
 
 	OFF::ProcessEvent.VerifyFC<Decl::ProcessEvent>()(This, Function, Parms);
 }

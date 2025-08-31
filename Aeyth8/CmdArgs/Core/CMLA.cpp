@@ -1,7 +1,5 @@
 #include <Windows.h>
 #include "CMLA.h"
-#include "../../Global.hpp"
-#include "../../../Dumper-7/UnrealContainers.hpp"
 
 /*
 
@@ -25,6 +23,7 @@ void CommandLineArguments::ParseCommandLine(wchar_t* CommandLineW, CArray<Comman
 	if (OutCommandLine != OutCommandLineCache) OutCommandLineCache = &Arguments;
 	OutCommandLine = &Arguments;	
 
+	// Loop through every argument received from command line.
 	for (wchar_t* const& Arg : Arguments)
 	{
 		if (Arg[0] != '-') continue;
@@ -32,46 +31,41 @@ void CommandLineArguments::ParseCommandLine(wchar_t* CommandLineW, CArray<Comman
 		wchar_t* EqualSign = FindChar(Arg, L'=');
 		const uint16 Size = CharacterLength(Arg);
 
+		// Index through every valid name to see if they match
 		for (CommandLineParameter<wchar_t>* const& Param : GlobalCommands)
 		{
+			// Ends early if the argument type fails to line up with the parameter.
+			// Basically if an argument is a "boolean" then it will require the name to be invoked, but it expects no parameters.
+			// This is useful for passing arguments such as '-skipmovies', I don't need a parameter, I just want to invoke movies to be skipped.
+			// And if I were to pass '-skipmovies=true', this would be invalid and fail, the same goes for if I passed '-GlobalDefaultMap' and it required a parameter.
 			if (EqualSign && Param->IsBool() || !EqualSign && !Param->IsBool()) continue;
+
+			uint16 ArgNameLength{0};
+			EqualSign ? ArgNameLength = (EqualSign - Arg) - 1 : ArgNameLength = CharacterLength(Arg) - 1;
 
 			wchar_t LowercaseName[260]{0};
 			wchar_t LowercaseArgName[260]{0};
+
+			Substring(Arg, LowercaseArgName, (uint16)1, ArgNameLength);
+
 			LowercaseStr(Param->GetNameAsString(), LowercaseName);
-			LowercaseStr(Arg, LowercaseArgName);
+			LowercaseStr(LowercaseArgName, LowercaseArgName);
 
-			uint16 Len = (EqualSign - Arg) - 1;
-			wchar_t buffer[260]{0};
-			Substring(LowercaseArgName, buffer, (uint16)1, Len);
+			if (!StringCompare(LowercaseArgName, LowercaseName)) continue;
 
-//			if (!StringCompare(buffer, LowercaseName)) continue;
+			if (Param->IsBool())
+			{
+				Param->SetBool(true);
+				break;
+			}
 
-			/*
-			Debug Test 1
+			wchar_t ArgumentBuffer[260]{0};
+			Substring(Arg, ArgumentBuffer, ArgNameLength + 2, Size - (ArgNameLength + 1));
 			
-			char PName[260]{0};
-			char AName[260]{0};
-			wcstombs_s(0, PName, ParamName->GetNameAsString(), lstrlenW(ParamName->GetNameAsString()));
-			wcstombs_s(0, AName, ParamName->GetArgumentAsString(), lstrlenW(ParamName->GetArgumentAsString()));			
-			Global::LogA(std::string(PName), std::string(AName));*/
-			//std::to_string(CharacterLength(ParamName->GetNameAsString()))
+			Param->SetArgument(Arg + ArgNameLength + 2);
 
-
-			
-			char AName[260]{0};
-			wcstombs_s(0, AName, LowercaseName, Size);
-			Global::LogA("HELP ME", std::to_string((uint16)Len));
-
-
-
+			break;
 		}
-
-		/*std::string Help;
-		int Count = lstrlenW(Arg);
-		for (int i{0}; i < Count; ++i) Help+= Lowercase(Arg[i]);
-
-		Global::LogA(std::to_string(ArgC), Help);*/
 	}
 }
 

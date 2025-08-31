@@ -47,7 +47,6 @@ constexpr BYTE NOP{0x90};
 
 std::vector<Hooks::HookStructure> StandaloneHooks =
 {
-	//{OFF::ProcessEvent, UFunctions::ProcessEvent},
 	{OFF::UConsole, UFunctions::UConsole},
 	{OFF::ConsoleCommand, UFunctions::ConsoleCommand},
 	{OFF::Browse, UFunctions::Browse},
@@ -124,7 +123,9 @@ void AJB::Init_Hooks()
 
 		BytePatcher::ReplaceBytes(PB(0x4840B0), Replacement); // UAJBGameInstance::ResetPP
 		BytePatcher::ReplaceBytes(PB(0x522CE0), Replacement); // UAJBGameInstance::StartConsumePP
+		//BytePatcher::ReplaceBytes(PB(0x507210), {MOV, 01, RETN, NOP, NOP}); // AAJBOutGameProxy::IsTenpoHost
 		
+		//BytePatcher::ReplaceBytes(PB(0x54D8CE), {MOV, 00, RETN, NOP, NOP, NOP}); // 
 
 		// Completely wipes out the HideCursorCaller and any trace (to be safe)
 		BYTE AntiAntiCursor[100]{RETN};
@@ -134,6 +135,7 @@ void AJB::Init_Hooks()
 
 		//BytePatcher::ReplaceBytes(PB(0x49DE20), {MOV, 00, RETN, NOP, NOP}); // UAJBUtilityFunctionLibrary::IsAJBOfflineMode (useless)
 		//BytePatcher::ReplaceBytes(PB(0x4ED5D0), { MOV, 00, RETN, NOP, NOP }); // UAJBNetworkObserver::IsOfflineMode (useless)
+		//BytePatcher::ReplaceBytes(PB(0x54D8CE), {MOV, 00, RETN, NOP, NOP, NOP}); // AAJBHUDBase::execSetCreditWidgetInstance (Result: Kills the game)
 		
 		LogA("BytePatcher", "Applied all patches successfully. (Failing would crash)");
 	}
@@ -141,6 +143,11 @@ void AJB::Init_Hooks()
 	if (Hooks::Init())
 	{
 		Hooks::CreateAndEnableHooks(StandaloneHooks);
+
+		if (CMLA::HookAndLogProcessEvent.GetAsBool())
+		{
+			Hooks::CreateAndEnableHook(OFF::ProcessEvent, UFunctions::ProcessEvent);
+		}
 	}
 
 }
@@ -184,15 +191,16 @@ void AJB::Init_Vars(SDK::UWorld* GWorld)
 		Settings = static_cast<SDK::UAJBAMSystemSettings*>(Instance->AMSystemSettings);
 		System = static_cast<SDK::UAJBAMSystemObject*>(Instance->AMSystemObject);
 		PlayerPoints = (&System->PP);
-		//OutGameProxy = SDK::ABP_AJBOutGameProxy_C::GetDefaultObj();
+		OutGameProxy = SDK::ABP_AJBOutGameProxy_C::GetDefaultObj();
 
 		if (!IsNull(Settings = static_cast<SDK::UAJBAMSystemSettings*>(Instance->AMSystemSettings)))
 		{
 			bDebugInputMode = (&Settings->bDebugInputMode);
 
 			Settings->CoinOptions.FreePlay = true;
+			//Settings->UpdateSettings.bIsServerMode = true;
 
-			*bDebugInputMode = true;
+			*bDebugInputMode = CMLA::bDebugInputMode.GetAsBool();
 		}
 
 		if (!IsNull(PlayerPoints = &System->PP))

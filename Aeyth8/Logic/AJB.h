@@ -49,6 +49,8 @@ namespace SDK
 	class AAJBInGameCharacter;
 	class ABP_AJBInGameCharacter_C; // Main class when ingame
 
+	class AAJBHUDBase;
+
 	struct FMatchingPlayerInfo;
 
 	// All game specific subclasses of UBlueprintFunctionLibrary

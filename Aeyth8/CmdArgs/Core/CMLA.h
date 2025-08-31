@@ -147,10 +147,12 @@ Encoding* Substring(Encoding* InputString, Integer StartPos, Integer Size)
 template <class Integer = uint16, class Encoding>
 void Substring(Encoding* InputString, Encoding* InputBuffer, Integer StartPos, Integer Size)
 {
-	for (Integer i{0}; i < Size; ++i)
+	Integer SizeOfString = CharacterLength(InputString);
+	for (Integer i{0}; SizeOfString > i && i < Size; ++i)
 	{
 		InputBuffer[i] = InputString[StartPos + i];
 	}
+	InputBuffer[SizeOfString] = '\0';
 }
 
 template <class Encoding>
@@ -162,6 +164,7 @@ private:
 	const Encoding* ParameterArgument;
 
 	uint32 bRequiresArgument : 1;		// If there is no argument required then it is a bool.
+	uint32 bBoolToggled		 : 1;		// This flag is only for booleans and it determines if the name has been invoked.
 	uint32 CharacterCount	 : 16;		// Max is 65,536 characters / uint16
 	// Add other bitflag bools later (maybe)
 
@@ -169,15 +172,15 @@ public:
 
 	// Default constructor
 	CommandLineParameter(const Encoding* ParameterName, const Encoding* ParameterArgument, uint16 CharacterCount)
-	: ParameterName(ParameterName), ParameterArgument(ParameterArgument), bRequiresArgument(1), CharacterCount(CharacterCount) {}
+	: ParameterName(ParameterName), ParameterArgument(ParameterArgument), bRequiresArgument(1), bBoolToggled(0), CharacterCount(CharacterCount) {}
 
 	// Default constructor without manual count
 	CommandLineParameter(const Encoding* ParameterName, const Encoding* ParameterArgument)
-	: ParameterName(ParameterName), ParameterArgument(ParameterArgument), bRequiresArgument(1), CharacterCount(CharacterLength(ParameterArgument)) {}
+	: ParameterName(ParameterName), ParameterArgument(ParameterArgument), bRequiresArgument(1), bBoolToggled(0), CharacterCount(CharacterLength(ParameterArgument)) {}
 
 	// For booleans, null = false | !null = true
 	CommandLineParameter(const Encoding* ParameterName)
-	: ParameterName(ParameterName), ParameterArgument(nullptr), bRequiresArgument(0), CharacterCount(0) {}
+	: ParameterName(ParameterName), ParameterArgument(nullptr), bRequiresArgument(0), bBoolToggled(0), CharacterCount(0) {}
 
 	uint16 const GetCharacterCount() const
 	{
@@ -189,9 +192,9 @@ public:
 		return !this->bRequiresArgument;
 	}
 
-	constexpr bool GetAsBool() const
+	bool GetAsBool() const
 	{
-		return this->bRequiresArgument && ParameterArgument != nullptr;
+		return this->IsBool() && bBoolToggled;
 	}
 
 	const Encoding* GetNameAsString() const
@@ -208,7 +211,12 @@ public:
 	{
 		this->ParameterArgument = NewArgument;
 		this->CharacterCount = CharacterLength(NewArgument);
-	}	
+	}
+
+	void SetBool(const bool NewValue)
+	{
+		this->bBoolToggled = NewValue;
+	}
 };
 
 // Base core class, any game specific configs should be used in a separate file. 
