@@ -23,6 +23,7 @@ namespace CMLA
 	CommandLineParameter<wchar_t> bDebugInputMode(L"bDebugInputMode");
 	CommandLineParameter<wchar_t> HookAndLogProcessEvent(L"HookPE");
 	CommandLineParameter<wchar_t> WinCSOut(L"log");
+	CommandLineParameter<wchar_t> ConsoleKey(L"ConsoleKey", L"Tilde");
 
 	// -- Global array for automated parsing, not generally needed for manual usage.
 	CommandLineParameter<wchar_t>* InternalGlobalArray[] =
@@ -33,7 +34,8 @@ namespace CMLA
 		&ServerPort,
 		&bDebugInputMode,
 		&HookAndLogProcessEvent,
-		&WinCSOut
+		&WinCSOut,
+		&ConsoleKey
 	};
 
 	// I would rather have this be the entire array instead of creating a second array, but I somehow managed to get this far I'm not pushing my mental strain any further for now.

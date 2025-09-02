@@ -48,7 +48,7 @@ static void Init() {
 
 	AJB::Init_Vars(GWorld);
 
-	if (!bConstructedUConsole) bConstructedUConsole = ConstructUConsole();
+	if (!bConstructedUConsole) bConstructedUConsole = ConstructUConsole(SDK::FString(CMLA::ConsoleKey.GetArgumentAsString()));
 }
 
 int __stdcall DllMain(HMODULE hModule, DWORD ulReasonForCall, LPVOID lpReserved) {

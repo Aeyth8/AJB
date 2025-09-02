@@ -241,7 +241,7 @@ UFunctions::BrowseReturnVal UFunctions::Browse(SDK::UEngine* This, SDK::FWorldCo
 {
 	constexpr const wchar_t* DefaultMap = L"/Game/Aeyth8/Maps/TitleScreen/PlaceholderTitleScreen";
 
-	if (!Global::bConstructedUConsole) { Global::bConstructedUConsole = Pointers::ConstructUConsole();
+	if (!Global::bConstructedUConsole) { Global::bConstructedUConsole = Pointers::ConstructUConsole(SDK::FString(CMLA::ConsoleKey.GetArgumentAsString()));
 		LogA("Browse", "Constructed UConsole early.");
 	}
 
