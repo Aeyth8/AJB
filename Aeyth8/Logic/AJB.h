@@ -95,6 +95,9 @@ namespace SDK
 	class UBPF_AJBOutGameHUD_C;
 	class UBPF_AJBOutGamePlayerController_C;
 
+	class FName;
+	struct FFlowStateHandler;
+
 }
 
 namespace A8CL
@@ -111,6 +114,8 @@ namespace AJB
 	extern SDK::ABP_AJBOutGameProxy_C* OutGameProxy;
 	extern SDK::UAJBVersion* Version;
 	extern SDK::UAJBSettings* AJBSettings;
+
+	extern SDK::FName* GameFlowState;
 
 	extern __int32* PlayerPoints;
 	extern bool* bDebugInputMode;

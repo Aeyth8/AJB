@@ -21,6 +21,7 @@ namespace OFF
 	extern OFFSET PreLogin;
 	extern OFFSET AJBPreLogin;
 	extern OFFSET Login;
+	extern OFFSET InitListen;
 
 	extern OFFSET UConsole;	
 	extern OFFSET ConsoleCommand;
@@ -33,5 +34,9 @@ namespace OFF
 
 	extern OFFSET IsNonPakFileNameAllowed;
 	extern OFFSET FindFileInPakFiles;
+
+	// Native Game Functions
+
+	extern OFFSET ChangeState;
 }
 }

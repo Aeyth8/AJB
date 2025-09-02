@@ -191,6 +191,15 @@
     <ClCompile Include="Aeyth8\CmdArgs\CommandLineArgs.cpp">
       <Filter>Aeyth8\CmdArgs</Filter>
     </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\FlowState_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\BP_GameFlowStateManager_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\BF_GameFlowStateUtils_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Aeyth8\Logger.hpp">

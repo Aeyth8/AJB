@@ -14,6 +14,8 @@
 #include "../../Dumper-7/SDK/EngineSettings_classes.hpp"
 #include "../../Dumper-7/SDK/BP_AJBOutGameProxy_classes.hpp"
 #include "../../Dumper-7/SDK/BP_AJBInGameCharacter_classes.hpp"
+#include "../../Dumper-7/SDK/FlowState_classes.hpp"
+#include "../../Dumper-7/SDK/FlowState_structs.hpp"
 
 /*
 
@@ -32,6 +34,8 @@ SDK::ABP_AJBOutGameProxy_C* AJB::OutGameProxy{nullptr};
 SDK::UAJBVersion* AJB::Version{nullptr};
 SDK::UAJBSettings* AJB::AJBSettings{nullptr};
 
+SDK::FName* AJB::GameFlowState{nullptr};
+
 HMODULE AJB::PCPortLib{0};
 HWND AJB::PCPortWindow{0};
 
@@ -45,6 +49,9 @@ constexpr BYTE MOV{0xB0};
 constexpr BYTE RETN{0xC3};
 constexpr BYTE NOP{0x90};
 
+// Forward declaration (I'm lazy)
+static bool FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag);
+
 std::vector<Hooks::HookStructure> StandaloneHooks =
 {
 	{OFF::UConsole, UFunctions::UConsole},
@@ -53,9 +60,11 @@ std::vector<Hooks::HookStructure> StandaloneHooks =
 	{OFF::Login, UFunctions::Login},
 	{OFF::PreLogin, UFunctions::PreLogin},
 	{OFF::AJBPreLogin, UFunctions::PreLogin},
+	{OFF::InitListen, UFunctions::InitListen},
 	{OFF::AppPreExit, UFunctions::AppPreExit},
 	{OFF::IsNonPakFileNameAllowed, UFunctions::IsNonPakFilenameAllowed},
 	{OFF::FindFileInPakFiles, UFunctions::FindFileInPakFiles},
+	{OFF::ChangeState, FlowUtilChangeState},
 };
 
 
@@ -180,7 +189,7 @@ void AJB::Init_Engine()
 		SendMessageA(AJB::PCPortWindow, WM_SETICON, ICON_SMALL, (LPARAM)AJBLogo);
 	}
 
-	SetWindowTextA(AJB::PCPortWindow, "AJB PC Port v28.0.0");
+	SetWindowTextA(AJB::PCPortWindow, "AJB PC Port v28.0.6");
 }
 
 void AJB::Init_Vars(SDK::UWorld* GWorld)
@@ -308,6 +317,37 @@ const char* AJB::PlayerInfoParser(SDK::FMatchingPlayerInfo& Info)
 	return std::format("[PlayerID]: {} | [GameServerUserID]: {} | [TeamID]: {} | [TeamHostUserID]: {} | [PlayerName]: {} | [PlayerIconID]: {} | [PlayerLevel]: {} | [PlayerTitle]: {} | [CharactorID]: {} | [bIsCameraMode]: {} | [Rate]: {}", Info.PlayerID, Info.GameServerUserID.ToString(), Info.TeamID, Info.TeamHostUserID.ToString(), Info.PlayerName.ToString(), Info.PlayerIconID, Info.PlayerLevel, Info.PlayerTitle.ToString(), Info.CharactorID, Info.bIsCameraMode, Info.Rate).c_str();
 }
 
+static bool FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag)
+{
+	// The mouse will not lock into the viewport on its own (making KBM compability unplayable unless you enjoy constantly holding down middle click to move your camera)  
+	constexpr const static wchar_t* MouseLockFlowstates[]
+	{
+		L"InGame.Gameplay",
+		L"InGame.Victory",
+		L"InGame.VictoryResult",
+		L"InGame.VictoryShot.Posing",
+		L"InGame.VictoryShot.Shot",
+		L"InGame.VictoryShot.Finish"
+	};
+
+	LogA("UFlowStateUtil", std::format("New FlowState: {}", NextStateTag.TagName.ToString()));
+	AJB::GameFlowState = &NextStateTag.TagName;
+
+	if (SDK::APlayerController* PC = Player(); PC != nullptr)
+	{
+		for (const wchar_t* Flowstate : MouseLockFlowstates)
+		{
+			if (wcscmp(Flowstate, AJB::GetBlueprintClass<SDK::UKismetStringLibrary>()->Conv_NameToString(*AJB::GameFlowState).CStr()) == 0)
+			{
+				AJB::GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->SetInputMode_GameOnly(PC);
+				PC->bShowMouseCursor = false;
+				break;
+			}
+		}		
+	}
+	
+	return OFF::ChangeState.VerifyFC<bool(__fastcall*)(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag)>()(StateHandler, NextStateTag);
+}
 
 // -- FMemory
 

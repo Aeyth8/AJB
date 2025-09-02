@@ -10,6 +10,8 @@
 #include "../../Dumper-7/SDK/BPF_AJBWwiseFunctionLibrary_classes.hpp"
 #include "../../Dumper-7/SDK/GameplayTags_structs.hpp"
 
+#include "../CmdArgs/CommandLineArgs.h"
+
 /*
 
 Written by Aeyth8
@@ -140,6 +142,8 @@ using namespace Global;
 #include "../../Dumper-7/SDK/BP_AJBInGamePlayerController_classes.hpp"
 #include "../../Dumper-7/SDK/BP_AJBInGameCharacter_classes.hpp"
 #include "../../Dumper-7/SDK/LoadingScreenSystem_classes.hpp"
+#include "../../Dumper-7/SDK/FlowState_classes.hpp"
+#include "../../Dumper-7/SDK/FlowState_structs.hpp"
 
 void UFunctions::UConsole(SDK::UConsole* This, SDK::FString& Command)
 {
@@ -213,7 +217,21 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		Manager->PostWwiseBGMEvent(SDK::FGameplayTag{Pointers::FString2FName(L"Sound.BGM.Play.BGM02.Menu1")}, true);
 		return OFF::ConsoleCommand.VerifyFC<Decl::ConsoleCommand>()(This, Result, Command, false);
 	}
+	else if (StrCommand == "hidemouse")
+	{
+		Pointers::Player()->bShowMouseCursor = false;
+	}
+	else if (StrCommand == "showmouse")
+	{
+		Pointers::Player()->bShowMouseCursor = true;
+	}
+	else if (StrCommand == "lockmouse")
+	{
+		SDK::APlayerController* Player = Pointers::Player();
+		AJB::GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->SetInputMode_GameOnly(Player);
 
+
+	}
 	//LogA("ConsoleCommand", std::format("[Owning PlayerController]: {} | [Command]: {}", This->GetFullName(), StrCommand));
 
 	return OFF::ConsoleCommand.VerifyFC<Decl::ConsoleCommand>()(This, Result, Command, bWriteToLog);
@@ -243,7 +261,10 @@ UFunctions::BrowseReturnVal UFunctions::Browse(SDK::UEngine* This, SDK::FWorldCo
 
 bool UFunctions::InitListen(SDK::UIpNetDriver* This, SDK::UObject* InNotify, SDK::FURL& LocalURL, bool bReuseAddressAndPort, SDK::FString& Error)
 {
-	//return VerifyFC<Decl::InitListen>(OFF::InitListen)(This, InNotify, LocalURL, bReuseAddressAndPort, Error);
+	LogA("InitListen", This->GetFullName() + " | " + Helpers::FURLParser(LocalURL));
+	LocalURL.Port = wcstol(CMLA::ServerPort.GetArgumentAsString(), 0, 10);
+
+	return OFF::InitListen.VerifyFC<Decl::InitListen>()(This, InNotify, LocalURL, bReuseAddressAndPort, Error);
 }
 
 SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPlayer* NewPlayer, SDK::ENetRole InRemoteRole, SDK::FString& Portal, SDK::FString& Options, SDK::FUniqueNetIdRepl& UniqueId, SDK::FString& ErrorMessage)
@@ -252,7 +273,7 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 
 	if (AJB::PlayerPoints) *AJB::PlayerPoints = 1170;
 	if (AJB::Instance && AJB::Instance->ArcadeTimeManager) AJB::Instance->ArcadeTimeManager = nullptr;
-
+	
 	/*SDK::ABP_AJBBattleGameMode_C* Game = AJB::GetGameMode<SDK::ABP_AJBBattleGameMode_C>();
 	if (!IsNull(Game))
 	{

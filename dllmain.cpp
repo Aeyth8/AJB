@@ -27,11 +27,11 @@ static void PreInit()
 	// Retrieves the Global Base Address (GBA) by getting the module handle casted as a uintptr_t
 	GBA = (uintptr_t)GetModuleHandleA("AJB-Win64-Shipping.exe");
 
-	LogWin();
+	CommandLineArguments::ParseCommandLine(GetCommandLineW(), CMLA::GlobalCommandLineArgs, CMLA::GlobalCommandLine);
+
+	if (CMLA::WinCSOut.GetAsBool()) LogWin();
 	LogA("GetCommandLineA", GetCommandLineA());
 	LogA("INITIALIZED", "The Global Base Address [GBA] is " + HexToString(GBA));
-
-	CommandLineArguments::ParseCommandLine(GetCommandLineW(), CMLA::GlobalCommandLineArgs, CMLA::GlobalCommandLine);
 
 	AJB::Init_Hooks();
 }
@@ -40,12 +40,13 @@ static void Init() {
 
 	AJB::Init_Engine();
 	
-	while (UWorld() == nullptr)
+	SDK::UWorld* GWorld{nullptr};
+	while ((GWorld = AJB::GWorld()) == nullptr)
 	{
-		Sleep(2000);
+		Sleep(100);
 	}
 
-	AJB::Init_Vars(UWorld());
+	AJB::Init_Vars(GWorld);
 
 	if (!bConstructedUConsole) bConstructedUConsole = ConstructUConsole();
 }

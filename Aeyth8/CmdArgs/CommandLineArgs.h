@@ -22,6 +22,7 @@ namespace CMLA
 	extern CommandLineParameter<wchar_t> ServerPort;
 	extern CommandLineParameter<wchar_t> bDebugInputMode;
 	extern CommandLineParameter<wchar_t> HookAndLogProcessEvent;
+	extern CommandLineParameter<wchar_t> WinCSOut;
 
 	// -- Global array for automated parsing, not generally needed for manual usage.
 	extern CArray<CommandLineParameter<wchar_t>*> GlobalCommandLineArgs;

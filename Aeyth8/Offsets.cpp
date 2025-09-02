@@ -21,6 +21,7 @@ namespace OFF
 	OFFSET PreLogin("AGameModeBase::PreLogin", 0x13D7710);
 	OFFSET AJBPreLogin("AJBPreLogin", 0x04A4060);						// Used in the AJB GameMode(s)
 	OFFSET Login("AGameModeBase::Login", 0x13D2A20);
+	OFFSET InitListen("UIpNetDriver::InitListen", 0x3FBE40);
 
 	OFFSET UConsole("UConsole::ConsoleCommand", 0x1796230);	
 	OFFSET ConsoleCommand("APlayerController::ConsoleCommand", 0x16077D0);
@@ -47,6 +48,8 @@ namespace OFF
 	*/
 
 	// Native Game Functions
+
+	OFFSET ChangeState("UFlowStateUtil::ChangeState", 0x21CF10);
 
 	/*
 	
