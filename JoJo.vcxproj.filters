@@ -39,15 +39,6 @@
     <Filter Include="Aeyth8\UConsole">
       <UniqueIdentifier>{d9ba78f5-ae64-4dca-9fa2-af7aa3b8db8e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Aeyth8\UConsole\Core">
-      <UniqueIdentifier>{df375495-402b-4ae7-a33c-1c9d3c502dc1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Aeyth8\UConsole\Commands">
-      <UniqueIdentifier>{aa495793-b747-4534-aa6f-b625bedcdb6e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Aeyth8\UConsole\ExecInternal">
-      <UniqueIdentifier>{e8ee9dbf-c92c-40c6-b897-b7f24e31523c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="SDK\CPP">
       <UniqueIdentifier>{2fd86045-df54-4f4c-a817-dae76f4ba6fe}</UniqueIdentifier>
     </Filter>
@@ -65,6 +56,15 @@
     </Filter>
     <Filter Include="Aeyth8\CmdArgs\Core">
       <UniqueIdentifier>{bd9fdae9-ea10-4957-ac48-1c9d43e6033e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Aeyth8\A8CL">
+      <UniqueIdentifier>{8a6fbd35-cdfe-4e4a-a4d5-43ee9a476116}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Aeyth8\A8CL\Strings">
+      <UniqueIdentifier>{aa85f891-9ded-4a4b-8bc5-05843a4cfe47}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Aeyth8\UConsole\Core">
+      <UniqueIdentifier>{9cc847ca-635e-4c29-9ffc-51dd92074124}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -97,12 +97,6 @@
     </ClCompile>
     <ClCompile Include="Aeyth8\Offsets.cpp">
       <Filter>Aeyth8</Filter>
-    </ClCompile>
-    <ClCompile Include="Aeyth8\UConsole\Core\ConsoleCommands.cpp">
-      <Filter>Aeyth8\UConsole\Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Aeyth8\UConsole\Commands\Command.cpp">
-      <Filter>Aeyth8\UConsole\Commands</Filter>
     </ClCompile>
     <ClCompile Include="Dumper-7\SDK\AJB_functions.cpp">
       <Filter>SDK\CPP</Filter>
@@ -164,16 +158,10 @@
     <ClCompile Include="Dumper-7\SDK\Engine_functions.cpp">
       <Filter>SDK\Core</Filter>
     </ClCompile>
-    <ClCompile Include="Aeyth8\Tools\BytePatch.cpp">
-      <Filter>Aeyth8\Tools\CPP</Filter>
-    </ClCompile>
     <ClCompile Include="Aeyth8\Tools\BytePatcher.cpp">
       <Filter>Aeyth8\Tools\CPP</Filter>
     </ClCompile>
     <ClCompile Include="Aeyth8\Tools\Pointers.cpp">
-      <Filter>Aeyth8\Tools\CPP</Filter>
-    </ClCompile>
-    <ClCompile Include="Aeyth8\Tools\Tick.cpp">
       <Filter>Aeyth8\Tools\CPP</Filter>
     </ClCompile>
     <ClCompile Include="Aeyth8\Tools\UFunctions.cpp">
@@ -199,6 +187,12 @@
     </ClCompile>
     <ClCompile Include="Dumper-7\SDK\BF_GameFlowStateUtils_functions.cpp">
       <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\BP_PPV_VSFilter_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\UConsole\Core\ConsoleCommands.cpp">
+      <Filter>Aeyth8\UConsole\Core</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -235,9 +229,6 @@
     <ClInclude Include="Aeyth8\Global.hpp">
       <Filter>Aeyth8</Filter>
     </ClInclude>
-    <ClInclude Include="Aeyth8\Tools\Tick.hpp">
-      <Filter>Aeyth8\Tools</Filter>
-    </ClInclude>
     <ClInclude Include="Aeyth8\Tools\UFunctions.hpp">
       <Filter>Aeyth8\Tools</Filter>
     </ClInclude>
@@ -256,17 +247,8 @@
     <ClInclude Include="Aeyth8\Offsets.h">
       <Filter>Aeyth8</Filter>
     </ClInclude>
-    <ClInclude Include="Aeyth8\Tools\BytePatch.h">
-      <Filter>Aeyth8\Tools</Filter>
-    </ClInclude>
     <ClInclude Include="Aeyth8\Tools\BytePatcher.h">
       <Filter>Aeyth8\Tools</Filter>
-    </ClInclude>
-    <ClInclude Include="Aeyth8\UConsole\Commands\Command.h">
-      <Filter>Aeyth8\UConsole\Commands</Filter>
-    </ClInclude>
-    <ClInclude Include="Aeyth8\UConsole\Core\ConsoleCommands.h">
-      <Filter>Aeyth8\UConsole\Core</Filter>
     </ClInclude>
     <ClInclude Include="Dumper-7\PropertyFixup.hpp">
       <Filter>SDK</Filter>
@@ -291,6 +273,12 @@
     </ClInclude>
     <ClInclude Include="Aeyth8\OffsetBase.h">
       <Filter>Aeyth8</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\A8CL\Strings\CStrings.h">
+      <Filter>Aeyth8\A8CL\Strings</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\UConsole\Core\ConsoleCommands.h">
+      <Filter>Aeyth8\UConsole\Core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

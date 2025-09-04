@@ -175,6 +175,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Aeyth8\A8CL\Strings\CStrings.h" />
     <ClInclude Include="Aeyth8\CmdArgs\CommandLineArgs.h" />
     <ClInclude Include="Aeyth8\CmdArgs\Core\CMLA.h" />
     <ClInclude Include="Aeyth8\Global.hpp" />
@@ -189,12 +190,9 @@
     <ClInclude Include="Aeyth8\Proxy8\ProxyTypes.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="Aeyth8\Tools\BytePatch.h" />
     <ClInclude Include="Aeyth8\Tools\BytePatcher.h" />
     <ClInclude Include="Aeyth8\Tools\Pointers.h" />
-    <ClInclude Include="Aeyth8\Tools\Tick.hpp" />
     <ClInclude Include="Aeyth8\Tools\UFunctions.hpp" />
-    <ClInclude Include="Aeyth8\UConsole\Commands\Command.h" />
     <ClInclude Include="Aeyth8\UConsole\Core\ConsoleCommands.h" />
     <ClInclude Include="Dumper-7\PropertyFixup.hpp" />
     <ClInclude Include="Dumper-7\SDK.hpp" />
@@ -246,13 +244,8 @@
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">ProxyTypes.h</PrecompiledHeaderFile>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="Aeyth8\Tools\BytePatch.cpp" />
     <ClCompile Include="Aeyth8\Tools\BytePatcher.cpp" />
     <ClCompile Include="Aeyth8\Tools\Pointers.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="Aeyth8\Tools\Tick.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -260,7 +253,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Aeyth8\UConsole\Commands\Command.cpp" />
     <ClCompile Include="Aeyth8\UConsole\Core\ConsoleCommands.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="Dumper-7\SDK\BF_GameFlowStateUtils_functions.cpp" />
@@ -272,6 +264,7 @@
     <ClCompile Include="Dumper-7\SDK\BP_AJBOutGameProxy_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\BP_AJBSimpleMatchPlayerController_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\BP_GameFlowStateManager_functions.cpp" />
+    <ClCompile Include="Dumper-7\SDK\BP_PPV_VSFilter_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\CoreUObject_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\Engine_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\FlowState_functions.cpp" />

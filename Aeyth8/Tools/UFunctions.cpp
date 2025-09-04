@@ -144,6 +144,7 @@ using namespace Global;
 #include "../../Dumper-7/SDK/LoadingScreenSystem_classes.hpp"
 #include "../../Dumper-7/SDK/FlowState_classes.hpp"
 #include "../../Dumper-7/SDK/FlowState_structs.hpp"
+#include "../../Dumper-7/SDK/BP_PPV_VSFilter_classes.hpp"
 
 void UFunctions::UConsole(SDK::UConsole* This, SDK::FString& Command)
 {
@@ -229,8 +230,33 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	{
 		SDK::APlayerController* Player = Pointers::Player();
 		AJB::GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->SetInputMode_GameOnly(Player);
+	}
+	else if (StrCommand == "netid")
+	{
+		LogA("NetID", AJB::Instance->NetworkObserverTask->GetNetID().ToString());
+	}
+	else if (StrCommand == "battle")
+	{
+		SDK::FAJBBattleSettings& Settings = AJB::Instance->BattleSettings;
+		LogA("Battle Settings", std::format("AI Level: {} | Difficulty: {} | Damage Area Type: {} ", Settings.AILevel, (uint8)Settings.Pad_1, Settings.DamageAreaType));
+	}
+	else if (StrCommand == "filter")
+	{
+		SDK::ABP_PPV_VSFilter_C* Filter = AJB::GetPostProcessFilter(AJB::GetPlayer<SDK::ABP_AJBInGamePlayerController_C>());
 
+		if (!IsNull(Filter))
+		{
+			LogA("Filter", std::to_string((uint8)Filter->CurrentType));
+		}
+	}
+	else if (StrCommand == "shader")
+	{
+		SDK::ABP_PPV_VSFilter_C* Filter = AJB::GetPostProcessFilter(AJB::GetPlayer<SDK::ABP_AJBInGamePlayerController_C>());
 
+		if (!IsNull(Filter))
+		{
+			Filter->NextFilter();
+		}
 	}
 	//LogA("ConsoleCommand", std::format("[Owning PlayerController]: {} | [Command]: {}", This->GetFullName(), StrCommand));
 

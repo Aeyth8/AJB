@@ -14,8 +14,10 @@
 #include "../../Dumper-7/SDK/EngineSettings_classes.hpp"
 #include "../../Dumper-7/SDK/BP_AJBOutGameProxy_classes.hpp"
 #include "../../Dumper-7/SDK/BP_AJBInGameCharacter_classes.hpp"
+#include "../../Dumper-7/SDK/BP_AJBInGamePlayerController_classes.hpp"
 #include "../../Dumper-7/SDK/FlowState_classes.hpp"
 #include "../../Dumper-7/SDK/FlowState_structs.hpp"
+#include "../../Dumper-7/SDK/BP_PPV_VSFilter_classes.hpp"
 
 /*
 
@@ -67,6 +69,15 @@ std::vector<Hooks::HookStructure> StandaloneHooks =
 	{OFF::ChangeState, FlowUtilChangeState},
 };
 
+A8CL::OFFSET NetID("UAJBNetworkObserver::GetNetID", 0x4ECC80);
+
+SDK::FString* __fastcall GetNetID(SDK::UAJBNetworkObserver* This, SDK::FString* OutString)
+{
+	const static SDK::FString NetID{L"Aeyth8"};
+	OFF::CopyString.VerifyFC<UFunctions::Decl::CopyString>()(OutString, const_cast<SDK::FString*>(&NetID));
+	
+	return OutString;
+}
 
 void AJB::Init_Hooks()
 {
@@ -157,6 +168,7 @@ void AJB::Init_Hooks()
 		{
 			Hooks::CreateAndEnableHook(OFF::ProcessEvent, UFunctions::ProcessEvent);
 		}
+		Hooks::CreateAndEnableHook(NetID, GetNetID);
 	}
 
 }
@@ -268,6 +280,11 @@ SDK::UWorld* const& AJB::GWorld(const bool bLog)
 	return World;
 }
 
+SDK::APlayerController* AJB::GPlayer(const int& Index)
+{
+	return Pointers::Player(Index);
+}
+
 SDK::UBlueprintFunctionLibrary* const& AJB::BlueprintFunctionLibrary()
 {
 	static SDK::UBlueprintFunctionLibrary* Library{nullptr};
@@ -281,19 +298,19 @@ SDK::AGameModeBase* AJB::GetGameMode(SDK::UWorld* OverrideWorld)
 	return GetBlueprintClass<SDK::UGameplayStatics>()->GetGameMode(OverrideWorld);
 }
 
-SDK::AAJBPlayerControllerBase* const& AJB::GetPlayer(const int& Index)
+SDK::ABP_AJBInGamePlayerController_C* const& AJB::GetPlayer(const int& Index)
 {
 	SDK::APlayerController* Player = Pointers::Player();
 
-	if (Player && Player->IsA(SDK::AAJBPlayerControllerBase::StaticClass()))
+	if (Player && Player->IsA(SDK::ABP_AJBInGamePlayerController_C::StaticClass()))
 	{
-		return static_cast<SDK::AAJBPlayerControllerBase*>(Player);
+		return static_cast<SDK::ABP_AJBInGamePlayerController_C*>(Player);
 	}
 
 	return nullptr;
 }
 
-SDK::ABP_AJBInGameCharacter_C* const& AJB::GetCharacter(const SDK::AAJBPlayerControllerBase* Player)
+SDK::ABP_AJBInGameCharacter_C* const& AJB::GetCharacter(const SDK::ABP_AJBInGamePlayerController_C* Player)
 {
 	if (Player && Player->Character->IsA(SDK::ABP_AJBInGameCharacter_C::StaticClass()))
 	{
@@ -302,6 +319,18 @@ SDK::ABP_AJBInGameCharacter_C* const& AJB::GetCharacter(const SDK::AAJBPlayerCon
 
 	return nullptr;
 
+}
+
+SDK::ABP_PPV_VSFilter_C* AJB::GetPostProcessFilter(const SDK::ABP_AJBInGamePlayerController_C* Player, const bool bCreateIfNull)
+{
+	if (Player)
+	{
+		SDK::ABP_PPV_VSFilter_C* Filter = Player->PPVVSFilter;
+
+		return Filter ? Filter : bCreateIfNull ? const_cast<SDK::ABP_AJBInGamePlayerController_C*>(Player)->PPVVSFilter = SpawnActor<SDK::ABP_PPV_VSFilter_C>() : nullptr;		
+	}
+
+	return nullptr;
 }
 
 bool AJB::IsOfType(SDK::UObject* Object, SDK::UClass* Type)

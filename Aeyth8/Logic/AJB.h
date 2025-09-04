@@ -25,6 +25,9 @@ namespace SDK
 	class UGameplayStatics;
 	class AGameModeBase;
 	class AGameMode;
+	class APlayerController;
+	class ACharacter;
+	class APawn;
 
 	class UAJBGameInstance;
 	class UBP_AJBGameInstance_C; // Final class of UAJBGameInstance
@@ -95,6 +98,8 @@ namespace SDK
 	class UBPF_AJBOutGameHUD_C;
 	class UBPF_AJBOutGamePlayerController_C;
 
+	class ABP_PPV_VSFilter_C;
+
 	class FName;
 	struct FFlowStateHandler;
 
@@ -133,11 +138,13 @@ namespace AJB
 
 	SDK::UEngine* const& GEngine(const bool bLog = false);
 	SDK::UWorld* const& GWorld(const bool bLog = false);
+	SDK::APlayerController* GPlayer(const int& Index = 0);
 	SDK::UBlueprintFunctionLibrary* const& BlueprintFunctionLibrary();
 
 	SDK::AGameModeBase* GetGameMode(SDK::UWorld* OverrideWorld = GWorld());
-	SDK::AAJBPlayerControllerBase* const& GetPlayer(const int& Index = 0);
-	SDK::ABP_AJBInGameCharacter_C* const& GetCharacter(const SDK::AAJBPlayerControllerBase* Player = GetPlayer());
+	SDK::ABP_AJBInGamePlayerController_C* const& GetPlayer(const int& Index = 0);
+	SDK::ABP_AJBInGameCharacter_C* const& GetCharacter(const SDK::ABP_AJBInGamePlayerController_C* Player = GetPlayer());
+	SDK::ABP_PPV_VSFilter_C* GetPostProcessFilter(const SDK::ABP_AJBInGamePlayerController_C* Player = GetPlayer(), const bool bCreateIfNull = true); // Only accessible ingame from the PlayerController.
 
 	bool IsOfType(SDK::UObject* Object, SDK::UClass* Type);
 
@@ -157,6 +164,19 @@ namespace AJB
 			return static_cast<UClass*>(AuthorityGameMode);
 		}
 	
+		return nullptr;
+	}
+
+	template <class UClass>
+	UClass* const& GetPlayer(SDK::UClass* Class = UClass::StaticClass(), const int& Index = 0)
+	{
+		SDK::APlayerController* Player = GPlayer();
+
+		if (Player && IsOfType((SDK::UObject*)Player, Class))
+		{
+			return static_cast<UClass*>(Player);
+		}
+
 		return nullptr;
 	}
 
