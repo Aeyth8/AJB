@@ -16,6 +16,7 @@ namespace OFF
 	extern OFFSET FFree;
 
 	extern OFFSET ProcessEvent;
+	extern OFFSET Invoke;
 	extern OFFSET AppPreExit;
 
 	extern OFFSET PreLogin;

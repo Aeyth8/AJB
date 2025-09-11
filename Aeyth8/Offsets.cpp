@@ -15,7 +15,8 @@ namespace OFF
 	OFFSET FRealloc("FMemory::Realloc", 0x5C9790);
 	OFFSET FFree("FMemory::Free", 0x5BC5E0);
 	
-	OFFSET ProcessEvent("ProcessEvent", 0x823B30);
+	OFFSET ProcessEvent("UObject::ProcessEvent", 0x823B30);
+	OFFSET Invoke("UFunction::Invoke", 0x70DBF0);
 	OFFSET AppPreExit("FEngineLoop::AppPreExit", 0x1E3380);
 
 	OFFSET PreLogin("AGameModeBase::PreLogin", 0x13D7710);

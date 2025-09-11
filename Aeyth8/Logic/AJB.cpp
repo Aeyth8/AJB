@@ -79,6 +79,13 @@ SDK::FString* __fastcall GetNetID(SDK::UAJBNetworkObserver* This, SDK::FString* 
 	return OutString;
 }
 
+A8CL::OFFSET CharacterNo("UAJBGameInstance::SetSelectedCharacterNo", 0x485F70);
+static void SetCharNo(SDK::UAJBGameInstance* This, int32 Num)
+{
+	LogA(CharacterNo.GetName(), std::to_string(Num));
+	CharacterNo.VerifyFC<void(__thiscall*)(SDK::UAJBGameInstance*, int32)>()(This, Num);
+}
+
 void AJB::Init_Hooks()
 {
 	constexpr const BYTE Replacement[] = { RETN, NOP };
@@ -168,7 +175,13 @@ void AJB::Init_Hooks()
 		{
 			Hooks::CreateAndEnableHook(OFF::ProcessEvent, UFunctions::ProcessEvent);
 		}
+		if (CMLA::HookAndLogInvoke.GetAsBool())
+		{
+			Hooks::CreateAndEnableHook(OFF::Invoke, UFunctions::Invoke);
+		}
+
 		Hooks::CreateAndEnableHook(NetID, GetNetID);
+		Hooks::CreateAndEnableHook(CharacterNo, SetCharNo);
 	}
 
 }
@@ -213,7 +226,7 @@ void AJB::Init_Vars(SDK::UWorld* GWorld)
 		System = static_cast<SDK::UAJBAMSystemObject*>(Instance->AMSystemObject);
 		PlayerPoints = (&System->PP);
 		OutGameProxy = SDK::ABP_AJBOutGameProxy_C::GetDefaultObj();
-
+		
 		if (!IsNull(Settings = static_cast<SDK::UAJBAMSystemSettings*>(Instance->AMSystemSettings)))
 		{
 			bDebugInputMode = (&Settings->bDebugInputMode);
@@ -247,11 +260,6 @@ void AJB::Init_Vars(SDK::UWorld* GWorld)
 			// However it may be affecting listen servers so I probably need to find the function that uses this pointer and kill it manually, this is just a simple lazy fix that works for now.
 			// UPDATE: NO IT DOES NOT AFFECT LISTEN SERVERS SO THIS MAY BE PERMANENT
 			Instance->ArcadeTimeManager = nullptr;	
-
-
-			//Call<UFunctions::Decl::DestroyActor>(OFF::DestroyActor.PlusBase())(GWorld, (SDK::AActor*)TimeManager, true, true);
-			//typedef void(__fastcall* Free)(void* Original);
-			//Call<Free>(PB(0x5BC5E0))(TimeManager);
 		}
 		
 		//reinterpret_cast<SDK::UBPF_AJBGameInstance_C*>(SDK::UKismetSystemLibrary::GetDefaultObj())->SetPlayMode(SDK::EPlayMode::Pair, GWorld);
@@ -344,6 +352,36 @@ bool AJB::IsOfType(SDK::UObject* Object, SDK::UClass* Type)
 const char* AJB::PlayerInfoParser(SDK::FMatchingPlayerInfo& Info)
 {
 	return std::format("[PlayerID]: {} | [GameServerUserID]: {} | [TeamID]: {} | [TeamHostUserID]: {} | [PlayerName]: {} | [PlayerIconID]: {} | [PlayerLevel]: {} | [PlayerTitle]: {} | [CharactorID]: {} | [bIsCameraMode]: {} | [Rate]: {}", Info.PlayerID, Info.GameServerUserID.ToString(), Info.TeamID, Info.TeamHostUserID.ToString(), Info.PlayerName.ToString(), Info.PlayerIconID, Info.PlayerLevel, Info.PlayerTitle.ToString(), Info.CharactorID, Info.bIsCameraMode, Info.Rate).c_str();
+}
+
+AJB::ESelectedCharacter AJB::GetSelectedCharacter()
+{
+	return Instance ? static_cast<ESelectedCharacter>(Instance->GetSelectedCharacterNo()) : INVALID;
+}
+
+unsigned char AJB::GetSelectedSkin()
+{
+	return Instance ? Instance->GetCharacterSkinId(AJB::GetSelectedCharacter()) : 0;
+}
+
+unsigned char AJB::GetSelectedStandSkin()
+{
+	return Instance ? Instance->GetStandSkinId(AJB::GetSelectedCharacter()) : 0;
+}
+
+bool AJB::SetSelectedCharacter(const ESelectedCharacter CharacterIndex, const unsigned char SkinIndex, const unsigned char StandSkinIndex)
+{
+	return AJB::SetSelectedCharacter(CharacterIndex, SkinIndex) ? (Instance->SetStandSkinId(CharacterIndex, StandSkinIndex), static_cast<int32>(AJB::GetSelectedStandSkin() == StandSkinIndex)) : false;
+}
+
+bool AJB::SetSelectedCharacter(const ESelectedCharacter CharacterIndex, const unsigned char SkinIndex)
+{
+	return AJB::SetSelectedCharacter(CharacterIndex) ? (Instance->SetCharacterSkinId(CharacterIndex, SkinIndex), static_cast<int32>(AJB::GetSelectedSkin() == SkinIndex)) : false;
+}
+
+bool AJB::SetSelectedCharacter(const ESelectedCharacter CharacterIndex)
+{
+	return Instance ? (SetCharNo(Instance, CharacterIndex), Instance->CharacterNo == static_cast<int32>(CharacterIndex)) : false;
 }
 
 static bool FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag)

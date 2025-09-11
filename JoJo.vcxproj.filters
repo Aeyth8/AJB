@@ -66,6 +66,9 @@
     <Filter Include="Aeyth8\UConsole\Core">
       <UniqueIdentifier>{9cc847ca-635e-4c29-9ffc-51dd92074124}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SDK\CPP\Widgets">
+      <UniqueIdentifier>{05509038-9dbd-4d1d-9178-3081544b49da}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -193,6 +196,33 @@
     </ClCompile>
     <ClCompile Include="Aeyth8\UConsole\Core\ConsoleCommands.cpp">
       <Filter>Aeyth8\UConsole\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\BP_AJBOutGameHUD_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\BP_HUDCountDownTimerWrapper_functions.cpp">
+      <Filter>SDK\CPP\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\BP_AJBSimpleMatchHUD_functions.cpp">
+      <Filter>SDK\CPP\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\BPF_AJBOutGameHUD_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\BP_AJBInGameHUD_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\WB_TimeLimitCountDown_functions.cpp">
+      <Filter>SDK\CPP\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\WB_Credit_functions.cpp">
+      <Filter>SDK\CPP\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\WB_Training_functions.cpp">
+      <Filter>SDK\CPP\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\WB_ModeSelect_functions.cpp">
+      <Filter>SDK\CPP\Widgets</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -106,6 +106,8 @@ public:
 
 		typedef void(__thiscall* ProcessEvent)(SDK::UObject* This, SDK::UFunction* Function, LPVOID Parms);
 
+		typedef void(__thiscall* Invoke)(SDK::UFunction* This, SDK::UObject* Obj, void* FFrame_Stack, void* Result);
+
 		typedef bool(__thiscall* IsNonPakFilenameAllowed)(__int64* This, SDK::FString& InFilename);
 
 		typedef bool(__thiscall* FindFileInPakFiles)(__int64* This, const wchar_t* Filename, __int64** OutPakFile, __int64* OutEntry);
@@ -138,6 +140,8 @@ public:
 	static __int64* SpawnActor(SDK::UWorld* This, SDK::UClass* Class, const SDK::FVector& Location, const SDK::FRotator& Rotation, FActorSpawnParameters& SpawnParameters);
 
 	static void ProcessEvent(SDK::UObject* This, SDK::UFunction* Function, LPVOID Parms);
+
+	static void Invoke(SDK::UFunction* This, SDK::UObject* Obj, void* FFrame_Stack, void* Result);
 
 	static bool IsNonPakFilenameAllowed(__int64* This, SDK::FString& InFilename);
 

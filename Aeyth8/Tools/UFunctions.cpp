@@ -145,6 +145,12 @@ using namespace Global;
 #include "../../Dumper-7/SDK/FlowState_classes.hpp"
 #include "../../Dumper-7/SDK/FlowState_structs.hpp"
 #include "../../Dumper-7/SDK/BP_PPV_VSFilter_classes.hpp"
+#include "../../Dumper-7/SDK/BP_HUDCountDownTimerWrapper_classes.hpp"
+#include "../../Dumper-7/SDK/BPF_AJBOutGameHUD_classes.hpp"
+#include "../../Dumper-7/SDK/BP_AJBOutGameHUD_classes.hpp"
+#include "../../Dumper-7/SDK/WB_TimeLimitCountDown_classes.hpp"
+#include "../../Dumper-7/SDK/WB_Credit_classes.hpp"
+#include "../../Dumper-7/SDK/WB_ModeSelect_classes.hpp"
 
 void UFunctions::UConsole(SDK::UConsole* This, SDK::FString& Command)
 {
@@ -258,6 +264,41 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			Filter->NextFilter();
 		}
 	}
+	else if (StrCommand == "hud")
+	{
+
+		//for (SDK::UWB_Credit_C* Credit : Pointers::FindObjects<SDK::UWB_Credit_C>(false))
+		//{
+		//	Credit->WB_TimeLimitCountDown->SetVisibility(SDK::ESlateVisibility::Hidden);
+		//	/*Credit->WB_TimeLimitCountDown->SetTextNum(1000, 1000);
+		//	Credit->WB_TimeLimitCountDown->PreviousTimerNum = 1000;
+		//	Credit->WB_TimeLimitCountDown->TimerNum = 1000;*/
+		//}
+		
+		bool Success{false};
+		SDK::ABP_AJBOutGameHUD_C* HUD{nullptr};
+
+		AJB::GetBlueprintClass<SDK::UBPF_AJBOutGameHUD_C>()->GetAJBOutGameHUD_BP(0, AJB::GWorld(), &Success, &HUD);
+		if (HUD)
+		{
+			for (SDK::UClass*& Widget : HUD->CreateWidgets)
+			{
+				LogA("Widget", Widget->GetFullName());
+			}
+			HUD->ShowCharacterSelect();
+			//HUD->ShowCharacterSelect();
+			//HUD->UpdateTimeCountDown(999, 999);
+			HUD->TakeOverElapsedTime_ModeSelect = 9999;
+			HUD->TakeOverRemainTime_PvE = 9999;
+			HUD->TakeOverRemainTime_ShopStandby = 9999;
+ 		}
+	}
+	else if (StrCommand == "skin")
+	{
+		AJB::SetSelectedCharacter(AJB::KAKYOIN, 7, 7);
+		LogA("Selected Character", std::to_string(AJB::GetSelectedCharacter()));
+	}
+
 	//LogA("ConsoleCommand", std::format("[Owning PlayerController]: {} | [Command]: {}", This->GetFullName(), StrCommand));
 
 	return OFF::ConsoleCommand.VerifyFC<Decl::ConsoleCommand>()(This, Result, Command, bWriteToLog);
@@ -388,7 +429,7 @@ void UFunctions::ProcessEvent(SDK::UObject* This, SDK::UFunction* Function, LPVO
 		135219, // Get_Img_AllNetIcon_Brush_0
 		136935, // OnCheckPP
 		119129, // ExecuteUbergraph_WB_ModeSelectButtonBase
-		119390, // ExecuteUbergraph_WB_ModeSelectButtonBase		
+		119390, // ExecuteUbergraph_WB_ModeSelectButtonBase
 	};
 
 	bool bLogPE{true};
@@ -413,16 +454,27 @@ void UFunctions::ProcessEvent(SDK::UObject* This, SDK::UFunction* Function, LPVO
 		}
 	}
 	
+	if (Function->Name.ComparisonIndex == 2130)
+	{
+		return;
+	}
 	
 	if (bLogPE) 
 	{
-		LogA("PE", std::format("[UObject]: Name = {} , ComparisonIndex = {} , Address = {} / {} / {} | [UFunction]: Name = {} , ComparisonIndex = {} , Address = {} / {} / {} | [Parms]: {} / {} |", 
+		LogA("PE", std::format("[UObject]: Name = {} , ComparisonIndex = {} , Address = {} / {} / {} | [UFunction]: Name = {} , Outer = {} , ComparisonIndex = {} , Address = {} / {} / {} | [Parms]: {} / {} |", 
 			This->GetFullName(), This->Name.ComparisonIndex, This ? HexToString(*(uintptr_t*)This - GBA) : "nullptr", This ? HexToString(*(uintptr_t*)This) : "nullptr", This ? HexToString((uintptr_t)This) : "nullptr",
-			Function->GetFullName(), Function->Name.ComparisonIndex, Function ? HexToString(*(uintptr_t*)Function - GBA) : "nullptr", Function ? HexToString(*(uintptr_t*)Function) : "nullptr", Function ? HexToString((uintptr_t)Function) : "nullptr",
+			Function->GetFullName(), Function->Outer->GetFullName(), Function->Name.ComparisonIndex, Function ? HexToString(*(uintptr_t*)Function - GBA) : "nullptr", Function ? HexToString(*(uintptr_t*)Function) : "nullptr", Function ? HexToString((uintptr_t)Function) : "nullptr",
 			Parms ? HexToString(*(uintptr_t*)Parms) : "nullptr", Parms ? HexToString((uintptr_t)Parms) : "nullptr"));
 	}
 
 	OFF::ProcessEvent.VerifyFC<Decl::ProcessEvent>()(This, Function, Parms);
+}
+
+void UFunctions::Invoke(SDK::UFunction* This, SDK::UObject* Obj, void* FFrame_Stack, void* Result)
+{
+	LogA(OFF::Invoke.GetName(), std::format("[UFunction]: {} | [UObject]: {}", This->GetFullName(), Obj->GetFullName()));
+
+	OFF::Invoke.VerifyFC<Decl::Invoke>()(This, Obj, FFrame_Stack, Result);
 }
 
 bool UFunctions::IsNonPakFilenameAllowed(__int64* This, SDK::FString& InFilename)

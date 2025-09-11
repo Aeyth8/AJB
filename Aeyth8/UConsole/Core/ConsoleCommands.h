@@ -46,6 +46,11 @@ public:
 
 	CCommand() { ++GlobalCommandCount, GlobalCommandObjects[GlobalCommandCount] = this; }
 
+	~CCommand()
+	{
+
+	}
+
 };
 
 }

@@ -53,6 +53,14 @@ namespace SDK
 	class ABP_AJBInGameCharacter_C; // Main class when ingame
 
 	class AAJBHUDBase;
+	class AAJBInGameHUD;
+	class ABP_AJBInGameHUD_C;
+	class ABP_AJBOutGameHUD_C;
+	class ABP_AJBSimpleMatchHUD_C;
+
+	class UAJBUserWidget;
+	class UAJBWindowWidget;
+	class UWB_ModeSelect_C;
 
 	struct FMatchingPlayerInfo;
 
@@ -97,6 +105,7 @@ namespace SDK
 	class UBPF_AJBInGameSkillFunctionLibrary_C;
 	class UBPF_AJBOutGameHUD_C;
 	class UBPF_AJBOutGamePlayerController_C;
+	class UBPF_AJBOutGameHUD_C;
 
 	class ABP_PPV_VSFilter_C;
 
@@ -109,6 +118,40 @@ namespace A8CL
 {
 namespace AJB
 {
+	enum ESelectedCharacter : unsigned char
+	{
+		// Blame the devs for making the numbers a mess
+		INVALID = 0,
+		JOTARO = 1,
+		DIO = 11,
+		JEAN = 8,
+		DIO_THE_WORLD = 14,
+		JOSUKE = 7,
+		OKUYASU = 15,
+		GIORNO = 9,
+		BRUNO = 3,
+		DIAVOLO = 17,
+		JOLYNE = 18,
+		JOTARO_STONE_OCEAN = 20,
+		ANASUI = 21,
+		AVDOL = 23,
+		KAKYOIN = 2,
+		HOL_HORSE = 10,
+		GUIDO = 4,
+		NARANCIA = 13,
+		KOICHI = 5,
+		ROHAN = 6,
+		KIRA = 12,
+		KOSAKU = 24,
+		FUGO = 22,
+		LEONE = 25,
+		RISOTTO = 16,
+		PUCCI = 28,
+		WEATHER_REPORT = 19,
+		JOSEPH = 26,
+		CAESAR = 27
+	};
+
 	// -- Vars
 
 	extern SDK::UGameMapsSettings* MapSettings;
@@ -184,6 +227,12 @@ namespace AJB
 
 	const char* PlayerInfoParser(SDK::FMatchingPlayerInfo& Info);
 
+	ESelectedCharacter GetSelectedCharacter();
+	unsigned char GetSelectedSkin(); // 0 is invalid, normally it's 1-10
+	unsigned char GetSelectedStandSkin();
+	bool SetSelectedCharacter(const ESelectedCharacter CharacterIndex, const unsigned char SkinIndex, const unsigned char StandSkinIndex);
+	bool SetSelectedCharacter(const ESelectedCharacter CharacterIndex, const unsigned char SkinIndex);
+	bool SetSelectedCharacter(const ESelectedCharacter CharacterIndex);
 }
 
 // -- FMemory

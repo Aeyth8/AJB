@@ -12,8 +12,11 @@ TEMP_HLP TEMP_HardcodedLaunchParms[] =
 	{"-bDebugInputMode", 0}
 };
 
-int main(int ArgC, const char** ArgV)
+int __stdcall WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd)
 {
+	int ArgC = __argc;
+	const char** ArgV = const_cast<const char**>(__argv);
+
 	CStr CommandLine(ArgC, ArgV);
 
 	for (const char*& Arg : CommandLine)
