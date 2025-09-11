@@ -40,16 +40,48 @@ class CCommand // Just a last minute concept/idea that I will have to figure out
 private:
 
 	static CCommand** GlobalCommandObjects;
+	inline static int GlobalCommandMax = 4;
 	static int GlobalCommandCount;
+
+	static void ResizeArray()
+	{
+		if (GlobalCommandMax < GlobalCommandCount)
+		{
+			int NewSize = GlobalCommandMax * 2;
+			CCommand** NewArray = new CCommand*[NewSize];
+
+			for (int i{0}; i < GlobalCommandCount; ++i)
+			{
+				NewArray[i] = GlobalCommandObjects[i];
+			}
+
+			delete[] GlobalCommandObjects;
+
+			GlobalCommandObjects = NewArray;
+			GlobalCommandMax = NewSize;
+		}
+	}
 
 public:
 
-	CCommand() { ++GlobalCommandCount, GlobalCommandObjects[GlobalCommandCount] = this; }
+	CCommand() 
+	{ 
+		if (!GlobalCommandObjects)
+		{
+			GlobalCommandObjects = new CCommand*[GlobalCommandMax];
+		}
 
-	~CCommand()
-	{
-
+		ResizeArray();
+		
+		GlobalCommandObjects[GlobalCommandCount++] = this;
 	}
+
+	/*~CCommand()
+	{
+		delete[] GlobalCommandObjects;
+		GlobalCommandMax = 0;
+		GlobalCommandCount = 0;
+	}*/
 
 };
 

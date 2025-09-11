@@ -225,7 +225,6 @@ void AJB::Init_Vars(SDK::UWorld* GWorld)
 		Settings = static_cast<SDK::UAJBAMSystemSettings*>(Instance->AMSystemSettings);
 		System = static_cast<SDK::UAJBAMSystemObject*>(Instance->AMSystemObject);
 		PlayerPoints = (&System->PP);
-		OutGameProxy = SDK::ABP_AJBOutGameProxy_C::GetDefaultObj();
 		
 		if (!IsNull(Settings = static_cast<SDK::UAJBAMSystemSettings*>(Instance->AMSystemSettings)))
 		{

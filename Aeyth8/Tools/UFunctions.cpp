@@ -151,6 +151,7 @@ using namespace Global;
 #include "../../Dumper-7/SDK/WB_TimeLimitCountDown_classes.hpp"
 #include "../../Dumper-7/SDK/WB_Credit_classes.hpp"
 #include "../../Dumper-7/SDK/WB_ModeSelect_classes.hpp"
+#include "../../Dumper-7/SDK/BP_AJBOutGameProxy_classes.hpp"
 
 void UFunctions::UConsole(SDK::UConsole* This, SDK::FString& Command)
 {
@@ -297,6 +298,24 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	{
 		AJB::SetSelectedCharacter(AJB::KAKYOIN, 7, 7);
 		LogA("Selected Character", std::to_string(AJB::GetSelectedCharacter()));
+	}
+	else if (StrCommand == "tenpo")
+	{
+		constexpr const char* TenpoStatus[7]{"SelectRoom", "WaitPairMatching", "WaitRandomPairMatching", "CharacterSelect", "GameMatching", "WaitPairIDMatching", "EOutGameProxyState_MAX"};
+
+		BYTE Int{0};
+		for (SDK::ABP_AJBOutGameProxy_C*& Proxy : Pointers::FindObjects<SDK::ABP_AJBOutGameProxy_C>(false))
+		{
+			Int++;
+			LogA("Proxy " + std::to_string(Int), std::format("[IsTenpoHost]: {} | [RoomHostUserId] {} | [OutGameProxyState]: {}", Proxy->IsTenpoHost(), Proxy->RoomHostUserID.ToString(), TenpoStatus[(unsigned char)Proxy->OutGameProxyState]));
+		}
+	}
+	else if (StrCommand == "host")
+	{
+		if (!AJB::OutGameProxy && !(AJB::OutGameProxy = Pointers::GetLastOf<SDK::ABP_AJBOutGameProxy_C>(false))) AJB::OutGameProxy = Pointers::SpawnActor<SDK::ABP_AJBOutGameProxy_C>();
+		//AJB::OutGameProxy->DebugSetupLoginPlayerInfo(true);
+		//AJB::OutGameProxy->StartTenpoHostServer();
+		Pointers::GetLastOf<SDK::UAJBInGameServerInfo>()->InitializeConnection(AJB::GWorld());
 	}
 
 	//LogA("ConsoleCommand", std::format("[Owning PlayerController]: {} | [Command]: {}", This->GetFullName(), StrCommand));

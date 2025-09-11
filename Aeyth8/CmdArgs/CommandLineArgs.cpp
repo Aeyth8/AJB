@@ -27,7 +27,7 @@ namespace CMLA
 	CommandLineParameter<wchar_t> ConsoleKey(L"ConsoleKey", L"Tilde");
 
 	// -- Global array for automated parsing, not generally needed for manual usage.
-	CommandLineParameter<wchar_t>* InternalGlobalArray[] =
+	/*CommandLineParameter<wchar_t>* InternalGlobalArray[] =
 	{
 		&GameDefaultMap,
 		&TransitionMap,
@@ -38,10 +38,12 @@ namespace CMLA
 		&HookAndLogInvoke,
 		&WinCSOut,
 		&ConsoleKey
-	};
+	};*/
 
 	// I would rather have this be the entire array instead of creating a second array, but I somehow managed to get this far I'm not pushing my mental strain any further for now.
-	CArray<CommandLineParameter<wchar_t>*> GlobalCommandLineArgs(sizeof(InternalGlobalArray)/sizeof(InternalGlobalArray[0]), InternalGlobalArray);
+	//CArray<CommandLineParameter<wchar_t>*> GlobalCommandLineArgs(sizeof(InternalGlobalArray)/sizeof(InternalGlobalArray[0]), InternalGlobalArray);
+
+	CArray<CommandLineParameter<wchar_t>*> GlobalCommandLineArgs = CommandLineParameter<wchar_t>::GCommands();
 
 	// -- Global array for command line arguments retrieved from the WinAPI, not used but good for reference/ease of access.
 	CArray<wchar_t*>* GlobalCommandLine{nullptr};
