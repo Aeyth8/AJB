@@ -152,6 +152,7 @@ using namespace Global;
 #include "../../Dumper-7/SDK/WB_Credit_classes.hpp"
 #include "../../Dumper-7/SDK/WB_ModeSelect_classes.hpp"
 #include "../../Dumper-7/SDK/BP_AJBOutGameProxy_classes.hpp"
+#include "BytePatcher.h"
 
 void UFunctions::UConsole(SDK::UConsole* This, SDK::FString& Command)
 {
@@ -316,6 +317,43 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		//AJB::OutGameProxy->DebugSetupLoginPlayerInfo(true);
 		//AJB::OutGameProxy->StartTenpoHostServer();
 		Pointers::GetLastOf<SDK::UAJBInGameServerInfo>()->InitializeConnection(AJB::GWorld());
+	}
+	else if (StrCommand == "text")
+	{
+		int Iterator{0};
+		bool bCopyString = true;
+		constexpr const int CrashBlacklist[] = // For no reason even with all of the validity checks THE STUPID GAME STILL CRASHES AT THESE INDEXES, I wasted more time than I EVER should need to for this stupidity.
+		{
+			1242, 2895, 2932, 2981, 2892, 2893, 2982, 2950, 3243, 3412, 3413, 3691, 3692
+		};
+
+		for (SDK::UAJBTextBlock*& Block : Pointers::FindObjects<SDK::UAJBTextBlock>())
+		{
+			Iterator++;
+
+			for (const int& Num : CrashBlacklist) if (Num == Iterator) { bCopyString = false; break; }
+
+			if (Block && Block->Text.TextData && Block->Text.TextData->TextSource && Block->Text.TextData->TextSource.IsValid() && Block->Text.GetStringRef() != nullptr)
+			{
+				SDK::FString AllocatedString{L"None"};
+
+				std::string Name = "NULL";
+				Name = Block->GetFullName();
+				//if (bCopyString) OFF::CopyString.VerifyFC<Decl::CopyString>()(&AllocatedString, &Block->Text.TextData->TextSource); 
+				void* String = &Block->Text.TextData->TextSource;
+				if (String != nullptr)
+				{
+					BytePatcher::SetProtectionStatus(*(uintptr_t*)String, 0x1000, BytePatcher::EProtectionStatus::EXECUTE_READWRITE);
+					LogA(Name + " | " + std::to_string(Iterator), HexToString(OffsetToByte(*reinterpret_cast<uintptr_t*>(&Block->Text.TextData->TextSource))));
+				}
+				
+			}
+
+			bCopyString = true;
+		}
+		
+		
+
 	}
 
 	//LogA("ConsoleCommand", std::format("[Owning PlayerController]: {} | [Command]: {}", This->GetFullName(), StrCommand));

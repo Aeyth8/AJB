@@ -107,5 +107,5 @@ bool Pointers::ConstructUConsole(const SDK::FString ConsoleKey)
 
 __int64* Pointers::SpawnActorInternal(SDK::UWorld* This, SDK::UClass* Class, const SDK::FVector& Location, const SDK::FRotator& Rotation, FActorSpawnParameters& SpawnParameters)
 {
-	return OFF::SpawnActor.VerifyFC<SpawnActor_T>()(This, Class, Location, Rotation, SpawnParameters);
+	return OFF::SpawnActor.VerifyFC<__int64*(__fastcall*)(SDK::UWorld*, SDK::UClass*, const SDK::FVector&, const SDK::FRotator&, FActorSpawnParameters&)>()(This, Class, Location, Rotation, SpawnParameters);
 }

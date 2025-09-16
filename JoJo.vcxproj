@@ -175,9 +175,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Aeyth8\A8CL\CTypes\IntegerTypes.h" />
+    <ClInclude Include="Aeyth8\A8CL\CTypes\CArray.h" />
     <ClInclude Include="Aeyth8\A8CL\Strings\CStrings.h" />
     <ClInclude Include="Aeyth8\CmdArgs\CommandLineArgs.h" />
     <ClInclude Include="Aeyth8\CmdArgs\Core\CMLA.h" />
+    <ClInclude Include="Aeyth8\Filesystem\FilesystemCore.h" />
     <ClInclude Include="Aeyth8\Global.hpp" />
     <ClInclude Include="Aeyth8\Hooks\Hooks.hpp" />
     <ClInclude Include="Aeyth8\Logger.hpp" />
@@ -194,6 +197,7 @@
     <ClInclude Include="Aeyth8\Tools\Pointers.h" />
     <ClInclude Include="Aeyth8\Tools\UFunctions.hpp" />
     <ClInclude Include="Aeyth8\UConsole\Core\ConsoleCommands.h" />
+    <ClInclude Include="Aeyth8\UConsole\Core\Logger.h" />
     <ClInclude Include="Dumper-7\PropertyFixup.hpp" />
     <ClInclude Include="Dumper-7\SDK.hpp" />
     <ClInclude Include="Dumper-7\UnrealContainers.hpp" />

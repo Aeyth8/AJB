@@ -26,8 +26,6 @@ struct FActorSpawnParameters
 	SDK::ESpawnActorCollisionHandlingMethod SpawnCollisionHandlingOverride;
 };
 
-typedef __int64*(__fastcall* SpawnActor_T)(SDK::UWorld* This, SDK::UClass* Class, const SDK::FVector& Location, const SDK::FRotator& Rotation, FActorSpawnParameters& SpawnParameters);
-
 namespace A8CL
 {
 

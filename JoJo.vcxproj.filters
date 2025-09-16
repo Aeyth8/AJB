@@ -69,6 +69,9 @@
     <Filter Include="SDK\CPP\Widgets">
       <UniqueIdentifier>{05509038-9dbd-4d1d-9178-3081544b49da}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Aeyth8\Filesystem">
+      <UniqueIdentifier>{55d4838f-c7ec-4bb4-86fa-fd19a6fa946f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -309,6 +312,18 @@
     </ClInclude>
     <ClInclude Include="Aeyth8\UConsole\Core\ConsoleCommands.h">
       <Filter>Aeyth8\UConsole\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\UConsole\Core\Logger.h">
+      <Filter>Aeyth8</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\Filesystem\FilesystemCore.h">
+      <Filter>Aeyth8\Filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\A8CL\CTypes\CArray.h">
+      <Filter>Aeyth8\A8CL</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\A8CL\CTypes\IntegerTypes.h">
+      <Filter>Aeyth8\A8CL</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

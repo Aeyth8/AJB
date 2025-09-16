@@ -1,6 +1,8 @@
 #include "ProxyTypes.h"
 #include <Windows.h>
-
+#include "../Global.hpp"
+#include "../A8CL/CTypes/CArray.h"
+#include <format>
 
 /*
 
@@ -50,6 +52,45 @@ void Proxy::LoadProxyPointers(const std::vector<Proxy::ProxyCallStructure>& Tabl
 
 bool Proxy::Attach(HMODULE CurrentModule)
 {
+	constexpr const char* ret = "I WONDER HOW I WONDER WHY YESYETDAY YOU ROTLD ME BAOTU etsit";
+	A8CL::CVArray<const char*> Strings =
+	{
+		"HELPPPP", "HELLLLLLLLLLLLLLP", "HELP MEEEEEEEEEE", "HEEEEEEEEEEELLLLLLLLLLLLLLLLPPPPPPPPPPPPPPPPPPP", (const char*)0, (const char*)0, (const char*)0, ret
+	};
+	A8CL::Global::LogA("CArray", std::format("Max {} | Size {} ", Strings.max(), Strings.size()));
+	A8CL::Global::LogA("CArray Resolve", std::to_string(A8CL::CVArray<const char*>::Resolve(&Strings)));
+
+	for (const char*& String : Strings)
+	{
+		A8CL::Global::LogA("String", std::string(String));
+	}
+
+	A8CL::Global::LogA("CArray", std::format("Max {} | Size {} ", Strings.max(), Strings.size()));
+	Strings.Resize(55);
+	A8CL::Global::LogA("CArray", std::format("Max {} | Size {} ", Strings.max(), Strings.size()));
+
+	for (const char*& String : Strings)
+	{
+		A8CL::Global::LogA("String", std::string(String));
+	}
+
+	//Strings.push().back("Hello");
+
+	/*const char* One{"HELPPPP"};
+	const char* Two{"HELLLLLLLLLLLLLLP"};
+	const char* Three{"HELP MEEEEEEEEEE"};
+	const char* Four{"HEEEEEEEEEEELLLLLLLLLLLLLLLLPPPPPPPPPPPPPPPPPPP"};
+
+	A8CL::CVArray<const char*> Strings =
+	{
+		One, Two, Three, Four
+	};
+
+	for (const char*& String : Strings)
+	{
+		A8CL::Global::LogA("String", std::string(String));
+	}*/
+
 	char Path[260]{0};
 
 	// Retrieves the name and relative path of 'this' DLL, the proxy.
