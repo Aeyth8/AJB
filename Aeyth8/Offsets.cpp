@@ -35,6 +35,9 @@ namespace OFF
 	
 	OFFSET IsNonPakFileNameAllowed("FPakPlatformFile::IsNonPakFilenameAllowed", 0x191F540);
 	OFFSET FindFileInPakFiles("FPakPlatformFile::FindFileInPakFiles", 0x191C430);
+	OFFSET StaticLoadClass("StaticLoadClass", 0x84B1A0);
+	OFFSET StaticFindObject("StaticFindObject", 0x84A3D0);
+	OFFSET StaticLoadObject("StaticLoadObject", 0x84B620);
 
 	/*
 	

@@ -152,6 +152,9 @@ using namespace Global;
 #include "../../Dumper-7/SDK/WB_Credit_classes.hpp"
 #include "../../Dumper-7/SDK/WB_ModeSelect_classes.hpp"
 #include "../../Dumper-7/SDK/BP_AJBOutGameProxy_classes.hpp"
+
+#include "../../Dumper-7/CustomSDK/WBP_OptionsMenu_classes.hpp" // Custom SDK header (NOT GAME NATIVE)
+
 #include "BytePatcher.h"
 
 void UFunctions::UConsole(SDK::UConsole* This, SDK::FString& Command)
@@ -207,6 +210,9 @@ void UFunctions::UConsole(SDK::UConsole* This, SDK::FString& Command)
 
 	OFF::UConsole.VerifyFC<Decl::UConsole>()(This, Command);
 }
+
+SDK::UClass* PrototypeMenu{nullptr};
+SDK::UWBP_OptionsMenu_C* OptionsMenu{nullptr};
 
 SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FString* Result, SDK::FString* Command, bool bWriteToLog)
 {
@@ -355,6 +361,30 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		
 
 	}
+	else if (StrCommand == "key")
+	{
+		LogA("Key??!!?", SDK::UClass::FindClass("WidgetBlueprintGeneratedClass WBP_OptionsMenu.WBP_OptionsMenu_C")->GetFullName());
+	}
+	else if (StrCommand == "menu")
+	{
+		static bool Opposite{false};
+		Opposite = !Opposite;
+		SDK::ABP_AJBInGamePlayerController_C* Player = AJB::GetPlayer();
+		if (Player)
+		{
+			SDK::AAJBInGameHUD* HUD = static_cast<SDK::AAJBInGameHUD*>(Player->GetHUD());
+			HUD->SetupForceInvisibleAllWidgetsFlag(Opposite);
+			Opposite ? AJB::GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->SetInputMode_UIOnly(Player, OptionsMenu, true) : /* if (!Opposite)*/ AJB::GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->SetInputMode_GameOnly(Player);
+			//if (OptionsMenu) OptionsMenu->SetOnlineStatus(Opposite);
+		}
+	}
+	else if (StrCommand == "oss")
+	{
+		static bool bOnline{false};
+		bOnline = !bOnline;
+
+		if (OptionsMenu) OptionsMenu->SetOnlineStatus(bOnline);
+	}
 
 	//LogA("ConsoleCommand", std::format("[Owning PlayerController]: {} | [Command]: {}", This->GetFullName(), StrCommand));
 
@@ -391,12 +421,44 @@ bool UFunctions::InitListen(SDK::UIpNetDriver* This, SDK::UObject* InNotify, SDK
 	return OFF::InitListen.VerifyFC<Decl::InitListen>()(This, InNotify, LocalURL, bReuseAddressAndPort, Error);
 }
 
+
+
 SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPlayer* NewPlayer, SDK::ENetRole InRemoteRole, SDK::FString& Portal, SDK::FString& Options, SDK::FUniqueNetIdRepl& UniqueId, SDK::FString& ErrorMessage)
 {
 	LogA("Login", "Called.");
 
 	if (AJB::PlayerPoints) *AJB::PlayerPoints = 1170;
 	if (AJB::Instance && AJB::Instance->ArcadeTimeManager) AJB::Instance->ArcadeTimeManager = nullptr;
+
+	
+	/*UFunctions::StaticLoadObject(SDK::UObject::FindClass("Class CoreUObject.Object"), nullptr, L"/Game/Aeyth8/UI/CustomUIManager.CustomUIManager_C", nullptr, 0, nullptr, true);
+	UFunctions::StaticLoadObject(SDK::UGameInstance::StaticClass(), nullptr, L"/Game/Aeyth8/UI/CustomMenuManager.CustomMenuManager_C", nullptr, 0, nullptr, true);*/
+	PrototypeMenu = UFunctions::StaticLoadClass(SDK::UUserWidget::StaticClass(), nullptr, L"/Game/Aeyth8/UI/InGame/WBP_OptionsMenu.WBP_OptionsMenu_C", nullptr, 0, nullptr);
+	if (PrototypeMenu)
+	{
+		OptionsMenu = static_cast<SDK::UWBP_OptionsMenu_C*>(AJB::GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->Create(AJB::GWorld(), PrototypeMenu, Pointers::Player()));
+		if (OptionsMenu)
+		{
+			OptionsMenu->AddToViewport(1170);
+
+			// I read the source code and these flags seemingly do absolutely nothing.
+			OptionsMenu->Flags = static_cast<SDK::EObjectFlags>(static_cast<int32>(OptionsMenu->Flags) | static_cast<int32>(EInternalObjectFlags::RootSet));
+
+		}
+	}
+	
+	
+	
+	/*static SDK::ULevelStreamingKismet* Stream = SDK::ULevelStreamingKismet::GetDefaultObj();
+	SDK::ULevelStreamingKismet* KeyListener = Stream->LoadLevelInstance(AJB::GWorld(), L"/Game/Aeyth8/UI/InGame/LVL_SpawnOptions", SDK::FVector{}, SDK::FRotator{}, 0);
+	KeyListener->bIsStatic = true;*/
+
+	
+	/*SDK::TSubclassOf<SDK::UUserWidget> KeyListener = 
+	AJB::GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->Create(AJB::GWorld(), )*/
+	
+	
+
 	
 	/*SDK::ABP_AJBBattleGameMode_C* Game = AJB::GetGameMode<SDK::ABP_AJBBattleGameMode_C>();
 	if (!IsNull(Game))
@@ -576,3 +638,50 @@ bool UFunctions::FindFileInPakFiles(__int64* This, const wchar_t* Filename, __in
 	// Returns the result of the actual function which is stored in the 6th bit.
 	return X & 0b00100000;
 }
+
+SDK::UClass* __fastcall UFunctions::StaticLoadClass(SDK::UClass* BaseClass, SDK::UObject* InOuter, const wchar_t* Name, const wchar_t* Filename, unsigned int LoadFlags, SDK::UPackageMap* Sandbox)
+{
+	SDK::FString AName{Name ? Name : L"None"};
+	SDK::FString AFilename{ Filename ? Filename : L"None"};
+
+	LogA("StaticLoadClass", std::format("[BaseClass]: {} | [InOuter]: {} | [Name]: {} | [Filename]: {} | [LoadFlags]: {} | [Sandbox]: {}", BaseClass->GetFullName(), InOuter->GetFullName(), AName.ToString(), AFilename.ToString(), LoadFlags, Sandbox->GetFullName()));
+
+	return OFF::StaticLoadClass.VerifyFC<Decl::StaticLoadClass>()(BaseClass, InOuter, Name, Filename, LoadFlags, Sandbox);
+}
+
+SDK::UObject* __fastcall UFunctions::StaticLoadObject(SDK::UClass* ObjectClass, SDK::UObject* InOuter, const wchar_t* InName, const wchar_t* Filename, unsigned int LoadFlags, SDK::UPackageMap* Sandbox, bool bAllowObjectReconciliation)
+{
+	SDK::FString AName{InName ? InName : L"None"};
+	SDK::FString AFilename{ Filename ? Filename : L"None"};
+	/*bool One{0};
+	if (!One && ObjectClass->GetFullName() == "Class CoreUObject.Class")
+	{
+		One = 1;
+		OFF::StaticLoadObject.VerifyFC<Decl::StaticLoadObject>()(ObjectClass, nullptr, L"/Game/Aeyth8/UI/InGame/WBP_OptionsMenu.WBP_OptionsMenu_C", nullptr, 0, nullptr, true);
+	}*/
+
+	LogA("StaticLoadObject", std::format("[ObjectClass]: {} {} | [InOuter]: {} | [Name]: {} | [Filename]: {} | [LoadFlags]: {} | [Sandbox]: {}", ObjectClass->GetFullName(), HexToString((uintptr_t)ObjectClass), InOuter->GetFullName(), AName.ToString(), AFilename.ToString(), LoadFlags, Sandbox->GetFullName()));
+	return OFF::StaticLoadObject.VerifyFC<Decl::StaticLoadObject>()(ObjectClass, InOuter, InName, Filename, LoadFlags, Sandbox, bAllowObjectReconciliation);
+}
+
+/*
+Cleanup later:
+
+Stupid function just HAD to be inline but fortunately it doesn't seem to be too big of a deal
+
+//
+// Add an object to the root set. This prevents the object and all
+// its descendants from being deleted during garbage collection.
+//
+FORCEINLINE void AddToRoot()
+{
+	GUObjectArray.IndexToObject(InternalIndex)->SetRootSet();
+}
+
+FORCEINLINE void SetRootSet()
+{
+	Flags |= int32(EInternalObjectFlags::RootSet);
+}
+
+
+*/

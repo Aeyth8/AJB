@@ -23,6 +23,7 @@ namespace CMLA
 	extern CommandLineParameter<wchar_t> bDebugInputMode;
 	extern CommandLineParameter<wchar_t> HookAndLogProcessEvent;
 	extern CommandLineParameter<wchar_t> HookAndLogInvoke;
+	extern CommandLineParameter<wchar_t> HookAndLogLoader;
 	extern CommandLineParameter<wchar_t> WinCSOut;
 	extern CommandLineParameter<wchar_t> ConsoleKey;
 

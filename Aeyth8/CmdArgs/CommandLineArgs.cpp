@@ -23,6 +23,7 @@ namespace CMLA
 	CommandLineParameter<wchar_t> bDebugInputMode(L"bDebugInputMode");
 	CommandLineParameter<wchar_t> HookAndLogProcessEvent(L"HookPE");
 	CommandLineParameter<wchar_t> HookAndLogInvoke(L"HookInvoke");
+	CommandLineParameter<wchar_t> HookAndLogLoader(L"HookLoader");
 	CommandLineParameter<wchar_t> WinCSOut(L"log");
 	CommandLineParameter<wchar_t> ConsoleKey(L"ConsoleKey", L"Tilde");
 

@@ -156,6 +156,16 @@ namespace AJB
 
 	extern SDK::UGameMapsSettings* MapSettings;
 
+	// The game will crash and die if I try to load any of my mod assets using StaticLoadClass/StaticLoadObject unless I use the CoreUObject class, which I am grabbing from the hook.
+	// I don't know if I can even access that in the SDK and I don't really understand how or why this is the case, especially since EVEN THE GAME INSTANCE which should be of type 'BlueprintGeneratedClass' shows up as 'Class CoreUObject.Object' instead.
+	// After logging the memory addresses for each pointer, I can confirm that the 'Class CoreUObject.Object' class shares the same pointer, therefore I should be able to reuse this pointer at all times.
+	// This is a giant note because I have wasted hours trying to figure out this stupid system, no crash logs or anything.
+	// 
+	// EDIT: Apparently it was just UObject::FindClass("Class CoreUObject.Object") which I had originally thought it was/should've been but it still kept crashing anyways, as it turns out it had NOTHING TO DO WITH IT
+	// I wasted my time because the real issue was the package loading, I guess the package just didn't fully load by the time I tried calling it, I'm going to reinterpret_cast myself off a cliff.
+	// 
+	//extern SDK::UClass* CoreUObject;
+
 	extern SDK::UBP_AJBGameInstance_C* Instance; // Originally SDK::UAJBGameInstance but this is a parent class. 
 	extern SDK::UAJBAMSystemSettings* Settings;
 	extern SDK::UAJBAMSystemObject* System;

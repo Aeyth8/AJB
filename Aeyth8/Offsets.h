@@ -35,6 +35,9 @@ namespace OFF
 
 	extern OFFSET IsNonPakFileNameAllowed;
 	extern OFFSET FindFileInPakFiles;
+	extern OFFSET StaticLoadClass;
+	extern OFFSET StaticFindObject;
+	extern OFFSET StaticLoadObject;
 
 	// Native Game Functions
 

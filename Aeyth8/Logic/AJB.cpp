@@ -19,6 +19,8 @@
 #include "../../Dumper-7/SDK/FlowState_structs.hpp"
 #include "../../Dumper-7/SDK/BP_PPV_VSFilter_classes.hpp"
 
+#include "../../Dumper-7/CustomSDK/WBP_OptionsMenu_classes.hpp" // Custom SDK header (NOT GAME NATIVE)
+
 /*
 
 Written by Aeyth8
@@ -45,6 +47,7 @@ __int32* AJB::PlayerPoints{nullptr};
 bool* AJB::bDebugInputMode{nullptr};
 
 SDK::UGameMapsSettings* AJB::MapSettings{nullptr};
+//SDK::UClass* CoreUObject{nullptr};
 
 // 8 bit to AL register
 constexpr BYTE MOV{0xB0};
@@ -160,6 +163,10 @@ void AJB::Init_Hooks()
 
 		BytePatcher::ReplaceBytes(PB(0x4A04A0), AntiAntiCursor); // HideCursorCaller, I don't have a proper name but it spam-hides the cursor like 100 times a second
 
+		//BytePatcher::ReplaceBytes(PB(0x49DEC0), {MOV, 01, RETN, NOP}); // UAJBUtilityFunctionLibrary::IsEditorPreview
+		BytePatcher::ReplaceBytes(PB(0x49DF00), ReturnZero); // UAJBUtilityFunctionLibrary::IsEnableGachaSchedule
+		//BytePatcher::ReplaceByte(PB(0x1DE861), 00); // UAJBUtilityFunctionLibrary::IsShipping
+
 		//BytePatcher::ReplaceBytes(PB(0x49DE20), {MOV, 00, RETN, NOP, NOP}); // UAJBUtilityFunctionLibrary::IsAJBOfflineMode (useless)
 		//BytePatcher::ReplaceBytes(PB(0x4ED5D0), { MOV, 00, RETN, NOP, NOP }); // UAJBNetworkObserver::IsOfflineMode (useless)
 		//BytePatcher::ReplaceBytes(PB(0x54D8CE), {MOV, 00, RETN, NOP, NOP, NOP}); // AAJBHUDBase::execSetCreditWidgetInstance (Result: Kills the game)
@@ -179,9 +186,15 @@ void AJB::Init_Hooks()
 		{
 			Hooks::CreateAndEnableHook(OFF::Invoke, UFunctions::Invoke);
 		}
+		if (CMLA::HookAndLogLoader.GetAsBool())
+		{
+			Hooks::CreateAndEnableHook(OFF::StaticLoadClass, UFunctions::StaticLoadClass);
+			Hooks::CreateAndEnableHook(OFF::StaticLoadObject, UFunctions::StaticLoadObject);
+		}
 
 		Hooks::CreateAndEnableHook(NetID, GetNetID);
 		Hooks::CreateAndEnableHook(CharacterNo, SetCharNo);
+		
 	}
 
 }
@@ -261,6 +274,12 @@ void AJB::Init_Vars(SDK::UWorld* GWorld)
 			Instance->ArcadeTimeManager = nullptr;	
 		}
 		
+		//constexpr const static wchar_t* ModdedPauseMenu{L"WidgetBlueprintGeneratedClass'/Game/Aeyth8/UI/InGame/WBP_OptionsMenu.WBP_OptionsMenu_C'"};
+		//UFunctions::StaticLoadObject(SDK::UClass::FindClass("Class CoreUObject.Class"), nullptr, L"/Game/Aeyth8/UI/InGame/WBP_OptionsMenu.WBP_OptionsMenu_C", nullptr, 0, nullptr, true);
+		/*SDK::UClass* PauseMenu = UFunctions::StaticLoadClass(SDK::UWidgetBlueprintGeneratedClass::StaticClass(), nullptr, (wchar_t*)ModdedPauseMenu, nullptr);
+		LogA("PauseMenu", PauseMenu ? "YIPEE!" : "STUPID PIEC OF SH");
+		GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->Create(GWorld, PauseMenu, Player());*/
+		//LogA("PauseMenu", PauseMenu->GetFullName());
 		//reinterpret_cast<SDK::UBPF_AJBGameInstance_C*>(SDK::UKismetSystemLibrary::GetDefaultObj())->SetPlayMode(SDK::EPlayMode::Pair, GWorld);
 	}
 }

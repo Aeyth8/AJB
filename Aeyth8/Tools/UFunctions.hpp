@@ -85,6 +85,26 @@ public:
 		SDK::ESpawnActorCollisionHandlingMethod SpawnCollisionHandlingOverride;
 	};
 
+	/** Objects flags for internal use (GC, low level UObject code) */
+	enum class EInternalObjectFlags : __int32
+	{
+		None = 0,
+		//~ All the other bits are reserved, DO NOT ADD NEW FLAGS HERE!
+		ReachableInCluster = 1 << 23, ///< External reference to object in cluster exists
+		ClusterRoot = 1 << 24, ///< Root of a cluster
+		Native = 1 << 25, ///< Native (UClass only). 
+		Async = 1 << 26, ///< Object exists only on a different thread than the game thread.
+		AsyncLoading = 1 << 27, ///< Object is being asynchronously loaded.
+		Unreachable = 1 << 28, ///< Object is not reachable on the object graph.
+		PendingKill = 1 << 29, ///< Objects that are pending destruction (invalid for gameplay but valid objects)
+		RootSet = 1 << 30, ///< Object will not be garbage collected, even if unreferenced.
+		HadReferenceKilled = 1 << 31, ///< Object had a reference null'd out by markpendingkill
+
+		GarbageCollectionKeepFlags = Native | Async | AsyncLoading,
+		//~ Make sure this is up to date!
+		AllFlags = ReachableInCluster | ClusterRoot | Native | Async | AsyncLoading | Unreachable | PendingKill | RootSet | HadReferenceKilled
+	};
+
 	class Decl
 	{
 	public:
@@ -119,6 +139,10 @@ public:
 		typedef SDK::FString*(__thiscall* CopyString)(SDK::FString* This, SDK::FString* NewString); // FString::FString
 
 		typedef SDK::FString*(__thiscall* ConsoleCommand)(SDK::APlayerController* This, SDK::FString* result, const SDK::FString* Cmd, bool bWriteToLog);
+
+		typedef SDK::UClass*(__fastcall* StaticLoadClass)(SDK::UClass* BaseClass, SDK::UObject* InOuter, const wchar_t* Name, const wchar_t* Filename, unsigned int LoadFlags, SDK::UPackageMap* Sandbox);
+
+		typedef SDK::UObject*(__fastcall* StaticLoadObject)(SDK::UClass* ObjectClass, SDK::UObject* InOuter, const wchar_t* InName, const wchar_t* Filename, unsigned int LoadFlags, SDK::UPackageMap* Sandbox, bool bAllowObjectReconciliation/*, void* InSerializeContext*/);
 	};
 
 	
@@ -147,9 +171,9 @@ public:
 
 	static bool FindFileInPakFiles(__int64* This, const wchar_t* Filename, __int64** OutPakFile, __int64* OutEntry);
 
+	static SDK::UClass* __fastcall StaticLoadClass(SDK::UClass* BaseClass, SDK::UObject* InOuter, const wchar_t* Name, const wchar_t* Filename, unsigned int LoadFlags, SDK::UPackageMap* Sandbox = nullptr);
 
-
-
+	static SDK::UObject*__fastcall StaticLoadObject(SDK::UClass* ObjectClass, SDK::UObject* InOuter, const wchar_t* InName, const wchar_t* Filename, unsigned int Flags, SDK::UPackageMap* Sandbox, bool bAllowObjectReconciliation);
 
 
 

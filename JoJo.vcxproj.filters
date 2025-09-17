@@ -72,6 +72,9 @@
     <Filter Include="Aeyth8\Filesystem">
       <UniqueIdentifier>{55d4838f-c7ec-4bb4-86fa-fd19a6fa946f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SDK\Custom">
+      <UniqueIdentifier>{dac963f0-78ec-4af4-9619-20333690e47c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -227,6 +230,9 @@
     <ClCompile Include="Dumper-7\SDK\WB_ModeSelect_functions.cpp">
       <Filter>SDK\CPP\Widgets</Filter>
     </ClCompile>
+    <ClCompile Include="Dumper-7\CustomSDK\WBP_OptionsMenu_functions.cpp">
+      <Filter>SDK\Custom</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Aeyth8\Logger.hpp">
@@ -324,6 +330,12 @@
     </ClInclude>
     <ClInclude Include="Aeyth8\A8CL\CTypes\IntegerTypes.h">
       <Filter>Aeyth8\A8CL</Filter>
+    </ClInclude>
+    <ClInclude Include="Dumper-7\CustomSDK\WBP_OptionsMenu_classes.hpp">
+      <Filter>SDK\Custom</Filter>
+    </ClInclude>
+    <ClInclude Include="Dumper-7\CustomSDK\WBP_OptionsMenu_parameters.hpp">
+      <Filter>SDK\Custom</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
