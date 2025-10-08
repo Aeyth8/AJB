@@ -140,9 +140,15 @@ public:
 
 		typedef SDK::FString*(__thiscall* ConsoleCommand)(SDK::APlayerController* This, SDK::FString* result, const SDK::FString* Cmd, bool bWriteToLog);
 
+		typedef void(__thiscall* ProcessMulticastDelegate)(__int64* This, void* Parameters);
+
 		typedef SDK::UClass*(__fastcall* StaticLoadClass)(SDK::UClass* BaseClass, SDK::UObject* InOuter, const wchar_t* Name, const wchar_t* Filename, unsigned int LoadFlags, SDK::UPackageMap* Sandbox);
 
 		typedef SDK::UObject*(__fastcall* StaticLoadObject)(SDK::UClass* ObjectClass, SDK::UObject* InOuter, const wchar_t* InName, const wchar_t* Filename, unsigned int LoadFlags, SDK::UPackageMap* Sandbox, bool bAllowObjectReconciliation/*, void* InSerializeContext*/);
+
+		typedef SDK::UObject*(__fastcall* StaticConstructObject_Internal)(SDK::UClass *InClass, SDK::UObject *InOuter, SDK::FName InName, unsigned int InFlags, EInternalObjectFlags InternalSetFlags, SDK::UObject *InTemplate, bool bCopyTransientsFromClassDefaults, void* *InInstanceGraph, bool bAssumeTemplateIsArchetype);
+	
+		typedef void(__fastcall* BroadcastDelegate)(SDK::UMulticastDelegateProperty* This);
 	};
 
 	
@@ -170,6 +176,10 @@ public:
 	static bool IsNonPakFilenameAllowed(__int64* This, SDK::FString& InFilename);
 
 	static bool FindFileInPakFiles(__int64* This, const wchar_t* Filename, __int64** OutPakFile, __int64* OutEntry);
+
+	static void __fastcall ProcessMulticastDelegate(__int64* This, void* Parameters);
+
+	static void __fastcall BroadcastDelegate(SDK::UMulticastDelegateProperty* This);
 
 	static SDK::UClass* __fastcall StaticLoadClass(SDK::UClass* BaseClass, SDK::UObject* InOuter, const wchar_t* Name, const wchar_t* Filename, unsigned int LoadFlags, SDK::UPackageMap* Sandbox = nullptr);
 

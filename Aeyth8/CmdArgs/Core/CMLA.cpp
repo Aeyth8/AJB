@@ -29,7 +29,6 @@ void CommandLineArguments::ParseCommandLine(wchar_t* CommandLineW, CArray<Comman
 		if (Arg[0] != '-') continue;
 
 		wchar_t* EqualSign = FindChar(Arg, L'=');
-		const uint16 Size = CharacterLength(Arg);
 
 		// Index through every valid name to see if they match
 		for (CommandLineParameter<wchar_t>* const& Param : GlobalCommands)
@@ -58,9 +57,6 @@ void CommandLineArguments::ParseCommandLine(wchar_t* CommandLineW, CArray<Comman
 				Param->SetBool(true);
 				break;
 			}
-
-			wchar_t ArgumentBuffer[260]{0};
-			Substring(Arg, ArgumentBuffer, ArgNameLength + 2, Size - (ArgNameLength + 1));
 			
 			Param->SetArgument(Arg + ArgNameLength + 2);
 

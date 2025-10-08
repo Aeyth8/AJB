@@ -112,6 +112,8 @@ namespace SDK
 	class FName;
 	struct FFlowStateHandler;
 
+	// Mod accessible only
+	class UWBP_OptionsMenu_C;
 }
 
 namespace A8CL
@@ -175,6 +177,10 @@ namespace AJB
 
 	extern SDK::FName* GameFlowState;
 
+	// Not native in any form, only exists within the PC Port mod as a Custom Widget Blueprint.
+	extern SDK::UClass* MOD_OptionsMenuClass;
+	extern SDK::UWBP_OptionsMenu_C* MOD_OptionsMenu;
+
 	extern __int32* PlayerPoints;
 	extern bool* bDebugInputMode;
 
@@ -232,6 +238,41 @@ namespace AJB
 
 		return nullptr;
 	}
+
+	struct IConsoleObject
+	{
+		void* VFTable;
+		unsigned __int32 FindCallCount;
+	};
+
+	template <class T>
+	struct TAutoConsoleVariableData
+	{
+		// [0]: Main Thread | [1]: Render Thread
+		T ShadowedValue[2];
+
+		T& GetReferenceFromThread(bool InterpretAsInt = 0)
+		{
+			return ShadowedValue[InterpretAsInt];
+		}
+	};
+
+	struct alignas(0x8)FAutoConsoleObject
+	{
+		void* VFTable{nullptr};
+		IConsoleObject* Target;
+
+		FAutoConsoleObject(IConsoleObject* InTarget) : Target(InTarget) {}
+
+		IConsoleObject* GetConsoleObj() { return Target; }
+		
+	};
+
+	template <class T>
+	struct alignas(0x8) TAutoConsoleVariable : FAutoConsoleObject
+	{
+		TAutoConsoleVariableData<T>* Ref;
+	};	
 
 	// -- Helpers
 

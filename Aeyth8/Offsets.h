@@ -29,6 +29,8 @@ namespace OFF
 	extern OFFSET Browse;
 	extern OFFSET SpawnActor;
 	extern OFFSET DestroyActor;
+	extern OFFSET ProcessMulticastDelegate;
+	extern OFFSET BroadcastDelegate;
 
 	extern OFFSET ActorDestroy;
 	extern OFFSET CopyString;
@@ -38,6 +40,8 @@ namespace OFF
 	extern OFFSET StaticLoadClass;
 	extern OFFSET StaticFindObject;
 	extern OFFSET StaticLoadObject;
+	extern OFFSET CreateDefaultObject;
+	extern OFFSET StaticConstructObject;
 
 	// Native Game Functions
 

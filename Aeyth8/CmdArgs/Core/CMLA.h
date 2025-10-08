@@ -95,7 +95,7 @@ void LowercaseStr(const Encoding* String, Encoding* OutBuffer)
 // Compares two C-Strings, returns true if equal, false if not equal
 // A homemade and templated version of strcmp / wcscmp 
 template <class Integer = uint16, class Encoding>
-constexpr bool StringCompare(Encoding* StringA, Encoding* StringB)
+constexpr bool StringCompare(Encoding* StringA, Encoding* StringB, bool CaseSensitive = true)
 {
 	Integer SizeA = CharacterLength<Integer, Encoding>(StringA);
 	Integer SizeB = CharacterLength<Integer, Encoding>(StringB);
@@ -104,6 +104,10 @@ constexpr bool StringCompare(Encoding* StringA, Encoding* StringB)
 
 	for (Integer i{0}; i < SizeA; ++i)
 	{
+		if (CaseSensitive)
+		{
+			if (Lowercase(StringA[i]) == Lowercase(StringB[i])) continue;
+		}
 		if (StringA[i] != StringB[i]) return false;
 	}
 

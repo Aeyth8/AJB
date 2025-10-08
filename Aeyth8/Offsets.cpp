@@ -29,6 +29,7 @@ namespace OFF
 	OFFSET Browse("UEngine::Browse", 0x175C530);
 	OFFSET SpawnActor("UWorld::SpawnActor", 0x1494440);
 	OFFSET DestroyActor("UWorld::DestroyActor", 0x1484190);
+	OFFSET ProcessMulticastDelegate("ProcessMulticastDelegate", 0x20C010);
 
 	OFFSET ActorDestroy("AActor::Destroy", 0x11AC5E0);
 	OFFSET CopyString("FString::FString", 0x1E0EE0);
@@ -38,6 +39,9 @@ namespace OFF
 	OFFSET StaticLoadClass("StaticLoadClass", 0x84B1A0);
 	OFFSET StaticFindObject("StaticFindObject", 0x84A3D0);
 	OFFSET StaticLoadObject("StaticLoadObject", 0x84B620);
+	OFFSET CreateDefaultObject("UClass::CreateDefaultObject", 0x707A60);
+	OFFSET StaticConstructObject("StaticConstructObject_Internal", 0x849630);
+	OFFSET BroadcastDelegate("TMulticastDelegate<void (void),FDefaultDelegateUserPolicy>::Broadcast", 0x1E3620);
 
 	/*
 	

@@ -7,6 +7,9 @@
 #include "Aeyth8/Proxy8/ProxyTypes.h"
 #endif
 
+#include <format>
+#include <intrin.h>
+
 /*
 
 Written by Aeyth8
@@ -19,6 +22,13 @@ https://github.com/Aeyth8
 // My entire codebase has been designed to use namespaces like this.
 using namespace A8CL; using namespace Global; using namespace Pointers;
 
+
+static long __stdcall VEH_Filter(PEXCEPTION_POINTERS Error)
+{
+	LogA("VEH", std::format("Error: {} | Error Address: {} | Caller Address: {} ", HexToString(Error->ExceptionRecord->ExceptionCode), Error->ExceptionRecord->ExceptionAddress, HexToString((uintptr_t)_ReturnAddress())));
+	
+	return 0;
+}
 
 // Called immediately before WinMainCRTStartup (entry), runs in-thread of entry to execute code before anything else begins.
 // 0x20773C4
@@ -57,6 +67,7 @@ int __stdcall DllMain(HMODULE hModule, DWORD ulReasonForCall, LPVOID lpReserved)
 	if (ulReasonForCall == DLL_PROCESS_ATTACH) 
 	{
 		AJB::PCPortLib = hModule;
+		//AddVectoredExceptionHandler(1, VEH_Filter);
 
 		Global::InitLog();
 		PreInit();

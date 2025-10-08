@@ -75,6 +75,9 @@
     <Filter Include="SDK\Custom">
       <UniqueIdentifier>{dac963f0-78ec-4af4-9619-20333690e47c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SDK\CPP\Widgets\DebugMenu">
+      <UniqueIdentifier>{48b0ec2b-9c45-46ae-965f-6659872240db}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -233,6 +236,12 @@
     <ClCompile Include="Dumper-7\CustomSDK\WBP_OptionsMenu_functions.cpp">
       <Filter>SDK\Custom</Filter>
     </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\BP_AJBInGameItemSpawnerMaster_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\WB_PpBuyWindow_functions.cpp">
+      <Filter>SDK\CPP\Widgets</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Aeyth8\Logger.hpp">
@@ -335,6 +344,9 @@
       <Filter>SDK\Custom</Filter>
     </ClInclude>
     <ClInclude Include="Dumper-7\CustomSDK\WBP_OptionsMenu_parameters.hpp">
+      <Filter>SDK\Custom</Filter>
+    </ClInclude>
+    <ClInclude Include="Dumper-7\CustomSDK\WBP_Cursor_classes.hpp">
       <Filter>SDK\Custom</Filter>
     </ClInclude>
   </ItemGroup>

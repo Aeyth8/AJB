@@ -198,6 +198,7 @@
     <ClInclude Include="Aeyth8\Tools\UFunctions.hpp" />
     <ClInclude Include="Aeyth8\UConsole\Core\ConsoleCommands.h" />
     <ClInclude Include="Aeyth8\UConsole\Core\Logger.h" />
+    <ClInclude Include="Dumper-7\CustomSDK\WBP_Cursor_classes.hpp" />
     <ClInclude Include="Dumper-7\CustomSDK\WBP_OptionsMenu_classes.hpp" />
     <ClInclude Include="Dumper-7\CustomSDK\WBP_OptionsMenu_parameters.hpp" />
     <ClInclude Include="Dumper-7\PropertyFixup.hpp" />
@@ -268,6 +269,7 @@
     <ClCompile Include="Dumper-7\SDK\BP_AJBBattleGameState_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\BP_AJBHighlightPlayerController_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\BP_AJBInGameHUD_functions.cpp" />
+    <ClCompile Include="Dumper-7\SDK\BP_AJBInGameItemSpawnerMaster_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\BP_AJBInGamePlayerController_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\BP_AJBOutGameHUD_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\BP_AJBOutGamePlayerController_functions.cpp" />
@@ -283,6 +285,7 @@
     <ClCompile Include="Dumper-7\SDK\LoadingScreenSystem_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\WB_Credit_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\WB_ModeSelect_functions.cpp" />
+    <ClCompile Include="Dumper-7\SDK\WB_PpBuyWindow_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\WB_TimeLimitCountDown_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\WB_Training_functions.cpp" />
     <ClCompile Include="MinHook\src\buffer.c">

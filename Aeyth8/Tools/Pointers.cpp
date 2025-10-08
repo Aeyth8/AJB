@@ -104,6 +104,20 @@ bool Pointers::ConstructUConsole(const SDK::FString ConsoleKey)
 	return Pointers::ConstructUConsole(nullptr, ConsoleKey);
 }
 
+std::vector<EObjectFlags> Pointers::EGetObjectFlags(SDK::UObject* Object)
+{
+
+}
+
+std::vector<const char*> Pointers::sGetObjectFlags(SDK::UObject* Object)
+{
+
+}
+
+bool Pointers::ObjectHasFlag(SDK::UObject* Object, EObjectFlags Flag)
+{
+	return (EObjectFlags)Object->Flags & Flag;
+}
 
 __int64* Pointers::SpawnActorInternal(SDK::UWorld* This, SDK::UClass* Class, const SDK::FVector& Location, const SDK::FRotator& Rotation, FActorSpawnParameters& SpawnParameters)
 {

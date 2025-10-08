@@ -26,6 +26,7 @@ namespace CMLA
 	CommandLineParameter<wchar_t> HookAndLogLoader(L"HookLoader");
 	CommandLineParameter<wchar_t> WinCSOut(L"log");
 	CommandLineParameter<wchar_t> ConsoleKey(L"ConsoleKey", L"Tilde");
+	CommandLineParameter<wchar_t> MouseCursor(L"MouseCursor", L"/Game/Aeyth8/Blueprints/WBP_Cursor.WBP_Cursor_C");
 
 	// -- Global array for automated parsing, not generally needed for manual usage.
 	CArray<CommandLineParameter<wchar_t>*> GlobalCommandLineArgs = CommandLineParameter<wchar_t>::GCommands();
