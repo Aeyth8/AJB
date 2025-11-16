@@ -103,12 +103,24 @@ public:
 		return reinterpret_cast<Decl>(this->PlusBase());
 	}
 
+	// Verify Function Call, ensures that the original function is called even if hooked, using the normal 'Call' function when hooked will cause recursion.
 	template <class Decl>
 	Decl VerifyFC()
 	{
 		return this->FunctionCall ? reinterpret_cast<Decl>(this->FunctionCall) : reinterpret_cast<Decl>(PlusBase());
 	}
 
+	// Template macro to access and call VFTable functions with visualization.
+	template <class Decl, class Pointer>
+	static Decl* VFTable(Pointer* BasePointer)
+	{
+		return reinterpret_cast<Decl*>(*reinterpret_cast<Decl**>(BasePointer));
+	}
 
+	template <class Pointer>
+	static ull* VFTable(Pointer* BasePointer)
+	{
+		return reinterpret_cast<ull*>(*reinterpret_cast<ull**>(BasePointer));
+	}
 };
 }
