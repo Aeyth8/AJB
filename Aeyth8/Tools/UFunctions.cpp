@@ -153,9 +153,19 @@ using namespace Global;
 #include "../../Dumper-7/SDK/WB_ModeSelect_classes.hpp"
 #include "../../Dumper-7/SDK/BP_AJBOutGameProxy_classes.hpp"
 
-#include "../../Dumper-7/CustomSDK/WBP_OptionsMenu_classes.hpp" // Custom SDK header (NOT GAME NATIVE)
+#include "../../Dumper-7/SDK/AkAudio_classes.hpp"
+
+#include "../../Dumper-7/SDK/WB_ModeSelect_Button_PvE_classes.hpp"
+
+#include "../../Dumper-7/CustomSDK/BP_GlobalPatcher_classes.hpp"	// Custom SDK header (NOT GAME NATIVE)
+#include "../../Dumper-7/CustomSDK/WBP_OptionsMenu_classes.hpp"		// Custom SDK header (NOT GAME NATIVE)
+#include "../../Dumper-7/CustomSDK/WBP_AJBTitleScreen_classes.hpp"	// Custom SDK header (NOT GAME NATIVE)
+#include "../../Dumper-7/CustomSDK/GM_AJBTitleScreen_classes.hpp"	// Custom SDK header (NOT GAME NATIVE)
+
 
 #include "BytePatcher.h"
+#include "../../Dumper-7/SDK/WB_ModeSelect_Button_SOLO_classes.hpp"
+#include "../../Dumper-7/SDK/WB_ModeSelect_Txt_Training_classes.hpp"
 
 void UFunctions::UConsole(SDK::UConsole* This, SDK::FString& Command)
 {
@@ -227,6 +237,20 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		SDK::ABP_AJBWwiseManager_C* Manager = Pointers::SpawnActor<SDK::ABP_AJBWwiseManager_C>();
 		
 		Manager->PostWwiseBGMEvent(SDK::FGameplayTag{Pointers::FString2FName(L"Sound.BGM.Play.BGM02.Menu1")}, true);
+		return OFF::ConsoleCommand.VerifyFC<Decl::ConsoleCommand>()(This, Result, Command, false);
+	}
+	else if (StrCommand == "UISelect")
+	{
+		/*SDK::ABP_AJBWwiseManager_C* Manager = Pointers::SpawnActor<SDK::ABP_AJBWwiseManager_C>();
+
+		Manager->PostWwiseBGMEvent(SDK::FGameplayTag{Pointers::FString2FName(L"Sound.UI.Common.Confirm")}, true);*/
+
+		SDK::UAkComponent* Component = Pointers::GetLastOf<SDK::UAkComponent>(false);
+		if (Component)
+		{
+			Component->PostAkEventByName(L"Sound.UI.Common.Confirm");
+		}
+
 		return OFF::ConsoleCommand.VerifyFC<Decl::ConsoleCommand>()(This, Result, Command, false);
 	}
 	else if (StrCommand.find("AJBExecInternal Kill") != std::string::npos)
@@ -509,6 +533,56 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 
 		}
 	}
+	else if (StrCommand == "textmenu")
+	{
+		if (AJB::MOD_GlobalPatcher)
+		{
+			/*SDK::UWBP_AJBTitleScreen_C* TitleScreenWidget = Pointers::FindObjects<SDK::UWBP_AJBTitleScreen_C>()[0];
+			if (TitleScreenWidget)
+			{
+				AJB::MOD_GlobalPatcher->SetWidgetText(TitleScreenWidget->TEXT_PressToStart, L"PULSE PARA INICIAR");
+				AJB::MOD_GlobalPatcher->SetWidgetText(TitleScreenWidget->TEXT_ScamWarning, L"Este proyecto es gratuito y de código abierto.\nSi has pagado dinero por él,\n¡has sido víctima de una estafa!");
+				AJB::MOD_GlobalPatcher->SetWidgetText(TitleScreenWidget->TEXT_DevelopedBy, L"Completamente desarrollado y modificado por");
+			}*/
+			SDK::UWB_ModeSelect_Txt_Training_C* Texter = Pointers::GetLastOf<SDK::UWB_ModeSelect_Txt_Training_C>();
+			{
+				SDK::UWidget* Child = Texter->RetainerBox_8->GetContent();
+				if (Child && Child->IsA(SDK::UHorizontalBox::StaticClass()))
+				{
+					SDK::UHorizontalBox* Box = static_cast<SDK::UHorizontalBox*>(Child);
+					const int Count = Box->GetChildrenCount();
+
+					for (int i{0}; i < Count; ++i)
+					{
+						SDK::UWidget* Widget = Box->GetChildAt(i);
+
+						LogA(Texter->GetFullName(), std::format("[ChildrenCount]: {} | [Index]: {} | {}", Count, i, Widget->GetFullName()));
+
+						if (Widget->IsA(SDK::UTextBlock::StaticClass()))
+						{
+							if (i == 1)
+							{
+								LogA("Char", static_cast<SDK::UTextBlock*>(Widget)->Text.ToString());
+
+								static SDK::FString NewChar{L"TRAINING"};
+								
+								if (AJB::MOD_GlobalPatcher) AJB::MOD_GlobalPatcher->SetWidgetText(static_cast<SDK::UTextBlock*>(Widget), NewChar);
+							}
+							else
+							{
+								static SDK::FString Blank{L" "};
+								if (AJB::MOD_GlobalPatcher) AJB::MOD_GlobalPatcher->SetWidgetText(static_cast<SDK::UTextBlock*>(Widget), Blank);
+							}
+							
+						}
+					}
+				}
+				//LogA(PVE->GetFullName(), PVE->DisplayButtonText.ToString());
+				//AJB::MOD_GlobalPatcher->SetWidgetText(PVE->AJBTextBlock_NeedPP, L"HELPPPP HELP ME HELPPPPPPPPPPPPPPPP");
+			}
+			
+		}
+	}
 	//LogA("ConsoleCommand", std::format("[Owning PlayerController]: {} | [Command]: {}", This->GetFullName(), StrCommand));
 
 	return OFF::ConsoleCommand.VerifyFC<Decl::ConsoleCommand>()(This, Result, Command, bWriteToLog);
@@ -553,6 +627,8 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 {
 	LogA("Login", "Called.");
 
+	const SDK::AGameModeBase* CurrentGameMode = AJB::GetGameMode();
+
 	if (AJB::PlayerPoints) *AJB::PlayerPoints = 1170;
 	if (AJB::Instance && AJB::Instance->ArcadeTimeManager) AJB::Instance->ArcadeTimeManager = nullptr;
 	if (AJB::MOD_OptionsMenu)
@@ -560,18 +636,44 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 		//LogA(AJB::MOD_OptionsMenu->IsInViewport() ? "In Viewport" : "Not In Viewport", AJB::GEngine()->GameViewport->GetFullName());
 		if (!AJB::MOD_OptionsMenu->IsInViewport()) AJB::MOD_OptionsMenu->AddToViewport(111);
 	}
+	if (CurrentGameMode && CurrentGameMode->IsA(SDK::AGM_AJBTitleScreen_C::StaticClass()))
+	{
+		SDK::UWBP_AJBTitleScreen_C* TitleScreenWidget = Pointers::GetLastOf<SDK::UWBP_AJBTitleScreen_C>(false);
+		if (TitleScreenWidget && AJB::StrDLLCommitVersion)
+		{
+			TitleScreenWidget->SetDLLCommitVersion(*AJB::StrDLLCommitVersion);
+		}
+	}
+	//AGM_AJBTitleScreen_C
+
 	
+	
+
+
 	/*UFunctions::StaticLoadObject(SDK::UObject::FindClass("Class CoreUObject.Object"), nullptr, L"/Game/Aeyth8/UI/CustomUIManager.CustomUIManager_C", nullptr, 0, nullptr, true);
 	UFunctions::StaticLoadObject(SDK::UGameInstance::StaticClass(), nullptr, L"/Game/Aeyth8/UI/CustomMenuManager.CustomMenuManager_C", nullptr, 0, nullptr, true);*/
-	static bool ONE{ 0 };
+	static bool ONE{0};
 	if (!ONE)
 	{
 		ONE = 1;
 
-		AJB::MOD_OptionsMenuClass = UFunctions::StaticLoadClass(SDK::UUserWidget::StaticClass(), AJB::GEngine(), L"/Game/Aeyth8/UI/InGame/WBP_OptionsMenu.WBP_OptionsMenu_C", nullptr, 0, nullptr);
+		constexpr const wchar_t* GlobalPatchObjectBlueprintPath{L"/Game/Aeyth8/Blueprints/Global/BP_GlobalPatcher.BP_GlobalPatcher_C"};
+		constexpr const wchar_t* OptionsMenuBlueprintPath{L"/Game/Aeyth8/Blueprints/UI/OptionsMenu/WBP_OptionsMenu.WBP_OptionsMenu_C"};
+
+		AJB::MOD_GlobalPatcherClass = UFunctions::StaticLoadClass(AJB::CoreUObject, AJB::GEngine(), GlobalPatchObjectBlueprintPath, nullptr, 0, nullptr);
+		if (AJB::MOD_GlobalPatcherClass)
+		{
+			AJB::MOD_GlobalPatcher = (SDK::UBP_GlobalPatcher_C*)Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(AJB::MOD_GlobalPatcherClass, AJB::GEngine(), Pointers::FString2FName(GlobalPatchObjectBlueprintPath), 0, EInternalObjectFlags::RootSet, 0, 0, 0, 0);
+			//AJB::MOD_GlobalPatcher = UFunctions::StaticLoadObject(BlueprintGeneratedClass, AJB::GEngine(), GlobalPatchObjectBlueprintPath, nullptr, 0, nullptr, true);
+			if (AJB::MOD_GlobalPatcher) LogA("Global Patcher", std::format("[ProofOfExistenceSignature]: {} | [Object]: {}", AJB::MOD_GlobalPatcher->ProofOfExistenceSignature, AJB::MOD_GlobalPatcher->GetFullName()));
+			//AJB::MOD_GlobalPatcher = Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(BlueprintGeneratedClass, AJB::GEngine(), Pointers::FString2FName(GlobalPatchObjectBlueprintPath), 0, EInternalObjectFlags::RootSet, 0, 0, 0, 0);
+		}		
+
+
+		AJB::MOD_OptionsMenuClass = UFunctions::StaticLoadClass(SDK::UUserWidget::StaticClass(), AJB::GEngine(), OptionsMenuBlueprintPath, nullptr, 0, nullptr);
 		if (AJB::MOD_OptionsMenuClass)
 		{
-			AJB::MOD_OptionsMenu = (SDK::UWBP_OptionsMenu_C*)Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(AJB::MOD_OptionsMenuClass, static_cast<SDK::UGameViewportClient*>(AJB::GEngine()->GameViewport), Pointers::FString2FName(L"/Game/Aeyth8/UI/InGame/WBP_OptionsMenu.WBP_OptionsMenu_C"), 0, EInternalObjectFlags::RootSet, 0, 0, 0, 0);
+			AJB::MOD_OptionsMenu = (SDK::UWBP_OptionsMenu_C*)Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(AJB::MOD_OptionsMenuClass, static_cast<SDK::UGameViewportClient*>(AJB::GEngine()->GameViewport), Pointers::FString2FName(OptionsMenuBlueprintPath), 0, EInternalObjectFlags::RootSet, 0, 0, 0, 0);
 			//	OptionsMenu = static_cast<SDK::UWBP_OptionsMenu_C*>(AJB::GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->Create(AJB::GWorld(), PrototypeMenu, Pointers::Player()));
 			if (AJB::MOD_OptionsMenu)
 			{
@@ -579,6 +681,12 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 
 				AJB::MOD_OptionsMenu->AddToViewport(1170);
 				AJB::MOD_OptionsMenu->SetVisibility(SDK::ESlateVisibility::Collapsed);
+
+				if (AJB::StrDLLCommitVersion)
+				{
+					AJB::MOD_OptionsMenu->SetDLLCommitVersion(*AJB::StrDLLCommitVersion);
+				}
+				
 				/*OptionsMenu->AddToViewport(111);
 				OptionsMenu->SetVisibility(SDK::ESlateVisibility::Collapsed);*/
 				//OptionsMenu->ToggleVisibility();
@@ -794,7 +902,7 @@ void UFunctions::Invoke(SDK::UFunction* This, SDK::UObject* Obj, void* FFrame_St
 		14739, // Function UMG.BrushBinding.GetValue
 		15873, // Function UMG.UserWidget.AddToViewport
 		15895, // Function UMG.TextBlock.SetColorAndOpacity
-		15991, //  Function Engine.Controller.GetViewTarget
+		15991, // Function Engine.Controller.GetViewTarget
 		16039, // Function Engine.PlayerController.GetViewportSize
 		16062, // Function Engine.PlayerController.WasInputKeyJustPressed
 		16392, // Function UMG.Image.GetDynamicMaterial
@@ -846,7 +954,10 @@ void UFunctions::Invoke(SDK::UFunction* This, SDK::UObject* Obj, void* FFrame_St
 
 	int32 DynamicClassFunctionIndexArray[CFBL_Size]{-1};
 
-	static bool bInitClassFunctions{false};
+	// GIANT NOTE I lost motivation and kinda forgot what I even was doing here but it doesn't work and crashes for (in my opinion) NO REASON.
+	// Maybe I'll fix this one day, if not, just delete this block and the hook will work fine.
+
+	/*static bool bInitClassFunctions{false};
 	if (!bInitClassFunctions)
 	{
 		bInitClassFunctions = true;
@@ -906,7 +1017,7 @@ void UFunctions::Invoke(SDK::UFunction* This, SDK::UObject* Obj, void* FFrame_St
 			}
 			else { bInitClassFunctions = false; }
 		}
-	}
+	}*/
 
 	bool bLogInvoke{true};
 

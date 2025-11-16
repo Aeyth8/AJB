@@ -7,8 +7,9 @@
 #include "Aeyth8/Proxy8/ProxyTypes.h"
 #endif
 
+#include "Aeyth8/OffsetBase.h"
+#include "Aeyth8/A8CL/CPUReg/CPUReg.h"
 #include <format>
-#include <intrin.h>
 
 /*
 
@@ -18,22 +19,40 @@ https://github.com/Aeyth8
 
 */
 
+extern "C" int __stdcall _DllMainCRTStartup(HMODULE, DWORD, LPVOID);
+
 
 // My entire codebase has been designed to use namespaces like this.
 using namespace A8CL; using namespace Global; using namespace Pointers;
 
+static ull GBA_NtDll{0};
+
 
 static long __stdcall VEH_Filter(PEXCEPTION_POINTERS Error)
 {
-	LogA("VEH", std::format("Error: {} | Error Address: {} | Caller Address: {} ", HexToString(Error->ExceptionRecord->ExceptionCode), Error->ExceptionRecord->ExceptionAddress, HexToString((uintptr_t)_ReturnAddress())));
+	LogA("VEH", std::format("Error: {} | Error Address: {} | Caller Address: {} ", HexToString(Error->ExceptionRecord->ExceptionCode), Error->ExceptionRecord->ExceptionAddress, HexToString(CPUReg::GetRegisterValue(rax))));
 	
 	return 0;
+}
+
+// The first entry point called within this DLL.
+// DllEntryPoint() -> DllMain()			ConstructThread(Init) -> Return To Game Thread
+//							  \		   /					\
+//							   PreInit()					Init() -> DLL Thread
+int __stdcall DllEntryPoint(HMODULE hModule, DWORD ulReasonForCall, LPVOID lpReserved)
+{
+	GBA_NtDll = OFFSET::GetBaseOfImage(*reinterpret_cast<ull*>(reinterpret_cast<BYTE*>(CPUReg::GetRegisterValue(rsp)) + 48));
+	return _DllMainCRTStartup(hModule, ulReasonForCall, lpReserved);
 }
 
 // Called immediately before WinMainCRTStartup (entry), runs in-thread of entry to execute code before anything else begins.
 // 0x20773C4
 static void PreInit()
 {
+	LogA("rax", HexToString(CPUReg::GetRegisterValue(rax)));
+	LogA("deref rbx", HexToString(CPUReg::GetDereferencedValue(rbx)));
+	LogA("ntdll", HexToString(GBA_NtDll));
+
 	// Retrieves the Global Base Address (GBA) by getting the module handle casted as a uintptr_t
 	GBA = (uintptr_t)GetModuleHandleA("AJB-Win64-Shipping.exe");
 

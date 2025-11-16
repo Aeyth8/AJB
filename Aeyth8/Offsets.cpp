@@ -1,4 +1,4 @@
-#include "Hooks/Hooks.hpp"
+#include "Offsets.h"
 
 class OFFSET;
 

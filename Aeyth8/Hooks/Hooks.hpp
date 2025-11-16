@@ -1,4 +1,5 @@
 #pragma once
+#include "../OffsetBase.h"
 #include "../../MinHook/MinHook.h"
 #include <string>
 #include <vector>
@@ -14,51 +15,6 @@ https://github.com/Aeyth8
 
 namespace A8CL
 {
-
-// An all-in-one object for storing and utilizing static offsets.
-// @param [std::string] Name
-// @param [uintptr_t] Offset
-class OFFSET
-{
-private:
-
-	inline static std::vector<std::string> StringIndexArray{};
-	uint32_t StringIndex;
-
-public:
-
-	OFFSET(const std::string& Name, const uintptr_t& Offset) : 
-		StringIndex(StringIndexArray.size()), Offset(Offset)
-	{
-		StringIndexArray.push_back(Name);
-	};
-
-	~OFFSET()
-	{
-		StringIndexArray[StringIndex].erase();
-	}
-
-	// Uncalculated
-	const uintptr_t Offset;
-
-	// Calculated 
-	uintptr_t Address{0};
-
-	// A pointer to the function after hooking, the trampoline.
-	LPVOID FunctionCall;
-
-	std::string& GetName() const { return StringIndexArray[StringIndex]; }
-	std::wstring GetNameW() const { return std::wstring(StringIndexArray[StringIndex].begin(), StringIndexArray[StringIndex].end()); }
-	uintptr_t& PlusBase() { return Address == 0 ? Address = Offset + (uintptr_t)GetModuleHandle(0) : Address; }
-
-	template <typename T>
-	T VerifyFC()
-	{
-		if (!this->FunctionCall) return reinterpret_cast<T>(PlusBase());
-		return reinterpret_cast<T>(this->FunctionCall);
-	}
-
-};
 
 // A MinHook wrapper
 class Hooks

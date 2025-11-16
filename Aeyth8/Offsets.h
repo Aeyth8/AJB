@@ -1,4 +1,5 @@
 #pragma once
+#include "OffsetBase.h"
 
 class OFFSET;
 

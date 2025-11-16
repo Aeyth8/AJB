@@ -20,11 +20,14 @@
 #include "../../Dumper-7/SDK/BP_PPV_VSFilter_classes.hpp"
 
 #include "../../Dumper-7/CustomSDK/WBP_OptionsMenu_classes.hpp" // Custom SDK header (NOT GAME NATIVE)
+#include "../../Dumper-7/CustomSDK/BP_GlobalPatcher_classes.hpp"
 
 #include <intrin.h>
 #include "../../Dumper-7/SDK/WB_Credit_classes.hpp"
 #include "../../Dumper-7/SDK/WB_TimeLimitCountDown_classes.hpp"
 #include "../../Dumper-7/SDK/WB_PpBuyWindow_classes.hpp"
+
+#include "../../Dumper-7/SDK/AkAudio_classes.hpp"
 
 /*
 
@@ -36,29 +39,45 @@ https://github.com/Aeyth8
 
 using namespace A8CL; using namespace Global; using namespace Pointers;
 
-SDK::UBP_AJBGameInstance_C* AJB::Instance{nullptr};
-SDK::UAJBAMSystemSettings* AJB::Settings{nullptr};
-SDK::UAJBAMSystemObject* AJB::System{nullptr};
-SDK::ABP_AJBOutGameProxy_C* AJB::OutGameProxy{nullptr};
-SDK::UAJBVersion* AJB::Version{nullptr};
-SDK::UAJBSettings* AJB::AJBSettings{nullptr};
+// -- UE Defaults -- 
 
-SDK::FName* AJB::GameFlowState{nullptr};
+SDK::UClass*						AJB::CoreUObject{nullptr};
+SDK::UGameMapsSettings*				AJB::MapSettings{nullptr};
 
-SDK::UClass* AJB::MOD_OptionsMenuClass{nullptr};
-SDK::UWBP_OptionsMenu_C* AJB::MOD_OptionsMenu{nullptr};
+// -- AJB Specific -- 
 
-HMODULE AJB::PCPortLib{0};
-HWND AJB::PCPortWindow{0};
+SDK::UBP_AJBGameInstance_C*			AJB::Instance{nullptr};
+SDK::UAJBAMSystemSettings*			AJB::Settings{nullptr};
+SDK::UAJBAMSystemObject*			AJB::System{nullptr};
+SDK::ABP_AJBOutGameProxy_C*			AJB::OutGameProxy{nullptr};
+SDK::UAJBVersion*					AJB::Version{nullptr};
+SDK::UAJBSettings*					AJB::AJBSettings{nullptr};
 
-__int32* AJB::PlayerPoints{nullptr};
-bool* AJB::bDebugInputMode{nullptr};
+SDK::FName*							AJB::GameFlowState{nullptr};
 
-SDK::UGameMapsSettings* AJB::MapSettings{nullptr};
-//SDK::UClass* CoreUObject{nullptr};
+__int32*							AJB::PlayerPoints{nullptr};
+bool*								AJB::bDebugInputMode{nullptr};
 
-// 8 bit to AL register
-constexpr BYTE MOV{0xB0};
+// -- MOD --
+
+SDK::UClass*						AJB::MOD_OptionsMenuClass{nullptr};
+SDK::UWBP_OptionsMenu_C*			AJB::MOD_OptionsMenu{nullptr};
+
+SDK::UClass*						AJB::MOD_GlobalPatcherClass{nullptr};
+SDK::UBP_GlobalPatcher_C*			AJB::MOD_GlobalPatcher{nullptr};
+
+const wchar_t*						AJB::DLLCommitVersion{L"[v0.4.1]"};
+UC::FString*						AJB::StrDLLCommitVersion{nullptr};
+
+// -- Windows External --
+
+HMODULE								AJB::PCPortLib{nullptr};
+HWND								AJB::PCPortWindow{nullptr};
+
+
+// -- Assembly Opcodes -- 
+
+constexpr BYTE MOV{0xB0}; // 8 bit to AL register
 constexpr BYTE RETN{0xC3};
 constexpr BYTE NOP{0x90};
 
@@ -84,6 +103,27 @@ std::vector<Hooks::HookStructure> StandaloneHooks =
 
 A8CL::OFFSET NetID("UAJBNetworkObserver::GetNetID", 0x4ECC80);
 A8CL::OFFSET OpenCommand("AAJBOutGameProxy::GetOpenCommand", 0x506DD0);
+A8CL::OFFSET PostEventByName("UAkComponent::PostAkEventByName", 0x291650);
+A8CL::OFFSET PostEvent("UAkComponent::PostAkEvent", 0x291390);
+A8CL::OFFSET LoadBankByName("UAkGameplayStatics::LoadBankByName", 0x286850);
+
+int32 LoadBankByNameHook(SDK::UAkGameplayStatics* This, SDK::FString& Name)
+{
+	LogA(LoadBankByName.GetName(), Name ? Name.ToString() : "Null");
+	return PostEventByName.VerifyFC<int32(__thiscall*)(SDK::UAkGameplayStatics*, SDK::FString&)>()(This, Name);
+}
+
+int32 PostEventByNameHook(SDK::UAkComponent* This, SDK::FString& Name)
+{
+	LogA(PostEventByName.GetName(), Name ? Name.ToString() : "Null");
+	return PostEventByName.VerifyFC<int32(__thiscall*)(SDK::UAkComponent*, SDK::FString&)>()(This, Name);
+}
+
+int32 PostEventHook(SDK::UAkComponent* This, SDK::UAkAudioEvent* Event, int32 CallbackMask, void* Delegate, SDK::FString& InEventName)
+{
+	LogA(PostEventByName.GetName(), InEventName ? InEventName.ToString() : "Null");
+	return PostEvent.VerifyFC<int32(__thiscall*)(SDK::UAkComponent*, SDK::UAkAudioEvent*, int32, void*, SDK::FString&)>()(This, Event, CallbackMask, Delegate, InEventName);
+}
 
 SDK::FString* __fastcall GetNetID(SDK::UAJBNetworkObserver* This, SDK::FString* OutString)
 {
@@ -320,6 +360,9 @@ void AJB::Init_Hooks()
 		Hooks::CreateAndEnableHook(GSetString, SetString);
 		Hooks::CreateAndEnableHook(OpenCommand, GetOpenCommand);
 		Hooks::CreateAndEnableHook(ObjBlueprint, NewObjectFromBlueprint);
+		Hooks::CreateAndEnableHook(PostEventByName, PostEventByNameHook);
+		Hooks::CreateAndEnableHook(PostEvent, PostEventHook);
+		Hooks::CreateAndEnableHook(LoadBankByName, LoadBankByNameHook);
 	}
 
 }
@@ -328,7 +371,7 @@ void AJB::Init_Engine()
 {
 	while (AJB::GEngine() == nullptr) Sleep(25);
 
-	
+	AJB::CoreUObject = SDK::UObject::FindClass("Class CoreUObject.Object");
 
 	// Calls FConfigCacheIni::GetSectionPrivate
 	//void* SectionPrivate = Call<void*(__fastcall*)(const wchar_t* Section, const bool Force, const bool Const, const SDK::FString* FileName)>(PB(0x6246F0))(L"/Script/Engine.UserInterfaceSettings", false, true, reinterpret_cast<SDK::FString*>(PB(0x3051380)));
@@ -381,7 +424,15 @@ void AJB::Init_Engine()
 		SDK::FString NewVersion{L"JJL128-1-NA-MPR0-F02-AEYTH8"};
 		Call<UFunctions::Decl::CopyString>(OFF::CopyString.PlusBase())(&Version->BuildName, &NewVersion);
 	}
-
+	if (!AJB::StrDLLCommitVersion)
+	{
+		// Creates the global wide string literal into a dynamic FString. 
+		static SDK::FString DLLCommitVersionSingleton{AJB::DLLCommitVersion};
+		if (DLLCommitVersionSingleton.IsValid())
+		{
+			AJB::StrDLLCommitVersion = &DLLCommitVersionSingleton;
+		}
+	}
 	/*SDK::UUserInterfaceSettings* Interface{nullptr};
 
 	//Interface = Call<SDK::UUserInterfaceSettings*(__fastcall*)()>(PB(0x1CDB90))();'
@@ -421,7 +472,10 @@ void AJB::Init_Engine()
 		SendMessageA(AJB::PCPortWindow, WM_SETICON, ICON_SMALL, (LPARAM)AJBLogo);
 	}
 
-	SetWindowTextA(AJB::PCPortWindow, "AJB PC Port v28.0.6");
+	static wchar_t VersioningBuffer[30]{L'A', L'J', L'B', L' ', L'P', L'C', L' ', L'P', L'o', L'r', L't', L' ', L'V', L'2', L'8', L' '};
+	lstrcatW(VersioningBuffer, AJB::DLLCommitVersion);
+	SetWindowTextW(AJB::PCPortWindow, VersioningBuffer);
+	//SetConsoleTitleW(AJB::DLLCommitVersion);
 }
 
 void AJB::Init_Vars(SDK::UWorld* GWorld)
@@ -622,7 +676,7 @@ static bool FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGame
 	SDK::FString TempString = AJB::GetBlueprintClass<SDK::UKismetStringLibrary>()->Conv_NameToString(*AJB::GameFlowState).CStr();
 	wchar_t* FlowstateLocal = TempString.CStr();
 
-	for (SDK::UWB_TimeLimitCountDown_C* POS : Pointers::FindObjects<SDK::UWB_TimeLimitCountDown_C>())
+	/*for (SDK::UWB_TimeLimitCountDown_C* POS : Pointers::FindObjects<SDK::UWB_TimeLimitCountDown_C>())
 	{
 		//if (!ObjectHasFlag(POS, EObjectFlags::Transient)) continue;
 		LogA("POS", POS->Visibility == SDK::ESlateVisibility::Visible ? "Visible" : "Not Visible");
@@ -648,7 +702,7 @@ static bool FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGame
 			Trash->Flags = static_cast<SDK::EObjectFlags>(static_cast<int32>(Trash->Flags) | static_cast<int32>(UFunctions::EInternalObjectFlags::PendingKill));
 			*Garbage.*CreditGarbage[i] = nullptr;
 		}
-	}
+	}*/
 
 	/*if (wcscmp(CharacterSelect, FlowstateLocal) == 0)
 	{

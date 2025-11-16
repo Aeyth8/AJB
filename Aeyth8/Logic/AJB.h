@@ -14,6 +14,10 @@ typedef HINSTANCE HMODULE;
 struct HWND__;
 typedef struct HWND__* HWND;
 
+namespace UC
+{
+	class FString;
+}
 namespace SDK
 {
 	class UObject;
@@ -114,6 +118,7 @@ namespace SDK
 
 	// Mod accessible only
 	class UWBP_OptionsMenu_C;
+	class UBP_GlobalPatcher_C;
 }
 
 namespace A8CL
@@ -154,21 +159,22 @@ namespace AJB
 		CAESAR = 27
 	};
 
-	// -- Vars
+	// ===========================================
+	// --			   VARIABLES			    --
+	// ===========================================
 
-	extern SDK::UGameMapsSettings* MapSettings;
+	/* -- UE Defaults --
+	
+	Native to any Unreal Engine game. */
 
-	// The game will crash and die if I try to load any of my mod assets using StaticLoadClass/StaticLoadObject unless I use the CoreUObject class, which I am grabbing from the hook.
-	// I don't know if I can even access that in the SDK and I don't really understand how or why this is the case, especially since EVEN THE GAME INSTANCE which should be of type 'BlueprintGeneratedClass' shows up as 'Class CoreUObject.Object' instead.
-	// After logging the memory addresses for each pointer, I can confirm that the 'Class CoreUObject.Object' class shares the same pointer, therefore I should be able to reuse this pointer at all times.
-	// This is a giant note because I have wasted hours trying to figure out this stupid system, no crash logs or anything.
-	// 
-	// EDIT: Apparently it was just UObject::FindClass("Class CoreUObject.Object") which I had originally thought it was/should've been but it still kept crashing anyways, as it turns out it had NOTHING TO DO WITH IT
-	// I wasted my time because the real issue was the package loading, I guess the package just didn't fully load by the time I tried calling it, I'm going to reinterpret_cast myself off a cliff.
-	// 
-	//extern SDK::UClass* CoreUObject;
+	extern SDK::UClass* CoreUObject;					// Class CoreUObject.Object
+	extern SDK::UGameMapsSettings* MapSettings;	
 
-	extern SDK::UBP_AJBGameInstance_C* Instance; // Originally SDK::UAJBGameInstance but this is a parent class. 
+	/* -- AJB Specific --
+	
+	Game native only. */
+
+	extern SDK::UBP_AJBGameInstance_C* Instance;		// Final subclass for UAJBGameInstance.
 	extern SDK::UAJBAMSystemSettings* Settings;
 	extern SDK::UAJBAMSystemObject* System;
 	extern SDK::ABP_AJBOutGameProxy_C* OutGameProxy;
@@ -177,23 +183,42 @@ namespace AJB
 
 	extern SDK::FName* GameFlowState;
 
-	// Not native in any form, only exists within the PC Port mod as a Custom Widget Blueprint.
-	extern SDK::UClass* MOD_OptionsMenuClass;
-	extern SDK::UWBP_OptionsMenu_C* MOD_OptionsMenu;
-
 	extern __int32* PlayerPoints;
 	extern bool* bDebugInputMode;
 
-	extern HMODULE PCPortLib;
-	extern HWND PCPortWindow;
+	/* -- MOD --
+		
+	Not native in any form, only exists within the PC Port mod as custom blueprints.
+	UClasses must be loaded using StaticLoadClass and passed into StaticConstructObject_Internal to create the object. */
 
-	// -- Initialization
+	extern SDK::UClass* MOD_OptionsMenuClass;			// Options menu class, must be loaded to create an object.
+	extern SDK::UClass* MOD_GlobalPatcherClass;			// Global patcher class, must be loaded to create an object.
 
-	void Init_Hooks();
-	void Init_Engine();
-	void Init_Vars(SDK::UWorld* GWorld);
+	extern SDK::UWBP_OptionsMenu_C* MOD_OptionsMenu;	// Options menu, a self maintained Widget Blueprint that uses its own internal ticking system, communicates with this DLL internally by executing console commands that are parsed with a hook to (APlayerController::ConsoleCommand).
+	extern SDK::UBP_GlobalPatcher_C* MOD_GlobalPatcher;	// Global object used as a translation layer between my DLL logic and Unreal Engine blueprints.
 
-	// -- Pointers
+	extern const wchar_t* DLLCommitVersion;				// Global hardcoded string used for commit versioning.
+	extern UC::FString* StrDLLCommitVersion;			// FString Singleton for UI usage, not guaranteed to be a valid pointer.
+
+	/* -- Windows External --
+	
+	Used to identify the game's process and window, allowing for live modification.
+	Currently it's only used to change the process icon and name, which is mainly for polish. */
+
+	extern HMODULE PCPortLib;							// The PC Port library | 'This' DLL | The dynamic global base address of it.
+	extern HWND PCPortWindow;							// The game's process window, containing the process name, title, icon, etc.
+
+	// ===========================================
+	// ##			  INITIALIZATION			## 
+	// ===========================================
+
+	void Init_Hooks();									// Called before entry, modifies the game's runtime instance before it even starts up, applying bytepatches and hooks.
+	void Init_Engine();									// Called after entry, waits for the core game engine to initialize, and sets all pre-world variables.
+	void Init_Vars(SDK::UWorld* GWorld);				// Called after game world is initialized, retrieves and sets any applicable pointer variables.
+
+	// ===========================================
+	// **			POINTER FUNCTIONS			**
+	// ===========================================
 
 	SDK::UEngine* const& GEngine(const bool bLog = false);
 	SDK::UWorld* const& GWorld(const bool bLog = false);
@@ -274,7 +299,9 @@ namespace AJB
 		TAutoConsoleVariableData<T>* Ref;
 	};	
 
-	// -- Helpers
+	// ===========================================
+	// **			 HELPER FUNCTIONS			**
+	// ===========================================
 
 	const char* PlayerInfoParser(SDK::FMatchingPlayerInfo& Info);
 

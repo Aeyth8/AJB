@@ -20,46 +20,50 @@ Copyright (C) 2025 Aeyth8
 
 extern "C" char __ImageBase;
 
+#if B64
+	typedef unsigned long long ull;
+#elif !B64
+	typedef unsigned long ull;
+#endif
+
+extern "C" unsigned long long __readgsqword(unsigned long Offset);
+
+namespace A8CL
+{
 // An all-in-one object for storing and utilizing static offsets.
 class OFFSET
 {
-private:
-
-#if B64
-	typedef unsigned long long uintptr;
-#elif !B64
-	typedef unsigned long uintptr;
-#endif
+public:
 
 	const char* OffsetName;
-	const uintptr Offset;
+	const ull Offset;
 	void* FunctionCall{nullptr}; // Either a pointer to the function after hooking (the trampoline) or a pointer to the function.
 
 public:
 
-	constexpr OFFSET(const char* Name, const uintptr Offset) :
+	constexpr OFFSET(const char* Name, const ull Offset) :
 		OffsetName(Name), Offset(Offset) {};
 
-	const static uintptr GetImageBase()
+	// Finds the base address of an image/module by going up.
+	const static ull GetBaseOfImage(ull ImageAddress)
 	{
-		/*
-		Would work if the image wasn't the DLL (oops)
-		uintptr Base = (uintptr_t)&__ImageBase;
+		ImageAddress &= ~0xFFF;
 
-		Base &= ~0xFFF;
-
-		for (;; Base -= 0x1000)
+		for (;; ImageAddress -= 0x1000)
 		{
-			if (*(short*)Base == 0x5A4D && *reinterpret_cast<int*>(Base + (*reinterpret_cast<int*>(Base + 0x3C))) == 0x4550)
+			if (*(short*)ImageAddress == 0x5A4D && *reinterpret_cast<int*>(ImageAddress + (*reinterpret_cast<int*>(ImageAddress + 0x3C))) == 0x4550)
 			{
-				return Base;
+				return ImageAddress;
 			}
 		}
 
-		return (uintptr)&__ImageBase;
-		*/
+		return ImageAddress;
+	}
 
-		return *reinterpret_cast<uintptr*>(*reinterpret_cast<uintptr*>(*reinterpret_cast<uintptr*>(__readgsqword(wordoffset) + 0x18) + 0x10) + 0x30);
+	// Gets the base address of the current module being run.
+	const static ull GetImageBase()
+	{
+		return *reinterpret_cast<ull*>(*reinterpret_cast<ull*>(*reinterpret_cast<ull*>(__readgsqword(wordoffset) + 0x18) + 0x10) + 0x30);
 	}
 
 	const char* GetName() const
@@ -68,10 +72,10 @@ public:
 	}
 
 	// IOBuffer [In-Out Buffer]
-	template <uintptr Size>
+	template <ull Size>
 	void GetNameW(wchar_t (&IOBuffer)[Size])
 	{	
-		for (uintptr i{0}; i < Size; ++i)
+		for (ull i{0}; i < Size; ++i)
 		{
 			const char& ANSIChar = OffsetName[i];
 			if (ANSIChar == '\0')
@@ -83,9 +87,14 @@ public:
 		}
 	}
 
-	uintptr PlusBase() const
+	ull PlusBase() const
 	{
 		return Offset + GetImageBase();
+	}
+
+	ull PlusBase(ull BaseAddress) const
+	{
+		return Offset + BaseAddress;
 	}
 
 	template <class Decl>
@@ -100,4 +109,6 @@ public:
 		return this->FunctionCall ? reinterpret_cast<Decl>(this->FunctionCall) : reinterpret_cast<Decl>(PlusBase());
 	}
 
+
 };
+}

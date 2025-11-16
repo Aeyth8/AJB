@@ -52,7 +52,7 @@ void Proxy::LoadProxyPointers(const std::vector<Proxy::ProxyCallStructure>& Tabl
 
 bool Proxy::Attach(HMODULE CurrentModule)
 {
-	constexpr const char* ret = "I WONDER HOW I WONDER WHY YESYETDAY YOU ROTLD ME BAOTU etsit";
+	/*constexpr const char* ret = "I WONDER HOW I WONDER WHY YESYETDAY YOU ROTLD ME BAOTU etsit";
 	A8CL::CVArray<const char*> Strings =
 	{
 		"HELPPPP", "HELLLLLLLLLLLLLLP", "HELP MEEEEEEEEEE", "HEEEEEEEEEEELLLLLLLLLLLLLLLLPPPPPPPPPPPPPPPPPPP", (const char*)0, (const char*)0, (const char*)0, ret
@@ -72,7 +72,7 @@ bool Proxy::Attach(HMODULE CurrentModule)
 	for (const char*& String : Strings)
 	{
 		A8CL::Global::LogA("String", std::string(String));
-	}
+	}*/
 
 	//Strings.push().back("Hello");
 

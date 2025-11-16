@@ -78,6 +78,30 @@
     <Filter Include="SDK\CPP\Widgets\DebugMenu">
       <UniqueIdentifier>{48b0ec2b-9c45-46ae-965f-6659872240db}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SDK\Custom\OptionsMenu">
+      <UniqueIdentifier>{7e1a7377-bda6-4eb9-94ec-636c3118e66b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Custom\Cursor">
+      <UniqueIdentifier>{3f96bc08-c2b5-4ee4-981f-c69d7f53fb80}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Custom\TitleScreen">
+      <UniqueIdentifier>{5a19e6f9-357c-4c30-a531-01af9ca026a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Custom\TitleScreen\GameMode">
+      <UniqueIdentifier>{48ff2dfe-bdf0-4b1a-8d6b-17d7b4054ebc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Aeyth8\Logic\Localization">
+      <UniqueIdentifier>{bf4723b1-2be1-43df-ad6d-a8fd935e8577}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Custom\Global">
+      <UniqueIdentifier>{d8403bb9-7a1a-42e5-894c-a4c9f34310e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\CPP\Audio">
+      <UniqueIdentifier>{5e00c376-4359-493a-9df2-9077051bd620}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Aeyth8\A8CL\CPUReg">
+      <UniqueIdentifier>{205b1ce5-1a35-44dc-9614-b33fb5f55569}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -113,9 +137,6 @@
     <ClCompile Include="Dumper-7\SDK\AJB_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
-    <ClCompile Include="Dumper-7\SDK\AmwPlugin_functions.cpp">
-      <Filter>SDK\CPP</Filter>
-    </ClCompile>
     <ClCompile Include="Dumper-7\SDK\BP_AJBGameInstance_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
@@ -123,9 +144,6 @@
       <Filter>SDK\CPP</Filter>
     </ClCompile>
     <ClCompile Include="Dumper-7\SDK\BPF_AJBGameInstance_functions.cpp">
-      <Filter>SDK\CPP</Filter>
-    </ClCompile>
-    <ClCompile Include="Dumper-7\SDK\BPF_AJBWwiseFunctionLibrary_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
     <ClCompile Include="Dumper-7\SDK\OnlineSubsystemUtils_functions.cpp">
@@ -233,14 +251,41 @@
     <ClCompile Include="Dumper-7\SDK\WB_ModeSelect_functions.cpp">
       <Filter>SDK\CPP\Widgets</Filter>
     </ClCompile>
-    <ClCompile Include="Dumper-7\CustomSDK\WBP_OptionsMenu_functions.cpp">
-      <Filter>SDK\Custom</Filter>
-    </ClCompile>
     <ClCompile Include="Dumper-7\SDK\BP_AJBInGameItemSpawnerMaster_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
     <ClCompile Include="Dumper-7\SDK\WB_PpBuyWindow_functions.cpp">
       <Filter>SDK\CPP\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\CustomSDK\WBP_AJBTitleScreen_functions.cpp">
+      <Filter>SDK\Custom\TitleScreen</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\CustomSDK\WBP_OptionsMenu_functions.cpp">
+      <Filter>SDK\Custom\OptionsMenu</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\CustomSDK\GM_AJBTitleScreen_functions.cpp">
+      <Filter>SDK\Custom\TitleScreen\GameMode</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\CustomSDK\BP_GlobalPatcher_functions.cpp">
+      <Filter>SDK\Custom\Global</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\WB_ModeSelectButtonBase_functions.cpp">
+      <Filter>SDK\CPP\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\WB_ModeSelect_Button_PvE_functions.cpp">
+      <Filter>SDK\CPP\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\WB_ModeSelect_Button_SOLO_functions.cpp">
+      <Filter>SDK\CPP\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\AkAudio_functions.cpp">
+      <Filter>SDK\CPP\Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\AmwPlugin_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\BPF_AJBWwiseFunctionLibrary_functions.cpp">
+      <Filter>SDK\CPP\Audio</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -340,14 +385,35 @@
     <ClInclude Include="Aeyth8\A8CL\CTypes\IntegerTypes.h">
       <Filter>Aeyth8\A8CL</Filter>
     </ClInclude>
-    <ClInclude Include="Dumper-7\CustomSDK\WBP_OptionsMenu_classes.hpp">
-      <Filter>SDK\Custom</Filter>
+    <ClInclude Include="Dumper-7\CustomSDK\WBP_AJBTitleScreen_classes.hpp">
+      <Filter>SDK\Custom\TitleScreen</Filter>
     </ClInclude>
-    <ClInclude Include="Dumper-7\CustomSDK\WBP_OptionsMenu_parameters.hpp">
-      <Filter>SDK\Custom</Filter>
+    <ClInclude Include="Dumper-7\CustomSDK\WBP_AJBTitleScreen_parameters.hpp">
+      <Filter>SDK\Custom\TitleScreen</Filter>
     </ClInclude>
     <ClInclude Include="Dumper-7\CustomSDK\WBP_Cursor_classes.hpp">
-      <Filter>SDK\Custom</Filter>
+      <Filter>SDK\Custom\Cursor</Filter>
+    </ClInclude>
+    <ClInclude Include="Dumper-7\CustomSDK\WBP_OptionsMenu_parameters.hpp">
+      <Filter>SDK\Custom\OptionsMenu</Filter>
+    </ClInclude>
+    <ClInclude Include="Dumper-7\CustomSDK\WBP_OptionsMenu_classes.hpp">
+      <Filter>SDK\Custom\OptionsMenu</Filter>
+    </ClInclude>
+    <ClInclude Include="Dumper-7\CustomSDK\GM_AJBTitleScreen_classes.hpp">
+      <Filter>SDK\Custom\TitleScreen\GameMode</Filter>
+    </ClInclude>
+    <ClInclude Include="Dumper-7\CustomSDK\GM_AJBTitleScreen_parameters.hpp">
+      <Filter>SDK\Custom\TitleScreen\GameMode</Filter>
+    </ClInclude>
+    <ClInclude Include="Dumper-7\CustomSDK\BP_GlobalPatcher_classes.hpp">
+      <Filter>SDK\Custom\Global</Filter>
+    </ClInclude>
+    <ClInclude Include="Dumper-7\CustomSDK\BP_GlobalPatcher_parameters.hpp">
+      <Filter>SDK\Custom\Global</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\A8CL\CPUReg\CPUReg.h">
+      <Filter>Aeyth8\A8CL\CPUReg</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -359,5 +425,10 @@
     <ResourceCompile Include="Version\JoJo.rc">
       <Filter>Version</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="Aeyth8\A8CL\CPUReg\CPUReg.asm">
+      <Filter>Aeyth8\A8CL\CPUReg</Filter>
+    </MASM>
   </ItemGroup>
 </Project>
