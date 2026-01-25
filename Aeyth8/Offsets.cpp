@@ -27,6 +27,11 @@ namespace OFF
 	OFFSET UConsole("UConsole::ConsoleCommand", 0x1796230);	
 	OFFSET ConsoleCommand("APlayerController::ConsoleCommand", 0x16077D0);
 	OFFSET Browse("UEngine::Browse", 0x175C530);
+	OFFSET RequestLevel("ULevelStreaming::RequestLevel", 0x1490820);
+	OFFSET PrepareMapChange("UEngine::PrepareMapChange", 0x177AA20);
+	OFFSET IsTimeLimitedExceeded("IsTimeLimitedExceeded", 0x17C4BB0);
+	OFFSET AddToWorld("UWorld::AddToWorld", 0x17BA220);
+	OFFSET RemoveFromWorld("UWorld::RemoveFromWorld", 0x17CAEA0);
 	OFFSET SpawnActor("UWorld::SpawnActor", 0x1494440);
 	OFFSET DestroyActor("UWorld::DestroyActor", 0x1484190);
 	OFFSET ProcessMulticastDelegate("ProcessMulticastDelegate", 0x20C010);
@@ -43,6 +48,7 @@ namespace OFF
 	OFFSET StaticConstructObject("StaticConstructObject_Internal", 0x849630);
 	OFFSET BroadcastDelegate("TMulticastDelegate<void (void),FDefaultDelegateUserPolicy>::Broadcast", 0x1E3620);
 
+	OFFSET ALevelScriptActorConstructor("ALevelScriptActor::ALevelScriptActor", 0x147E150);
 	/*
 	
 	UWorld::DestroyActor 0x1484190 (lowest level)
@@ -58,6 +64,9 @@ namespace OFF
 	// Native Game Functions
 
 	OFFSET ChangeState("UFlowStateUtil::ChangeState", 0x21CF10);
+	OFFSET TryGetMatchingMyPairInfo("UAJBGameInstance::TryGetMatchingMyPairInfo", 0x486FC0);
+
+	OFFSET GetUsername("GetUsername", 0x694650);
 
 	/*
 	

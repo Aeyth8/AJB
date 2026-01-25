@@ -105,6 +105,39 @@ public:
 		AllFlags = ReachableInCluster | ClusterRoot | Native | Async | AsyncLoading | Unreachable | PendingKill | RootSet | HadReferenceKilled
 	};
 
+	/** Describes what parts of level streaming should be forcibly handled immediately */
+	enum class EFlushLevelStreamingType : unsigned char
+	{
+		/** Do not flush state on change */
+		None,
+		/** Allow multiple load requests */
+		Full,
+		/** Flush visibility only, do not allow load requests, flushes async loading as well */
+		Visibility,
+	};
+
+	enum EReqLevelBlock
+	{
+		/** Block load AlwaysLoaded levels. Otherwise Async load. */
+		BlockAlwaysLoadedLevelsOnly,
+		/** Block all loads */
+		AlwaysBlock,
+		/** Never block loads */
+		NeverBlock,
+	};
+
+	enum class ECurrentState : unsigned char
+	{
+		Removed,
+		Unloaded,
+		FailedToLoad,
+		Loading,
+		LoadedNotVisible,
+		MakingVisible,
+		LoadedVisible,
+		MakingInvisible
+	};
+
 	class Decl
 	{
 	public:
@@ -149,6 +182,10 @@ public:
 		typedef SDK::UObject*(__fastcall* StaticConstructObject_Internal)(SDK::UClass *InClass, SDK::UObject *InOuter, SDK::FName InName, unsigned int InFlags, EInternalObjectFlags InternalSetFlags, SDK::UObject *InTemplate, bool bCopyTransientsFromClassDefaults, void* *InInstanceGraph, bool bAssumeTemplateIsArchetype);
 	
 		typedef void(__fastcall* BroadcastDelegate)(SDK::UMulticastDelegateProperty* This);
+
+		typedef bool(__thiscall* PrepareMapChange)(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SDK::TArray<SDK::FName>& LevelNames);
+
+		typedef bool (__thiscall* RequestLevel)(SDK::ULevelStreaming* This, SDK::UWorld* PersistentWorld, bool bAllowLevelLoadRequests, EReqLevelBlock BlockPolicy);
 	};
 
 	
@@ -158,6 +195,10 @@ public:
 	static SDK::FString* ConsoleCommand(SDK::APlayerController* This, SDK::FString* Result, SDK::FString* Command, bool bWriteToLog);
 
 	static BrowseReturnVal Browse(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SDK::FURL URL, SDK::FString& Error);
+
+	static bool RequestLevel(SDK::ULevelStreaming* This, SDK::UWorld* PersistentWorld, bool bAllowLevelLoadRequests, EReqLevelBlock BlockPolicy);
+
+	static bool PrepareMapChange(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SDK::TArray<SDK::FName>& LevelNames);
 
 	static bool InitListen(SDK::UIpNetDriver* This, SDK::UObject* InNotify, SDK::FURL& LocalURL, bool bReuseAddressAndPort, SDK::FString& Error);
 

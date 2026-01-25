@@ -16,7 +16,7 @@ namespace A8CL
 namespace CMLA
 {
 	// -- Individual args for manual use 
-	CommandLineParameter<wchar_t> GameDefaultMap(L"GameDefaultMap", L"/Game/Aeyth8/Maps/TitleScreen/PlaceholderTitleScreen.PlaceholderTitleScreen");
+	CommandLineParameter<wchar_t> GameDefaultMap(L"GameDefaultMap", L"/Game/Aeyth8/Maps/TitleScreen/AJBTitleScreen.AJBTitleScreen");
 	CommandLineParameter<wchar_t> TransitionMap(L"TransitionMap", L"/Game/Aeyth8/Maps/LoadingWorld.LoadingWorld");
 	CommandLineParameter<wchar_t> GlobalDefaultGameMode(L"GlobalDefaultGameMode", L"/Game/AJB/InGame/Core/BP_AJBBattleGameMode.BP_AJBBattleGameMode_C");
 	CommandLineParameter<wchar_t> ServerPort(L"ServerPort", L"1170");
@@ -27,6 +27,7 @@ namespace CMLA
 	CommandLineParameter<wchar_t> WinCSOut(L"log");
 	CommandLineParameter<wchar_t> ConsoleKey(L"ConsoleKey", L"Tilde");
 	CommandLineParameter<wchar_t> MouseCursor(L"MouseCursor", L"/Game/Aeyth8/Blueprints/WBP_Cursor.WBP_Cursor_C");
+	CommandLineParameter<wchar_t> Username(L"Username", L"Aeyth8");
 
 	// -- Global array for automated parsing, not generally needed for manual usage.
 	CArray<CommandLineParameter<wchar_t>*> GlobalCommandLineArgs = CommandLineParameter<wchar_t>::GCommands();

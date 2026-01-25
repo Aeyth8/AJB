@@ -28,6 +28,11 @@ namespace OFF
 	extern OFFSET UConsole;	
 	extern OFFSET ConsoleCommand;
 	extern OFFSET Browse;
+	extern OFFSET RequestLevel;
+	extern OFFSET PrepareMapChange;
+	extern OFFSET IsTimeLimitedExceeded;
+	extern OFFSET AddToWorld;
+	extern OFFSET RemoveFromWorld;
 	extern OFFSET SpawnActor;
 	extern OFFSET DestroyActor;
 	extern OFFSET ProcessMulticastDelegate;
@@ -44,8 +49,12 @@ namespace OFF
 	extern OFFSET CreateDefaultObject;
 	extern OFFSET StaticConstructObject;
 
+	extern OFFSET ALevelScriptActorConstructor;
+
 	// Native Game Functions
 
 	extern OFFSET ChangeState;
+	extern OFFSET TryGetMatchingMyPairInfo;
+	extern OFFSET GetUsername;
 }
 }

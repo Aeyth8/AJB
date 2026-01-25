@@ -18,14 +18,17 @@ namespace SDK
 {
 
 // BlueprintGeneratedClass GM_AJBTitleScreen.GM_AJBTitleScreen_C
-// 0x0010 (0x03D8 - 0x03C8)
+// 0x0018 (0x03E0 - 0x03C8)
 class AGM_AJBTitleScreen_C final : public AGameModeBase
 {
 public:
 	struct FPointerToUberGraphFrame               UberGraphFrame;                                    // 0x03C8(0x0008)(Transient, DuplicateTransient)
 	class USceneComponent*                        DefaultSceneRoot;                                  // 0x03D0(0x0008)(BlueprintVisible, ZeroConstructor, InstancedReference, IsPlainOldData, NonTransactional, NoDestructor, HasGetValueTypeHash)
+	class UWBP_AJBTitleScreen_C*                  TitleScreenWidget;                                 // 0x03D8(0x0008)(Edit, BlueprintVisible, ZeroConstructor, DisableEditOnInstance, InstancedReference, IsPlainOldData, NoDestructor, HasGetValueTypeHash)
 
 public:
+	void InitTitleScreenWidget();
+	UWBP_AJBTitleScreen_C* GetTitleScreenWidget();
 	void UserConstructionScript();
 	void ReceiveBeginPlay();
 	void ExecuteUbergraph_GM_AJBTitleScreen(int32 EntryPoint);
@@ -41,9 +44,10 @@ public:
 	}
 };
 static_assert(alignof(AGM_AJBTitleScreen_C) == 0x000008, "Wrong alignment on AGM_AJBTitleScreen_C");
-static_assert(sizeof(AGM_AJBTitleScreen_C) == 0x0003D8, "Wrong size on AGM_AJBTitleScreen_C");
+static_assert(sizeof(AGM_AJBTitleScreen_C) == 0x0003E0, "Wrong size on AGM_AJBTitleScreen_C");
 static_assert(offsetof(AGM_AJBTitleScreen_C, UberGraphFrame) == 0x0003C8, "Member 'AGM_AJBTitleScreen_C::UberGraphFrame' has a wrong offset!");
 static_assert(offsetof(AGM_AJBTitleScreen_C, DefaultSceneRoot) == 0x0003D0, "Member 'AGM_AJBTitleScreen_C::DefaultSceneRoot' has a wrong offset!");
+static_assert(offsetof(AGM_AJBTitleScreen_C, TitleScreenWidget) == 0x0003D8, "Member 'AGM_AJBTitleScreen_C::TitleScreenWidget' has a wrong offset!");
 
 }
 

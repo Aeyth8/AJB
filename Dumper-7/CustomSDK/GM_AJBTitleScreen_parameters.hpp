@@ -14,6 +14,24 @@
 namespace SDK::Params
 {
 
+// Function GM_AJBTitleScreen.GM_AJBTitleScreen_C.InitTitleScreenWidget
+// 0x0018 (0x0018 - 0x0000)
+struct GM_AJBTitleScreen_C_InitTitleScreenWidget final
+{
+public:
+	class APlayerController*                      CallFunc_GetPlayerController_ReturnValue;          // 0x0000(0x0008)(ZeroConstructor, IsPlainOldData, NoDestructor, HasGetValueTypeHash)
+	class UWBP_AJBTitleScreen_C*                  CallFunc_Create_ReturnValue;                       // 0x0008(0x0008)(ZeroConstructor, InstancedReference, IsPlainOldData, NoDestructor, HasGetValueTypeHash)
+	bool                                          CallFunc_IsValid_ReturnValue;                      // 0x0010(0x0001)(ZeroConstructor, IsPlainOldData, NoDestructor)
+};
+
+// Function GM_AJBTitleScreen.GM_AJBTitleScreen_C.GetTitleScreenWidget
+// 0x0008 (0x0008 - 0x0000)
+struct GM_AJBTitleScreen_C_GetTitleScreenWidget final
+{
+public:
+	class UWBP_AJBTitleScreen_C*                  Widget;                                            // 0x0000(0x0008)(Parm, OutParm, ZeroConstructor, InstancedReference, IsPlainOldData, NoDestructor, HasGetValueTypeHash)
+};
+
 // Function GM_AJBTitleScreen.GM_AJBTitleScreen_C.ExecuteUbergraph_GM_AJBTitleScreen
 // 0x0020 (0x0020 - 0x0000)
 struct GM_AJBTitleScreen_C_ExecuteUbergraph_GM_AJBTitleScreen final

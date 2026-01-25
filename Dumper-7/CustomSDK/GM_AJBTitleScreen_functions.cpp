@@ -17,6 +17,39 @@
 namespace SDK
 {
 
+// Function GM_AJBTitleScreen.GM_AJBTitleScreen_C.InitTitleScreenWidget
+// (Public, BlueprintCallable, BlueprintEvent)
+
+void AGM_AJBTitleScreen_C::InitTitleScreenWidget()
+{
+	static class UFunction* Func = nullptr;
+
+	if (Func == nullptr)
+		Func = Class->GetFunction("GM_AJBTitleScreen_C", "InitTitleScreenWidget");
+
+	UObject::ProcessEvent(Func, nullptr);
+}
+
+
+// Function GM_AJBTitleScreen.GM_AJBTitleScreen_C.GetTitleScreenWidget
+// (Public, HasOutParams, BlueprintCallable, BlueprintEvent)
+// Parameters:
+// class UWBP_AJBTitleScreen_C**           Widget                                                 (Parm, OutParm, ZeroConstructor, InstancedReference, IsPlainOldData, NoDestructor, HasGetValueTypeHash)
+
+UWBP_AJBTitleScreen_C* AGM_AJBTitleScreen_C::GetTitleScreenWidget()
+{
+	static class UFunction* Func = nullptr;
+
+	if (Func == nullptr)
+		Func = Class->GetFunction("GM_AJBTitleScreen_C", "GetTitleScreenWidget");
+
+	Params::GM_AJBTitleScreen_C_GetTitleScreenWidget Parms{};
+
+	UObject::ProcessEvent(Func, &Parms);
+
+	return Parms.Widget;
+}
+
 // Function GM_AJBTitleScreen.GM_AJBTitleScreen_C.UserConstructionScript
 // (Event, Public, BlueprintCallable, BlueprintEvent)
 

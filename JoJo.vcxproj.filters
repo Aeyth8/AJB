@@ -287,6 +287,15 @@
     <ClCompile Include="Dumper-7\SDK\BPF_AJBWwiseFunctionLibrary_functions.cpp">
       <Filter>SDK\CPP\Audio</Filter>
     </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\WB_InGameMain_functions.cpp">
+      <Filter>SDK\CPP\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\WB_TestModePage_functions.cpp">
+      <Filter>SDK\CPP\Widgets\DebugMenu</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\AJBCreadit_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Aeyth8\Logger.hpp">

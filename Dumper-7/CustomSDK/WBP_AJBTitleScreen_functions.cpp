@@ -18,11 +18,11 @@ namespace SDK
 {
 
 // Function WBP_AJBTitleScreen.WBP_AJBTitleScreen_C.SetDLLCommitVersion
-// (Public, HasOutParams, HasDefaults, BlueprintCallable, BlueprintEvent)
+// (Public, HasDefaults, BlueprintCallable, BlueprintEvent)
 // Parameters:
-// class FString&                          NewVersion                                             (BlueprintVisible, BlueprintReadOnly, Parm, OutParm, ZeroConstructor, ReferenceParm, HasGetValueTypeHash)
+// const class FString&                    NewVersion                                             (BlueprintVisible, BlueprintReadOnly, Parm, ZeroConstructor, HasGetValueTypeHash)
 
-void UWBP_AJBTitleScreen_C::SetDLLCommitVersion(class FString& NewVersion)
+void UWBP_AJBTitleScreen_C::SetDLLCommitVersion(const class FString& NewVersion)
 {
 	static class UFunction* Func = nullptr;
 
@@ -34,8 +34,20 @@ void UWBP_AJBTitleScreen_C::SetDLLCommitVersion(class FString& NewVersion)
 	Parms.NewVersion = std::move(NewVersion);
 
 	UObject::ProcessEvent(Func, &Parms);
+}
 
-	NewVersion = std::move(Parms.NewVersion);
+
+// Function WBP_AJBTitleScreen.WBP_AJBTitleScreen_C.OnButtonPressed
+// (Public, BlueprintCallable, BlueprintEvent)
+
+void UWBP_AJBTitleScreen_C::OnButtonPressed()
+{
+	static class UFunction* Func = nullptr;
+
+	if (Func == nullptr)
+		Func = Class->GetFunction("WBP_AJBTitleScreen_C", "OnButtonPressed");
+
+	UObject::ProcessEvent(Func, nullptr);
 }
 
 
@@ -59,57 +71,71 @@ void UWBP_AJBTitleScreen_C::ExecuteUbergraph_WBP_AJBTitleScreen(int32 EntryPoint
 }
 
 
-// Function WBP_AJBTitleScreen.WBP_AJBTitleScreen_C.BndEvt__YouTubeBT_K2Node_ComponentBoundEvent_2_OnButtonClickedEvent__DelegateSignature
+// Function WBP_AJBTitleScreen.WBP_AJBTitleScreen_C.BndEvt__BT_YouTube_K2Node_ComponentBoundEvent_2_OnButtonClickedEvent__DelegateSignature
 // (BlueprintEvent)
 
-void UWBP_AJBTitleScreen_C::BndEvt__YouTubeBT_K2Node_ComponentBoundEvent_2_OnButtonClickedEvent__DelegateSignature()
+void UWBP_AJBTitleScreen_C::BndEvt__BT_YouTube_K2Node_ComponentBoundEvent_2_OnButtonClickedEvent__DelegateSignature()
 {
 	static class UFunction* Func = nullptr;
 
 	if (Func == nullptr)
-		Func = Class->GetFunction("WBP_AJBTitleScreen_C", "BndEvt__YouTubeBT_K2Node_ComponentBoundEvent_2_OnButtonClickedEvent__DelegateSignature");
+		Func = Class->GetFunction("WBP_AJBTitleScreen_C", "BndEvt__BT_YouTube_K2Node_ComponentBoundEvent_2_OnButtonClickedEvent__DelegateSignature");
 
 	UObject::ProcessEvent(Func, nullptr);
 }
 
 
-// Function WBP_AJBTitleScreen.WBP_AJBTitleScreen_C.BndEvt__InvisibleButtonPressToStart_K2Node_ComponentBoundEvent_3_OnButtonClickedEvent__DelegateSignature
+// Function WBP_AJBTitleScreen.WBP_AJBTitleScreen_C.BndEvt__BT_TBD_K2Node_ComponentBoundEvent_3_OnButtonClickedEvent__DelegateSignature
 // (BlueprintEvent)
 
-void UWBP_AJBTitleScreen_C::BndEvt__InvisibleButtonPressToStart_K2Node_ComponentBoundEvent_3_OnButtonClickedEvent__DelegateSignature()
+void UWBP_AJBTitleScreen_C::BndEvt__BT_TBD_K2Node_ComponentBoundEvent_3_OnButtonClickedEvent__DelegateSignature()
 {
 	static class UFunction* Func = nullptr;
 
 	if (Func == nullptr)
-		Func = Class->GetFunction("WBP_AJBTitleScreen_C", "BndEvt__InvisibleButtonPressToStart_K2Node_ComponentBoundEvent_3_OnButtonClickedEvent__DelegateSignature");
+		Func = Class->GetFunction("WBP_AJBTitleScreen_C", "BndEvt__BT_TBD_K2Node_ComponentBoundEvent_3_OnButtonClickedEvent__DelegateSignature");
 
 	UObject::ProcessEvent(Func, nullptr);
 }
 
 
-// Function WBP_AJBTitleScreen.WBP_AJBTitleScreen_C.BndEvt__GitHubBT_K2Node_ComponentBoundEvent_1_OnButtonClickedEvent__DelegateSignature
+// Function WBP_AJBTitleScreen.WBP_AJBTitleScreen_C.BndEvt__BT_InvisiblePressToStart_K2Node_ComponentBoundEvent_4_OnButtonClickedEvent__DelegateSignature
 // (BlueprintEvent)
 
-void UWBP_AJBTitleScreen_C::BndEvt__GitHubBT_K2Node_ComponentBoundEvent_1_OnButtonClickedEvent__DelegateSignature()
+void UWBP_AJBTitleScreen_C::BndEvt__BT_InvisiblePressToStart_K2Node_ComponentBoundEvent_4_OnButtonClickedEvent__DelegateSignature()
 {
 	static class UFunction* Func = nullptr;
 
 	if (Func == nullptr)
-		Func = Class->GetFunction("WBP_AJBTitleScreen_C", "BndEvt__GitHubBT_K2Node_ComponentBoundEvent_1_OnButtonClickedEvent__DelegateSignature");
+		Func = Class->GetFunction("WBP_AJBTitleScreen_C", "BndEvt__BT_InvisiblePressToStart_K2Node_ComponentBoundEvent_4_OnButtonClickedEvent__DelegateSignature");
 
 	UObject::ProcessEvent(Func, nullptr);
 }
 
 
-// Function WBP_AJBTitleScreen.WBP_AJBTitleScreen_C.BndEvt__DiscordBT_K2Node_ComponentBoundEvent_0_OnButtonClickedEvent__DelegateSignature
+// Function WBP_AJBTitleScreen.WBP_AJBTitleScreen_C.BndEvt__BT_GitHub_K2Node_ComponentBoundEvent_1_OnButtonClickedEvent__DelegateSignature
 // (BlueprintEvent)
 
-void UWBP_AJBTitleScreen_C::BndEvt__DiscordBT_K2Node_ComponentBoundEvent_0_OnButtonClickedEvent__DelegateSignature()
+void UWBP_AJBTitleScreen_C::BndEvt__BT_GitHub_K2Node_ComponentBoundEvent_1_OnButtonClickedEvent__DelegateSignature()
 {
 	static class UFunction* Func = nullptr;
 
 	if (Func == nullptr)
-		Func = Class->GetFunction("WBP_AJBTitleScreen_C", "BndEvt__DiscordBT_K2Node_ComponentBoundEvent_0_OnButtonClickedEvent__DelegateSignature");
+		Func = Class->GetFunction("WBP_AJBTitleScreen_C", "BndEvt__BT_GitHub_K2Node_ComponentBoundEvent_1_OnButtonClickedEvent__DelegateSignature");
+
+	UObject::ProcessEvent(Func, nullptr);
+}
+
+
+// Function WBP_AJBTitleScreen.WBP_AJBTitleScreen_C.BndEvt__BT_Discord_K2Node_ComponentBoundEvent_0_OnButtonClickedEvent__DelegateSignature
+// (BlueprintEvent)
+
+void UWBP_AJBTitleScreen_C::BndEvt__BT_Discord_K2Node_ComponentBoundEvent_0_OnButtonClickedEvent__DelegateSignature()
+{
+	static class UFunction* Func = nullptr;
+
+	if (Func == nullptr)
+		Func = Class->GetFunction("WBP_AJBTitleScreen_C", "BndEvt__BT_Discord_K2Node_ComponentBoundEvent_0_OnButtonClickedEvent__DelegateSignature");
 
 	UObject::ProcessEvent(Func, nullptr);
 }

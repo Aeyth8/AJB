@@ -53,6 +53,8 @@ SDK::ABP_AJBOutGameProxy_C*			AJB::OutGameProxy{nullptr};
 SDK::UAJBVersion*					AJB::Version{nullptr};
 SDK::UAJBSettings*					AJB::AJBSettings{nullptr};
 
+SDK::AAJBCreadit_C*					AJB::CreaditPointer{nullptr};
+
 SDK::FName*							AJB::GameFlowState{nullptr};
 
 __int32*							AJB::PlayerPoints{nullptr};
@@ -66,7 +68,9 @@ SDK::UWBP_OptionsMenu_C*			AJB::MOD_OptionsMenu{nullptr};
 SDK::UClass*						AJB::MOD_GlobalPatcherClass{nullptr};
 SDK::UBP_GlobalPatcher_C*			AJB::MOD_GlobalPatcher{nullptr};
 
-const wchar_t*						AJB::DLLCommitVersion{L"[v0.4.1]"};
+SDK::UClass*						AJB::MOD_TitleScreenClass{nullptr};
+
+const wchar_t*						AJB::DLLCommitVersion{L"[v0.4.2]"};
 UC::FString*						AJB::StrDLLCommitVersion{nullptr};
 
 // -- Windows External --
@@ -81,8 +85,57 @@ constexpr BYTE MOV{0xB0}; // 8 bit to AL register
 constexpr BYTE RETN{0xC3};
 constexpr BYTE NOP{0x90};
 
-// Forward declaration (I'm lazy)
-static bool FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag);
+
+
+
+/*static bool bPendingBlacklistedLevel{false};
+static FGuidWrapper CurrentPendingBlacklistedLevel{0};
+
+static bool IsTimeLimitExceeded(const wchar_t* CurrentTask, double StartTime, SDK::ULevel* Level, double TimeLimit)
+{
+	if (bPendingBlacklistedLevel && FGuidWrapper::IsEqual(Level->LevelBuildDataId, CurrentPendingBlacklistedLevel.Get()))
+	{
+		LogA(OFF::IsTimeLimitedExceeded.GetName(), "Removing blacklisted level..");
+
+		bPendingBlacklistedLevel = false;
+		return true;
+	}
+
+	return OFF::IsTimeLimitedExceeded.VerifyFC<bool(__fastcall*)(const wchar_t*, double, SDK::ULevel*, double)>()(CurrentTask, StartTime, Level, TimeLimit);
+}
+
+void AddToWorld(SDK::UWorld* This, SDK::ULevel* Level, SDK::FTransform& LevelTransform, bool bConsiderTimeLimit)
+{
+	LogA(OFF::AddToWorld.GetName(), Level ? std::format("[Level]: {} | [bConsiderTimeLimit]: {} | [LevelBuildDataId]: {} / A: {} B: {} C: {} D: {}", Level->GetFullName(), bConsiderTimeLimit, AJB::GetBlueprintClass<SDK::UKismetGuidLibrary>()->Conv_GuidToString(Level->LevelBuildDataId).ToString(), Level->LevelBuildDataId.A, Level->LevelBuildDataId.B, Level->LevelBuildDataId.C, Level->LevelBuildDataId.D) : "nullptr");
+
+	constexpr static SDK::FGuid BlacklistedLevels[]
+	{
+		{538744768, 1336608493, -556329026, -468622330}, // 201C97C04FAB06EDDED717BEE4116406 // [AJBCreadit] Worthless level that displays the credit counter.
+	};
+
+	int LevelIndex{0};
+
+	
+
+	for (const SDK::FGuid& GUID : BlacklistedLevels)
+	{
+		__assume(Level != nullptr); // SHUTUP
+		if (FGuidWrapper::IsEqual(BlacklistedLevels[LevelIndex], Level->LevelBuildDataId))
+		{
+			LogA(OFF::AddToWorld.GetName(), "World is blacklisted! Killing time limit..");
+
+			bPendingBlacklistedLevel = true;
+			CurrentPendingBlacklistedLevel.Assign(Level->LevelBuildDataId);
+
+			return;
+		}
+
+		LevelIndex++;
+	}
+
+	
+	return OFF::AddToWorld.VerifyFC<void(__thiscall*)(SDK::UWorld*, SDK::ULevel*, SDK::FTransform&, bool)>()(This, Level, LevelTransform, bConsiderTimeLimit);
+}*/
 
 std::vector<Hooks::HookStructure> StandaloneHooks =
 {
@@ -96,9 +149,14 @@ std::vector<Hooks::HookStructure> StandaloneHooks =
 	{OFF::AppPreExit, UFunctions::AppPreExit},
 	{OFF::IsNonPakFileNameAllowed, UFunctions::IsNonPakFilenameAllowed},
 	{OFF::FindFileInPakFiles, UFunctions::FindFileInPakFiles},
-	{OFF::ChangeState, FlowUtilChangeState},
+	{OFF::ChangeState, AJB::FlowUtilChangeState},
 	{OFF::ProcessMulticastDelegate, UFunctions::ProcessMulticastDelegate}, // unsure if I'm keeping this
 	{OFF::BroadcastDelegate, UFunctions::BroadcastDelegate},
+	{OFF::Invoke, UFunctions::Invoke},
+	{OFF::PrepareMapChange, UFunctions::PrepareMapChange},
+	/*{OFF::AddToWorld, AddToWorld},
+	{OFF::IsTimeLimitedExceeded, IsTimeLimitExceeded},*/
+	/*{OFF::RequestLevel, UFunctions::RequestLevel}, Temporarily disabled since it inevitably crashes and if it doesn't it will stall forever */
 };
 
 A8CL::OFFSET NetID("UAJBNetworkObserver::GetNetID", 0x4ECC80);
@@ -106,6 +164,32 @@ A8CL::OFFSET OpenCommand("AAJBOutGameProxy::GetOpenCommand", 0x506DD0);
 A8CL::OFFSET PostEventByName("UAkComponent::PostAkEventByName", 0x291650);
 A8CL::OFFSET PostEvent("UAkComponent::PostAkEvent", 0x291390);
 A8CL::OFFSET LoadBankByName("UAkGameplayStatics::LoadBankByName", 0x286850);
+
+
+// Server functionality only
+void TryGetMatchingMyPairInfo(SDK::UAJBGameInstance* This, bool* bIsValid, bool* bIsRoomHost, SDK::FMatchingPlayerInfo* Out)
+{
+	LogA(OFF::TryGetMatchingMyPairInfo.GetName(), std::format("[This]: {} [bIsValid]: {} [bIsRoomHost]: {} [Info]: {}", This->GetFullName(), *bIsValid, *bIsRoomHost, AJB::PlayerInfoParser(*Out)));
+	SDK::FString Lemon{L"Lemon Possession"};
+	AJB::GetBlueprintClass<SDK::UAJBPlayerInfoUtility>()->SetBotFMatchingPlayerInfo(Out, Lemon);
+	Call<UFunctions::Decl::CopyString>(OFF::CopyString.PlusBase())(&Out->PlayerName, &Lemon);
+	return OFF::TryGetMatchingMyPairInfo.VerifyFC<void(__thiscall*)(SDK::UAJBGameInstance*, bool*,bool*, SDK::FMatchingPlayerInfo*)>()(This, bIsValid, bIsRoomHost, Out);
+}
+
+#include "../../Dumper-7/SDK/AJBCreadit_classes.hpp"
+
+SDK::ALevelScriptActor* __fastcall ALevelScriptActor(SDK::AActor* This, void* ObjectInitializer)
+{
+	if (This->IsA(SDK::AAJBCreadit_C::StaticClass())) {
+		AJB::CreaditPointer = static_cast<SDK::AAJBCreadit_C*>(This);
+	}
+	return OFF::ALevelScriptActorConstructor.VerifyFC<SDK::ALevelScriptActor* (__fastcall*)(SDK::AActor*, void*)>()(This, ObjectInitializer);
+}
+
+const wchar_t* GetUsername()
+{
+	return CMLA::Username.GetArgumentAsString();
+}
 
 int32 LoadBankByNameHook(SDK::UAkGameplayStatics* This, SDK::FString& Name)
 {
@@ -340,14 +424,17 @@ void AJB::Init_Hooks()
 	{
 		Hooks::CreateAndEnableHooks(StandaloneHooks);
 
+		/*Hooks::CreateAndEnableHook(OFF::GetUsername, GetUsername);
+		Hooks::CreateAndEnableHook(OFF::TryGetMatchingMyPairInfo, TryGetMatchingMyPairInfo);*/
+
 		if (CMLA::HookAndLogProcessEvent.GetAsBool())
 		{
 			Hooks::CreateAndEnableHook(OFF::ProcessEvent, UFunctions::ProcessEvent);
 		}
-		if (CMLA::HookAndLogInvoke.GetAsBool())
+		/*if (CMLA::HookAndLogInvoke.GetAsBool())
 		{
 			Hooks::CreateAndEnableHook(OFF::Invoke, UFunctions::Invoke);
-		}
+		}*/
 		if (CMLA::HookAndLogLoader.GetAsBool())
 		{
 			Hooks::CreateAndEnableHook(OFF::StaticLoadClass, UFunctions::StaticLoadClass);
@@ -363,6 +450,8 @@ void AJB::Init_Hooks()
 		Hooks::CreateAndEnableHook(PostEventByName, PostEventByNameHook);
 		Hooks::CreateAndEnableHook(PostEvent, PostEventHook);
 		Hooks::CreateAndEnableHook(LoadBankByName, LoadBankByNameHook);
+
+		Hooks::CreateAndEnableHook(OFF::ALevelScriptActorConstructor, ALevelScriptActor);
 	}
 
 }
@@ -478,6 +567,8 @@ void AJB::Init_Engine()
 	//SetConsoleTitleW(AJB::DLLCommitVersion);
 }
 
+#include "../../Dumper-7/SDK/BPF_AJBGameInstance_classes.hpp"
+
 void AJB::Init_Vars(SDK::UWorld* GWorld)
 {
 	if (GWorld)
@@ -486,7 +577,31 @@ void AJB::Init_Vars(SDK::UWorld* GWorld)
 		Settings = static_cast<SDK::UAJBAMSystemSettings*>(Instance->AMSystemSettings);
 		System = static_cast<SDK::UAJBAMSystemObject*>(Instance->AMSystemObject);
 		PlayerPoints = (&System->PP);
+
+		SDK::FString ElSev{L"1170"};
+		SDK::FString Username{CMLA::Username.GetArgumentAsString()};
+		/*CopyString(&Instance->PlayerLoginInfo.SessionID, &ElSev);
+		CopyString(&Instance->PlayerLoginInfo.AccessCode, &ElSev);
+		CopyString(&Instance->PlayerLoginInfo.UserDataID, &ElSev);
+		CopyString(&Instance->PlayerLoginInfo.MatchingPlayerInfo.PlayerName, &Username);
+		CopyString(&Instance->PlayerLoginInfo.UserDataID, &ElSev);
+		Instance->PlayerLoginInfo.MatchingPlayerInfo.PlayerIconID = 5;
+		Instance->PlayerLoginInfo.bIsBNCard = true;
+		Instance->PlayerLoginInfo.bIsGuest = false;*/
 		
+		
+
+		/*for (SDK::FCustomData& Data : Instance->PlayerLoginInfo.CustomData)
+		{
+			LogA("charaSkinId", std::to_string(Data.charaSkinId));
+			Data.charaSkinId = 2;
+			for (SDK::FEmoteData& Emote : Data.EmoteData)
+			{
+				LogA("Emote", Emote.EmoteName.ToString());
+				Emote.emoteId = 11;
+			}
+		}*/
+
 		if (!IsNull(Settings = static_cast<SDK::UAJBAMSystemSettings*>(Instance->AMSystemSettings)))
 		{
 			bDebugInputMode = (&Settings->bDebugInputMode);
@@ -528,6 +643,7 @@ void AJB::Init_Vars(SDK::UWorld* GWorld)
 		LogA("PauseMenu", PauseMenu ? "YIPEE!" : "STUPID PIEC OF SH");
 		GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->Create(GWorld, PauseMenu, Player());*/
 		//LogA("PauseMenu", PauseMenu->GetFullName());
+		//reinterpret_cast<SDK::UBPF_AJBGameInstance_C*>(AJB::Instance)->SetPlayMode(SDK::EPlayMode::Pair, GWorld);
 		//reinterpret_cast<SDK::UBPF_AJBGameInstance_C*>(SDK::UKismetSystemLibrary::GetDefaultObj())->SetPlayMode(SDK::EPlayMode::Pair, GWorld);
 	}
 	//GetBlueprintClass<SDK::UAJBPlayerInfoUtility>()->MakeAutoPlayerName(L"Aether", 1, 0);
@@ -651,7 +767,12 @@ bool AJB::SetSelectedCharacter(const ESelectedCharacter CharacterIndex)
 	return Instance ? (SetCharNo(Instance, CharacterIndex), Instance->CharacterNo == static_cast<int32>(CharacterIndex)) : false;
 }
 
-static bool FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag)
+void AJB::CopyString(UC::FString* StringToModify, UC::FString* StringToCopy)
+{
+	Call<UFunctions::Decl::CopyString>(OFF::CopyString.PlusBase())(StringToModify, StringToCopy);
+}
+
+bool AJB::FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag)
 {
 	// The mouse will not lock into the viewport on its own (making KBM compability unplayable unless you enjoy constantly holding down middle click to move your camera)  
 	constexpr const static wchar_t* MouseLockFlowstates[]
@@ -724,6 +845,53 @@ static bool FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGame
 	
 	return OFF::ChangeState.VerifyFC<bool(__fastcall*)(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag)>()(StateHandler, NextStateTag);
 }
+
+
+//#include "../../Dumper-7/SDK/BP_AJBCompass_classes.hpp"
+//#include "../../Dumper-7/SDK/WB_Compass_classes.hpp"
+//#include "../../Dumper-7/SDK/WB_InGameMain_classes.hpp"
+//#include "../../Dumper-7/SDK/WB_LandmarkableMap_classes.hpp"
+#include "../../Dumper-7/SDK/BP_AJBInGameHUD_classes.hpp"
+#include "../../Dumper-7/SDK/WB_FullMap_classes.hpp"
+
+void AJB::OnToggleFullMapVisibility(SDK::UObject* Object)
+{
+	static bool bToggled{false};
+	static SDK::UWB_FullMap_C* MapCache{nullptr};
+
+	bToggled = !bToggled;
+
+	LogA("OnToggleFullMapVisibility", Object->GetFullName());
+
+	if (Object->IsA(SDK::ABP_AJBInGameHUD_C::StaticClass()))
+	{
+		SDK::ABP_AJBInGameHUD_C* HUD = reinterpret_cast<SDK::ABP_AJBInGameHUD_C*>(Object);
+		HUD->PlayerOwner->bShowMouseCursor = bToggled;
+
+		// SDK::UWB_LandmarkableMap_C* MapCache = HUD->BP_AJBCompass->TargetWidget->CachedLastMapWidget; // Doesn't work because it's null IDK which one I should use
+		if (!MapCache) MapCache = GetLastOf<SDK::UWB_FullMap_C>(false);
+		if (MapCache)
+		{
+			if (bToggled)
+			{
+				LogA("FullMapVisibility", MapCache->GetFullName());
+				GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->SetInputMode_GameAndUI(HUD->PlayerOwner, nullptr, true, false);
+			}
+			else
+			{
+				AJB::GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->SetInputMode_GameOnly(HUD->PlayerOwner);
+			}
+		}
+	}
+}
+
+//void AJB::CreaditKys(SDK::UObject* Object)
+//{
+//	LogA("CreaditKys", "Killing credits...");
+//
+//	SDK::AAJBCreadit_C* Stupid = reinterpret_cast<SDK::AAJBCreadit_C*>(Object);
+//	Stupid->ReceiveEndPlay(SDK::EEndPlayReason::EEndPlayReason_MAX);
+//}
 
 // -- FMemory
 

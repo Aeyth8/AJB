@@ -27,6 +27,7 @@ namespace CMLA
 	extern CommandLineParameter<wchar_t> WinCSOut;
 	extern CommandLineParameter<wchar_t> ConsoleKey;
 	extern CommandLineParameter<wchar_t> MouseCursor;
+	extern CommandLineParameter<wchar_t> Username;
 
 	// -- Global array for automated parsing, not generally needed for manual usage.
 	extern CArray<CommandLineParameter<wchar_t>*> GlobalCommandLineArgs;

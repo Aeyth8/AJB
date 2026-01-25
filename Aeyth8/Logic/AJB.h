@@ -109,16 +109,17 @@ namespace SDK
 	class UBPF_AJBInGameSkillFunctionLibrary_C;
 	class UBPF_AJBOutGameHUD_C;
 	class UBPF_AJBOutGamePlayerController_C;
-	class UBPF_AJBOutGameHUD_C;
-
 	class ABP_PPV_VSFilter_C;
 
 	class FName;
 	struct FFlowStateHandler;
+	struct FGameplayTag;
 
 	// Mod accessible only
 	class UWBP_OptionsMenu_C;
 	class UBP_GlobalPatcher_C;
+
+	class AAJBCreadit_C;
 }
 
 namespace A8CL
@@ -181,6 +182,8 @@ namespace AJB
 	extern SDK::UAJBVersion* Version;
 	extern SDK::UAJBSettings* AJBSettings;
 
+	extern SDK::AAJBCreadit_C* CreaditPointer;
+
 	extern SDK::FName* GameFlowState;
 
 	extern __int32* PlayerPoints;
@@ -193,6 +196,7 @@ namespace AJB
 
 	extern SDK::UClass* MOD_OptionsMenuClass;			// Options menu class, must be loaded to create an object.
 	extern SDK::UClass* MOD_GlobalPatcherClass;			// Global patcher class, must be loaded to create an object.
+	extern SDK::UClass* MOD_TitleScreenClass;			// Title screen class, has the ability to use localization from the DLL, and is spawned from the DLL because blueprints are pissing me off.
 
 	extern SDK::UWBP_OptionsMenu_C* MOD_OptionsMenu;	// Options menu, a self maintained Widget Blueprint that uses its own internal ticking system, communicates with this DLL internally by executing console commands that are parsed with a hook to (APlayerController::ConsoleCommand).
 	extern SDK::UBP_GlobalPatcher_C* MOD_GlobalPatcher;	// Global object used as a translation layer between my DLL logic and Unreal Engine blueprints.
@@ -303,6 +307,41 @@ namespace AJB
 	// **			 HELPER FUNCTIONS			**
 	// ===========================================
 
+	struct FGuid
+	{
+		int A; int B; int C; int D;
+	};
+
+	struct FGuidWrapper
+	{
+		FGuid GUID;
+
+		FGuid const& Get()
+		{
+			return this->GUID;
+		}
+
+		void Assign(FGuid& NewGUID) // Copies from the original
+		{
+			this->GUID.A = NewGUID.A;
+			this->GUID.B = NewGUID.B;
+			this->GUID.C = NewGUID.C;
+			this->GUID.D = NewGUID.D;
+		}
+
+		static bool IsEqual(const FGuid& A, const FGuid B)
+		{
+			return A.A == B.A && A.B == B.B && A.C == B.C && A.D == B.D;
+		}
+
+		template <class ForwardDeclare = SDK::FGuid>
+		inline operator FGuid ()
+		{
+			return reinterpret_cast<ForwardDeclare>(this->GUID);
+		}
+
+	};
+
 	const char* PlayerInfoParser(SDK::FMatchingPlayerInfo& Info);
 
 	ESelectedCharacter GetSelectedCharacter();
@@ -311,6 +350,16 @@ namespace AJB
 	bool SetSelectedCharacter(const ESelectedCharacter CharacterIndex, const unsigned char SkinIndex, const unsigned char StandSkinIndex);
 	bool SetSelectedCharacter(const ESelectedCharacter CharacterIndex, const unsigned char SkinIndex);
 	bool SetSelectedCharacter(const ESelectedCharacter CharacterIndex);
+
+	void CopyString(UC::FString* StringToModify, UC::FString* StringToCopy);
+
+	// ===========================================
+	// **		EXTERNAL HOOK FUNCTIONS			**
+	// ===========================================
+	bool FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag);
+	void OnToggleFullMapVisibility(SDK::UObject* Object);
+	//void CreaditKys(SDK::UObject* Object);
+
 }
 
 // -- FMemory

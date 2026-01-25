@@ -166,6 +166,9 @@ using namespace Global;
 #include "BytePatcher.h"
 #include "../../Dumper-7/SDK/WB_ModeSelect_Button_SOLO_classes.hpp"
 #include "../../Dumper-7/SDK/WB_ModeSelect_Txt_Training_classes.hpp"
+#include "../../Dumper-7/SDK/WB_TestModePage_classes.hpp"
+
+#include "../../Dumper-7/SDK/AJBCreadit_classes.hpp"
 
 void UFunctions::UConsole(SDK::UConsole* This, SDK::FString& Command)
 {
@@ -341,6 +344,17 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			LogA("Time", HUDs->GetFullName());
 		}
 	}
+	else if (StrCommand == "char")
+	{
+		bool Success{false};
+		SDK::ABP_AJBOutGameHUD_C* HUD{nullptr};
+
+		AJB::GetBlueprintClass<SDK::UBPF_AJBOutGameHUD_C>()->GetAJBOutGameHUD_BP(0, AJB::GWorld(), &Success, &HUD);
+		if (HUD)
+		{
+			HUD->ShowCharacterSelect();
+		}
+	}
 	else if (StrCommand == "skin")
 	{
 		AJB::SetSelectedCharacter(AJB::KAKYOIN, 7, 7);
@@ -363,43 +377,6 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		//AJB::OutGameProxy->DebugSetupLoginPlayerInfo(true);
 		//AJB::OutGameProxy->StartTenpoHostServer();
 		Pointers::GetLastOf<SDK::UAJBInGameServerInfo>()->InitializeConnection(AJB::GWorld());
-	}
-	else if (StrCommand == "text")
-	{
-		int Iterator{0};
-		bool bCopyString = true;
-		constexpr const int CrashBlacklist[] = // For no reason even with all of the validity checks THE STUPID GAME STILL CRASHES AT THESE INDEXES, I wasted more time than I EVER should need to for this stupidity.
-		{
-			1242, 2895, 2932, 2981, 2892, 2893, 2982, 2950, 3243, 3412, 3413, 3691, 3692
-		};
-
-		for (SDK::UAJBTextBlock*& Block : Pointers::FindObjects<SDK::UAJBTextBlock>())
-		{
-			Iterator++;
-
-			for (const int& Num : CrashBlacklist) if (Num == Iterator) { bCopyString = false; break; }
-
-			if (Block && Block->Text.TextData && Block->Text.TextData->TextSource && Block->Text.TextData->TextSource.IsValid() && Block->Text.GetStringRef() != nullptr)
-			{
-				SDK::FString AllocatedString{L"None"};
-
-				std::string Name = "NULL";
-				Name = Block->GetFullName();
-				//if (bCopyString) OFF::CopyString.VerifyFC<Decl::CopyString>()(&AllocatedString, &Block->Text.TextData->TextSource); 
-				void* String = &Block->Text.TextData->TextSource;
-				if (String != nullptr)
-				{
-					BytePatcher::SetProtectionStatus(*(uintptr_t*)String, 0x1000, BytePatcher::EProtectionStatus::EXECUTE_READWRITE);
-					LogA(Name + " | " + std::to_string(Iterator), HexToString(OffsetToByte(*reinterpret_cast<uintptr_t*>(&Block->Text.TextData->TextSource))));
-				}
-				
-			}
-
-			bCopyString = true;
-		}
-		
-		
-
 	}
 	else if (StrCommand == "key")
 	{
@@ -475,15 +452,13 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		
 		*/
 	}
-
-	else if (StrCommand == "POS")
-	{
-		if (AJB::MOD_OptionsMenu) LogA("Key", AJB::MOD_OptionsMenu->GetInputKey().KeyName.ToString());
-		//Call<Decl::ActorDestroy>(OFF::ActorDestroy.PlusBase())(Pointers::GetLastOf<SDK::ABP_AJBOutGameProxy_C>(0), true, true);
-		//LogA("POS", std::to_string(Pointers::GetLastOf<SDK::ABP_AJBOutGameProxy_C>()->CharacterSelectTimeoutSecond = 1));
-	}
 	else if (StrCommand == "toggledebugmenu")
 	{
+		constexpr int MenuPage = 3;
+
+		static SDK::UClass* Classes[4]{nullptr};
+		static SDK::UUserWidget* Menus[4]{nullptr};
+
 		static bool ONE{0};
 		if (!ONE)
 		{
@@ -497,8 +472,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 				L"/Game/AJB/Debug/UI/WB_DebugMenuPage_NetPlayerInfo.WB_DebugMenuPage_NetPlayerInfo_C"
 			};
 
-			static SDK::UClass* Classes[4]{nullptr};
-			static SDK::UUserWidget* Menus[4]{nullptr};
+			
 			
 			
 			BYTE i{0};
@@ -511,6 +485,8 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 				{
 					Menus[i] = (SDK::UUserWidget*)Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(Classes[i], static_cast<SDK::UGameViewportClient*>(AJB::GEngine()->GameViewport), Pointers::FString2FName(Widgy), 0, EInternalObjectFlags::RootSet, 0, 0, 0, 0);
 
+
+					if (i == MenuPage)
 					if (Menus[i])
 					{
 						Menus[i]->AddToViewport(112);
@@ -524,13 +500,24 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			AJB::GetBlueprintClass<SDK::UBPF_AJBOutGameHUD_C>()->GetAJBOutGameHUD_BP(0, AJB::GWorld(), 0, &HUD);
 			if (HUD)
 			{
+				
+
 				//HUD->DebugMenuOutGameClassPtr.WeakPtr.ObjectIndex = Classes[2]->Index;
 				HUD->OnShowDebugMenu();
 
-				AJB::GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->SetInputMode_GameAndUI(Pointers::Player(), Menus[2], true, false);
+				AJB::GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->SetInputMode_GameAndUI(Pointers::Player(), Menus[MenuPage], true, false);
+				if (Menus[MenuPage] && Menus[MenuPage]->IsA(SDK::UWB_TestModePage_C::StaticClass()))
+				{
+					reinterpret_cast<SDK::UWB_TestModePage_C*>(Menus[MenuPage])->ViewPriority = SDK::EAJBUIViewPortPriority::Top;
+					reinterpret_cast<SDK::UWB_TestModePage_C*>(Menus[MenuPage])->SetUserFocus(Pointers::Player());
+				}
 			}
 
 
+		}
+		else
+		{
+			AJB::GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->SetInputMode_GameAndUI(Pointers::Player(), Menus[MenuPage], true, false);
 		}
 	}
 	else if (StrCommand == "textmenu")
@@ -583,9 +570,93 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			
 		}
 	}
+	else if (StrCommand == "host")
+	{
+		AJB::Instance->bIsLocalSessionMode = true;
+		AJB::Instance->CreateSession();
+		AJB::Instance->PlayMode = SDK::EPlayMode::Shop;
+	}
+	else if (StrCommand == "join")
+	{
+		AJB::Instance->bIsLocalSessionMode = true;
+		AJB::Instance->JoinSession();
+		AJB::Instance->PlayMode = SDK::EPlayMode::Shop;
+	}
+	else if (StrCommand == "multiplayer")
+	{
+		
+		AJB::Instance->StageTypeID = 3;
+		//AJB::Instance->NPCNum = 20;
+		//AJB::Instance->StageTypeID = 3;
+		/*SDK::FString Lemon{L"Lemon Possession"};
+		Call<Decl::CopyString>(OFF::CopyString.PlusBase())(&Pointers::GetLastOf<SDK::AAJBOutGameProxy>()->RoomHostUserID, &Lemon);
+		Pointers::GetLastOf<SDK::AAJBOutGameProxy>()->DebugSetupLoginPlayerInfo(1);*/
+	}
+	else if (StrCommand == "name")
+	{
+		LogA("NewName", AJB::GetBlueprintClass<SDK::UAJBPlayerInfoUtility>()->MakeAutoPlayerName(L"Feck", false, false).ToString());
+	}
 	//LogA("ConsoleCommand", std::format("[Owning PlayerController]: {} | [Command]: {}", This->GetFullName(), StrCommand));
 
 	return OFF::ConsoleCommand.VerifyFC<Decl::ConsoleCommand>()(This, Result, Command, bWriteToLog);
+}
+
+bool UFunctions::RequestLevel(SDK::ULevelStreaming* This, SDK::UWorld* PersistentWorld, bool bAllowLevelLoadRequests, EReqLevelBlock BlockPolicy)
+{
+	SDK::FName WorldAssetPackageFName = This->GetWorldAssetPackageFName();
+
+	EFlushLevelStreamingType* StreamingType = reinterpret_cast<EFlushLevelStreamingType*>(PersistentWorld + 2008); // UWorld::FlushLevelStreamingType
+
+	static bool StupidLevelGoAway{false};
+	if (StupidLevelGoAway)
+	{
+		if (StreamingType && *StreamingType == EFlushLevelStreamingType::Visibility)
+		{
+			*StreamingType = EFlushLevelStreamingType::None;
+		}
+	}
+
+	if (!StupidLevelGoAway) LogA(OFF::RequestLevel.GetName(), std::format("[WorldAssetPackageFName]: {} | [bAllowLevelLoadRequests]: {} | [ComparisonIndex]: {}", WorldAssetPackageFName.ToString(), bAllowLevelLoadRequests, WorldAssetPackageFName.ComparisonIndex));
+
+	constexpr static int32 WorldBlacklist[]
+	{
+		23788,	// [AJBCreadit] Worthless level that displays the credit counter.
+	};
+
+	for (const int32& Entry : WorldBlacklist)
+	{
+		if (WorldAssetPackageFName.ComparisonIndex == Entry)
+		{
+			if (!StupidLevelGoAway) LogA(OFF::RequestLevel.GetName(), "Rejecting requested blacklisted level: " + WorldAssetPackageFName.ToString());
+
+			StupidLevelGoAway = true;
+
+			// It won't stop requesting unless UWorld::AllowLevelLoadRequests is false, however it's not a global variable, it's a function.
+			// So I could either patch it which would be extremely unoptimal and just garbage all around, or I could force the condition to be false by doing this.
+			*StreamingType = EFlushLevelStreamingType::Visibility;
+
+			*reinterpret_cast<ECurrentState*>(This + 180) = ECurrentState::FailedToLoad; // ULevelStreaming::CurrentState
+
+			return false;
+		}
+	}
+
+	StupidLevelGoAway = false;
+
+	return OFF::RequestLevel.VerifyFC<Decl::RequestLevel>()(This, PersistentWorld, bAllowLevelLoadRequests, BlockPolicy);
+}
+
+bool UFunctions::PrepareMapChange(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SDK::TArray<SDK::FName>& LevelNames)
+{
+	std::string Levels;
+
+	for (SDK::FName& Level : LevelNames)
+	{
+		Levels += Level.ToString() + " | ";
+	}
+	LogA(OFF::PrepareMapChange.GetName(), Levels);
+
+	return OFF::PrepareMapChange.VerifyFC<Decl::PrepareMapChange>()(This, WorldContext, LevelNames);
 }
 
 UFunctions::BrowseReturnVal UFunctions::Browse(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SDK::FURL URL, SDK::FString& Error)
@@ -618,6 +689,12 @@ bool UFunctions::InitListen(SDK::UIpNetDriver* This, SDK::UObject* InNotify, SDK
 	return OFF::InitListen.VerifyFC<Decl::InitListen>()(This, InNotify, LocalURL, bReuseAddressAndPort, Error);
 }
 
+template <typename Class, typename T>
+Class* GetTypedOuter(T* Object)
+{
+	return Object->IsA(Class::StaticClass()) ? (Class*)Object : (Class*)GetTypedOuter<Class>((T*)Object->Outer);
+}
+
 /*
 0x176A260 UEngine::GetMaxTickRate
 0x176A220 UEngine::GetMaxFPS ? (idk for sure I got this offset from an AOB I made back when I sucked at decompilation and I dont feel like looking right now)
@@ -627,7 +704,13 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 {
 	LogA("Login", "Called.");
 
-	const SDK::AGameModeBase* CurrentGameMode = AJB::GetGameMode();
+	/*if (Options.ToString().rfind("?Name") != std::string::npos)
+	{
+		static SDK::FString NewUser(CMLA::Username.GetArgumentAsString());
+		Call<Decl::CopyString>(OFF::CopyString.PlusBase())(&Options, &NewUser);
+	}*/
+	
+	SDK::AGameModeBase* CurrentGameMode = AJB::GetGameMode();
 
 	if (AJB::PlayerPoints) *AJB::PlayerPoints = 1170;
 	if (AJB::Instance && AJB::Instance->ArcadeTimeManager) AJB::Instance->ArcadeTimeManager = nullptr;
@@ -636,20 +719,10 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 		//LogA(AJB::MOD_OptionsMenu->IsInViewport() ? "In Viewport" : "Not In Viewport", AJB::GEngine()->GameViewport->GetFullName());
 		if (!AJB::MOD_OptionsMenu->IsInViewport()) AJB::MOD_OptionsMenu->AddToViewport(111);
 	}
-	if (CurrentGameMode && CurrentGameMode->IsA(SDK::AGM_AJBTitleScreen_C::StaticClass()))
-	{
-		SDK::UWBP_AJBTitleScreen_C* TitleScreenWidget = Pointers::GetLastOf<SDK::UWBP_AJBTitleScreen_C>(false);
-		if (TitleScreenWidget && AJB::StrDLLCommitVersion)
-		{
-			TitleScreenWidget->SetDLLCommitVersion(*AJB::StrDLLCommitVersion);
-		}
-	}
+	
 	//AGM_AJBTitleScreen_C
 
 	
-	
-
-
 	/*UFunctions::StaticLoadObject(SDK::UObject::FindClass("Class CoreUObject.Object"), nullptr, L"/Game/Aeyth8/UI/CustomUIManager.CustomUIManager_C", nullptr, 0, nullptr, true);
 	UFunctions::StaticLoadObject(SDK::UGameInstance::StaticClass(), nullptr, L"/Game/Aeyth8/UI/CustomMenuManager.CustomMenuManager_C", nullptr, 0, nullptr, true);*/
 	static bool ONE{0};
@@ -659,14 +732,12 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 
 		constexpr const wchar_t* GlobalPatchObjectBlueprintPath{L"/Game/Aeyth8/Blueprints/Global/BP_GlobalPatcher.BP_GlobalPatcher_C"};
 		constexpr const wchar_t* OptionsMenuBlueprintPath{L"/Game/Aeyth8/Blueprints/UI/OptionsMenu/WBP_OptionsMenu.WBP_OptionsMenu_C"};
-
+		
 		AJB::MOD_GlobalPatcherClass = UFunctions::StaticLoadClass(AJB::CoreUObject, AJB::GEngine(), GlobalPatchObjectBlueprintPath, nullptr, 0, nullptr);
 		if (AJB::MOD_GlobalPatcherClass)
 		{
 			AJB::MOD_GlobalPatcher = (SDK::UBP_GlobalPatcher_C*)Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(AJB::MOD_GlobalPatcherClass, AJB::GEngine(), Pointers::FString2FName(GlobalPatchObjectBlueprintPath), 0, EInternalObjectFlags::RootSet, 0, 0, 0, 0);
-			//AJB::MOD_GlobalPatcher = UFunctions::StaticLoadObject(BlueprintGeneratedClass, AJB::GEngine(), GlobalPatchObjectBlueprintPath, nullptr, 0, nullptr, true);
 			if (AJB::MOD_GlobalPatcher) LogA("Global Patcher", std::format("[ProofOfExistenceSignature]: {} | [Object]: {}", AJB::MOD_GlobalPatcher->ProofOfExistenceSignature, AJB::MOD_GlobalPatcher->GetFullName()));
-			//AJB::MOD_GlobalPatcher = Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(BlueprintGeneratedClass, AJB::GEngine(), Pointers::FString2FName(GlobalPatchObjectBlueprintPath), 0, EInternalObjectFlags::RootSet, 0, 0, 0, 0);
 		}		
 
 
@@ -729,6 +800,48 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 			ONE = 0;
 		}
 	}
+
+	if (CurrentGameMode && CurrentGameMode->IsA(SDK::AGM_AJBTitleScreen_C::StaticClass()))
+	{
+		// For some STUPID reason this worthless piece of trash widget only creates itself once, it refuses to exist after being called again, so I'm just gonna make it in C++
+		// It has pissed me off for two and a half hours too long.
+		SDK::AGM_AJBTitleScreen_C* GameMode = static_cast<SDK::AGM_AJBTitleScreen_C*>(CurrentGameMode);
+
+		// I genuinely have no clue what I cursed this blueprint with because it requires me to LOAD THE CLASS EVERY SINGLE TIME, even though it already has an archetype, or else the game just dies for no reasonable explanation.
+		// This works but it shouldn't have come to this, maybe in the future when I'm not sleep deprived of 24 hours I can fix this crap.
+		constexpr const wchar_t* TitleScreenBlueprintPath{L"/Game/Aeyth8/Blueprints/Titlescreen/WBP_AJBTitleScreen.WBP_AJBTitleScreen_C"};		
+		AJB::MOD_TitleScreenClass = UFunctions::StaticLoadClass(SDK::UUserWidget::StaticClass(), AJB::GEngine(), TitleScreenBlueprintPath, nullptr, 0, nullptr);
+
+		if (AJB::MOD_TitleScreenClass)
+		{
+			SDK::UWBP_AJBTitleScreen_C* TitleScreenWidget = (SDK::UWBP_AJBTitleScreen_C*)Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(AJB::MOD_TitleScreenClass, static_cast<SDK::UGameViewportClient*>(AJB::GEngine()->GameViewport), Pointers::FString2FName(TitleScreenBlueprintPath), 0, EInternalObjectFlags::None, 0, 0, 0, 0);
+
+			if (TitleScreenWidget)
+			{
+				GameMode->TitleScreenWidget = TitleScreenWidget;
+				//TitleScreenWidget->AddToViewport(0);
+
+				if (AJB::StrDLLCommitVersion)
+				{
+					// I have to use the patcher object because even the stupid object function fails to work the second time, I want to delete myself.
+					AJB::MOD_GlobalPatcher->SetWidgetText(TitleScreenWidget->TXT_VERSION, *AJB::StrDLLCommitVersion);
+				}
+			}
+		}
+		/*SDK::UWBP_AJBTitleScreen_C* TitleScreenWidget = static_cast<SDK::AGM_AJBTitleScreen_C*>(CurrentGameMode)->TitleScreenWidget;
+		if (TitleScreenWidget && AJB::StrDLLCommitVersion)
+		{
+			//LogA("TitleScreen", TitleScreenWidget->GetFullName());
+			
+		}*/
+
+		/*SDK::UWorld* OwningWorld = GetTypedOuter<SDK::UWorld>(This);
+		for (SDK::ULevel*& Level : OwningWorld->Levels)
+		{
+			LogA("Level", Level->GetFullName());
+		}*/
+		
+	}
 	
 	/*
 	AJB::TAutoConsoleVariable<float>& CVarMaxFPS = reinterpret_cast<AJB::TAutoConsoleVariable<float>&>(PB(0x32557F0));
@@ -737,32 +850,6 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 
 	LogA("MaxFPS", std::to_string(MaxFPS));
 	*/
-	
-	/*static SDK::ULevelStreamingKismet* Stream = SDK::ULevelStreamingKismet::GetDefaultObj();
-	SDK::ULevelStreamingKismet* KeyListener = Stream->LoadLevelInstance(AJB::GWorld(), L"/Game/Aeyth8/UI/InGame/LVL_SpawnOptions", SDK::FVector{}, SDK::FRotator{}, 0);
-	KeyListener->bIsStatic = true;*/
-
-	
-	/*SDK::TSubclassOf<SDK::UUserWidget> KeyListener = 
-	AJB::GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->Create(AJB::GWorld(), )*/
-	
-	
-
-	
-	/*SDK::ABP_AJBBattleGameMode_C* Game = AJB::GetGameMode<SDK::ABP_AJBBattleGameMode_C>();
-	if (!IsNull(Game))
-	{
-		LogA(Game->GetFullName(), std::to_string(Game->bUseTimeLimit));
-		Game->bUseTimeLimit = false;
-	}
-	else
-	{
-		LogA("Owning GameMode", AJB::GetGameMode()->GetFullName());
-	}*/
-	//SDK::ULevelStreamingKismet::GetDefaultObj()->LoadLevelInstance(Pointers::UWorld(), L"/Game/Aeyth8/UI/InGame/LVL_KeyListener", SDK::FVector(0, 0, 0), SDK::FRotator(0, 0, 0), 0);
-	//SDK::ULevelStreamingKismet::GetDefaultObj()->LoadLevelInstance(Pointers::UWorld(), L"/Game/Aeyth8/UI/InGame/LVL_KeyListener", SDK::FVector(0, 0, 0), SDK::FRotator(0, 0, 0), 0);
-	
-	//LogA("Last Played Event", AJB::Instance->LastPlayedWwiseBGMEventTag.TagName.ToString());
 
 	return OFF::Login.VerifyFC<Decl::Login>()(This, NewPlayer, InRemoteRole, Portal, Options, UniqueId, ErrorMessage);
 }
@@ -875,189 +962,256 @@ void UFunctions::ProcessEvent(SDK::UObject* This, SDK::UFunction* Function, LPVO
 
 void UFunctions::Invoke(SDK::UFunction* This, SDK::UObject* Obj, void* FFrame_Stack, void* Result)
 {
-	static constexpr const int32 ObjectBlacklist[] =
+	static bool bIsDebugging = CMLA::HookAndLogInvoke.GetAsBool();
+
+	if (bIsDebugging)
 	{
-		96692, // KismetArrayLibrary Engine.Default__KismetArrayLibrary
-		97352, // AkGameplayStatics AkAudio.Default__AkGameplayStatics
-		96702, // KismetSystemLibrary Engine.Default__KismetSystemLibrary
-		96703, // KismetTextLibrary Engine.Default__KismetTextLibrary
-		96700, // KismetStringLibrary Engine.Default__KismetStringLibrary
-		96440, // DataTableFunctionLibrary Engine.Default__DataTableFunctionLibrary
-		96580, // GameplayStatics Engine.Default__GameplayStatics
-		96311, // BlueprintMapLibrary Engine.Default__BlueprintMapLibrary
-
-		// Not UE Native
-
-		98612, // AJBNetworkObserver AJB.Default__AJBNetworkObserver
-		97329 // LoadingScreenSystem.Default__LoadingScreenSystemBPLibrary
-	};
-
-	static constexpr const int32 FunctionBlacklist[] =
-	{
-		8321, // Function <Class> ReceiveTick
-		14300, // Function UMG.Widget.IsVisible
-		14310, // UMG.Widget.SetRenderOpacity
-		14319, // Function UMG.Widget.SetVisibility
-		14423, // Function UMG.WidgetBlueprintLibrary.Create
-		14739, // Function UMG.BrushBinding.GetValue
-		15873, // Function UMG.UserWidget.AddToViewport
-		15895, // Function UMG.TextBlock.SetColorAndOpacity
-		15991, // Function Engine.Controller.GetViewTarget
-		16039, // Function Engine.PlayerController.GetViewportSize
-		16062, // Function Engine.PlayerController.WasInputKeyJustPressed
-		16392, // Function UMG.Image.GetDynamicMaterial
-		16396, // Function UMG.Image.SetBrushFromMaterial		
-		16400, // Function UMG.Image.SetBrushTintColor
-		16925, // Function UMG.TextBlock.SetText
-		17338, // Function UMG.CanvasPanel.AddChildToCanvas
-		17617, // Function UMG.WidgetBlueprintLibrary.MakeBrushFromTexture
-		17669, // UMG.WidgetLayoutLibrary.GetViewportScale		
-		18269, // Function Engine.GameplayStatics.GetPlayerController
-		18277, // Function Engine.GameplayStatics.GetWorldDeltaSeconds
-		18592, // Function Engine.MaterialInstanceDynamic.SetScalarParameterValue
-		
-		
-		// Not UE Native
-
-		7393, // Function <UAJBUserWidget> Tick
-		7384, // Function <UAJBUserWidget> OnPaint
-		14391, // Function FlowState.FlowStateUtil.TickFlowState
-		14412, // Function LoadingScreenSystem.LoadingScreenSystemBPLibrary.SetCacheInteger
-		14669, // Function AJB.AJBUtilityFunctionLibrary.IsEditor
-		15801, // Function AJB.AJBAMSystemObject.IsAMSystemErrorMode
-		16204, // Function AJB.AJBHighlightManager.GetFocusActor
-		16210, // Function AJB.AJBGameInstance.GetHighlightManager
-		16220, // Function AJB.AJBGameInstance.GetParamRepos
-		16229, // Function AJB.AJBGameInstance.IsConsumePP
-		16231, // Function AJB.AJBGameInstance.IsFreePlay
-		16241, // Function AJB.AJBHighlightManager.IsPlayingReplay
-		16244, // Function AJB.AJBGameInstance.IsServicePlay
-		16799, // Function AJB.AJBParamRepos.CheckExistParamFile		
-		16802, // Function AJB.AJBParamRepos.LoadParamFile
-		16971, // Function AJB.AJBUtilityFunctionLibrary.IsAJBOfflineMode
-		16929, // Function AJB.AJBUtilityFunctionLibrary.CanAJBArcadeGamePlay
-		16973, // Function AJB.AJBUtilityFunctionLibrary.IsDistribution
-		134207, // Function WB_CharacterSelect.WB_CharacterSelect_C.ExecuteUbergraph_WB_CharacterSelect
-		135155, // Function WB_Credit.WB_Credit_C.Get_Img_AllNetIcon_Brush_0
-		136949, // Function WB_PPBuyButton.WB_PPBuyButton_C.OnCheckPP
-	};
-
-	// Must be called once at runtime since the index always varies.
-	static constexpr const wchar_t* ClassFunctionBlacklist[][2] =
-	{
-		{L"WB_Credit_C", L"Get_Img_AllNetIcon_Brush_0"},
-		{L"WB_PPBuyButton_C", L"OnCheckPP"},
-		{L"WB_CharacterSelect_C", L"ExecuteUbergraph_WB_CharacterSelect"}
-	};
-
-	constexpr const unsigned char CFBL_Size = sizeof(ClassFunctionBlacklist) / sizeof(ClassFunctionBlacklist[0]);
-
-	int32 DynamicClassFunctionIndexArray[CFBL_Size]{-1};
-
-	// GIANT NOTE I lost motivation and kinda forgot what I even was doing here but it doesn't work and crashes for (in my opinion) NO REASON.
-	// Maybe I'll fix this one day, if not, just delete this block and the hook will work fine.
-
-	/*static bool bInitClassFunctions{false};
-	if (!bInitClassFunctions)
-	{
-		bInitClassFunctions = true;
-
-		uint16 Iteration{0};
-		for (const wchar_t* const* const & Entry : ClassFunctionBlacklist)
+		static constexpr const int32 ObjectBlacklist[] =
 		{
-			Iteration++;
+			96692, // KismetArrayLibrary Engine.Default__KismetArrayLibrary
+			97352, // AkGameplayStatics AkAudio.Default__AkGameplayStatics
+			96702, // KismetSystemLibrary Engine.Default__KismetSystemLibrary
+			96703, // KismetTextLibrary Engine.Default__KismetTextLibrary
+			96700, // KismetStringLibrary Engine.Default__KismetStringLibrary
+			96440, // DataTableFunctionLibrary Engine.Default__DataTableFunctionLibrary
+			96580, // GameplayStatics Engine.Default__GameplayStatics
+			96311, // BlueprintMapLibrary Engine.Default__BlueprintMapLibrary
 
-			SDK::UClass* Class{nullptr};
-			SDK::UFunction* Function{nullptr};
+			// Not UE Native
 
-			SDK::FName ClassFName = Pointers::FString2FName(Entry[0]);
-			SDK::FName FunctionFName = Pointers::FString2FName(Entry[1]);
+			98612, // AJBNetworkObserver AJB.Default__AJBNetworkObserver
+			97329 // LoadingScreenSystem.Default__LoadingScreenSystemBPLibrary
+		};
 
-			for (int i{0}; i < SDK::UObject::GObjects->Num(); ++i)
+		static constexpr const int32 FunctionBlacklist[] =
+		{
+			8321, // Function <Class> ReceiveTick
+			14300, // Function UMG.Widget.IsVisible
+			14310, // UMG.Widget.SetRenderOpacity
+			14319, // Function UMG.Widget.SetVisibility
+			14423, // Function UMG.WidgetBlueprintLibrary.Create
+			14739, // Function UMG.BrushBinding.GetValue
+			15873, // Function UMG.UserWidget.AddToViewport
+			15895, // Function UMG.TextBlock.SetColorAndOpacity
+			15991, // Function Engine.Controller.GetViewTarget
+			16039, // Function Engine.PlayerController.GetViewportSize
+			16062, // Function Engine.PlayerController.WasInputKeyJustPressed
+			16392, // Function UMG.Image.GetDynamicMaterial
+			16396, // Function UMG.Image.SetBrushFromMaterial		
+			16400, // Function UMG.Image.SetBrushTintColor
+			16925, // Function UMG.TextBlock.SetText
+			17338, // Function UMG.CanvasPanel.AddChildToCanvas
+			17617, // Function UMG.WidgetBlueprintLibrary.MakeBrushFromTexture
+			17669, // UMG.WidgetLayoutLibrary.GetViewportScale		
+			18269, // Function Engine.GameplayStatics.GetPlayerController
+			18277, // Function Engine.GameplayStatics.GetWorldDeltaSeconds
+			18592, // Function Engine.MaterialInstanceDynamic.SetScalarParameterValue
+
+
+			// Not UE Native
+
+			7393, // Function <UAJBUserWidget> Tick
+			7384, // Function <UAJBUserWidget> OnPaint
+			14391, // Function FlowState.FlowStateUtil.TickFlowState
+			14412, // Function LoadingScreenSystem.LoadingScreenSystemBPLibrary.SetCacheInteger
+			14669, // Function AJB.AJBUtilityFunctionLibrary.IsEditor
+			15801, // Function AJB.AJBAMSystemObject.IsAMSystemErrorMode
+			16204, // Function AJB.AJBHighlightManager.GetFocusActor
+			16210, // Function AJB.AJBGameInstance.GetHighlightManager
+			16220, // Function AJB.AJBGameInstance.GetParamRepos
+			16229, // Function AJB.AJBGameInstance.IsConsumePP
+			16231, // Function AJB.AJBGameInstance.IsFreePlay
+			16241, // Function AJB.AJBHighlightManager.IsPlayingReplay
+			16244, // Function AJB.AJBGameInstance.IsServicePlay
+			16799, // Function AJB.AJBParamRepos.CheckExistParamFile		
+			16802, // Function AJB.AJBParamRepos.LoadParamFile
+			16971, // Function AJB.AJBUtilityFunctionLibrary.IsAJBOfflineMode
+			16929, // Function AJB.AJBUtilityFunctionLibrary.CanAJBArcadeGamePlay
+			16973, // Function AJB.AJBUtilityFunctionLibrary.IsDistribution
+			134207, // Function WB_CharacterSelect.WB_CharacterSelect_C.ExecuteUbergraph_WB_CharacterSelect
+			135155, // Function WB_Credit.WB_Credit_C.Get_Img_AllNetIcon_Brush_0
+			136949, // Function WB_PPBuyButton.WB_PPBuyButton_C.OnCheckPP
+		};
+
+		// Must be called once at runtime since the index always varies.
+		static constexpr const wchar_t* ClassFunctionBlacklist[][2] =
+		{
+			{L"WB_Credit_C", L"Get_Img_AllNetIcon_Brush_0"},
+			{L"WB_PPBuyButton_C", L"OnCheckPP"},
+			{L"WB_CharacterSelect_C", L"ExecuteUbergraph_WB_CharacterSelect"}
+		};
+
+		constexpr const unsigned char CFBL_Size = sizeof(ClassFunctionBlacklist) / sizeof(ClassFunctionBlacklist[0]);
+
+		int32 DynamicClassFunctionIndexArray[CFBL_Size]{ -1 };
+
+		// GIANT NOTE I lost motivation and kinda forgot what I even was doing here but it doesn't work and crashes for (in my opinion) NO REASON.
+		// Maybe I'll fix this one day, if not, just delete this block and the hook will work fine.
+
+		/*static bool bInitClassFunctions{false};
+		if (!bInitClassFunctions)
+		{
+			bInitClassFunctions = true;
+
+			uint16 Iteration{0};
+			for (const wchar_t* const* const & Entry : ClassFunctionBlacklist)
 			{
-				SDK::UObject* Obj = SDK::UObject::GObjects->GetByIndex(i);
+				Iteration++;
 
-				if (Obj && Obj->HasTypeFlag(SDK::EClassCastFlags::Class) && Obj->Name == ClassFName)
+				SDK::UClass* Class{nullptr};
+				SDK::UFunction* Function{nullptr};
+
+				SDK::FName ClassFName = Pointers::FString2FName(Entry[0]);
+				SDK::FName FunctionFName = Pointers::FString2FName(Entry[1]);
+
+				for (int i{0}; i < SDK::UObject::GObjects->Num(); ++i)
 				{
-					Class = static_cast<SDK::UClass*>(Obj);
-				}
-			}
+					SDK::UObject* Obj = SDK::UObject::GObjects->GetByIndex(i);
 
-			//LogA("FoundClass", SDK::UObject::FindClass("WidgetBlueprintGeneratedClass WB_Credit.WB_Credit_C")->GetName());
-
-			if (Class)
-			{				
-				bool bFinish{false};
-				for (const SDK::UStruct* Inheritance = Class; Inheritance; Inheritance->Super)
-				{
-					if (bFinish) break;
-
-					if (Inheritance->Name != ClassFName) continue;
-
-					for (SDK::UField* Field = Inheritance->Children; Field; Field->Next)
+					if (Obj && Obj->HasTypeFlag(SDK::EClassCastFlags::Class) && Obj->Name == ClassFName)
 					{
-						if (Field->HasTypeFlag(SDK::EClassCastFlags::Function) && Field->Name == FunctionFName)
+						Class = static_cast<SDK::UClass*>(Obj);
+					}
+				}
+
+				//LogA("FoundClass", SDK::UObject::FindClass("WidgetBlueprintGeneratedClass WB_Credit.WB_Credit_C")->GetName());
+
+				if (Class)
+				{
+					bool bFinish{false};
+					for (const SDK::UStruct* Inheritance = Class; Inheritance; Inheritance->Super)
+					{
+						if (bFinish) break;
+
+						if (Inheritance->Name != ClassFName) continue;
+
+						for (SDK::UField* Field = Inheritance->Children; Field; Field->Next)
 						{
-							bFinish = true;
+							if (Field->HasTypeFlag(SDK::EClassCastFlags::Function) && Field->Name == FunctionFName)
+							{
+								bFinish = true;
 
-							Function = static_cast<SDK::UFunction*>(Field);
+								Function = static_cast<SDK::UFunction*>(Field);
 
-							break;
+								break;
+							}
 						}
+
 					}
 
-				}
-
-				if (Function)
-				{
-					DynamicClassFunctionIndexArray[Iteration] = Function->Name.ComparisonIndex;
-					LogA("GiantFunction", std::to_string(DynamicClassFunctionIndexArray[Iteration]));
+					if (Function)
+					{
+						DynamicClassFunctionIndexArray[Iteration] = Function->Name.ComparisonIndex;
+						LogA("GiantFunction", std::to_string(DynamicClassFunctionIndexArray[Iteration]));
+					}
+					else { bInitClassFunctions = false; }
 				}
 				else { bInitClassFunctions = false; }
 			}
-			else { bInitClassFunctions = false; }
-		}
-	}*/
+		}*/
 
-	bool bLogInvoke{true};
+		bool bLogInvoke{ true };
 
-	if (AJB::MOD_OptionsMenu && Obj->Name.ComparisonIndex == AJB::MOD_OptionsMenu->Name.ComparisonIndex) 
-		bLogInvoke = false;
-
-	for (const int32& ObjNameIndex : ObjectBlacklist)
-	{
-		if (Obj->Name.ComparisonIndex == ObjNameIndex)
-		{
+		if (AJB::MOD_OptionsMenu && Obj->Name.ComparisonIndex == AJB::MOD_OptionsMenu->Name.ComparisonIndex)
 			bLogInvoke = false;
+
+		for (const int32& ObjNameIndex : ObjectBlacklist)
+		{
+			if (Obj->Name.ComparisonIndex == ObjNameIndex)
+			{
+				bLogInvoke = false;
+				break;
+			}
+		}
+		if (bLogInvoke)
+		{
+			for (const int32& FuncNameIndex : FunctionBlacklist)
+			{
+				if (This->Name.ComparisonIndex == FuncNameIndex)
+				{
+					bLogInvoke = false;
+					break;
+				}
+			}
+		}
+		if (bLogInvoke)
+		{
+			for (const int32& ClassFuncNameIndex : DynamicClassFunctionIndexArray)
+			{
+				if (ClassFuncNameIndex != -1 && This->Name.ComparisonIndex == ClassFuncNameIndex)
+				{
+					bLogInvoke = false;
+					break;
+				}
+			}
+		}
+
+		if (bLogInvoke)
+		{
+			LogA(OFF::Invoke.GetName(), std::format("[UFunction]: {} | [ComparisonIndex]: {} | [UObject]: {} | [ComparisonIndex]: {}", This->GetFullName(), This->Name.ComparisonIndex, Obj->GetFullName(), Obj->Name.ComparisonIndex));
+		}
+	}
+
+	// A structure I made allowing me to pass the object obtained here to external functions.
+	struct TExternFunction { void(*Function)(SDK::UObject*); int32 FunctionIndex; };
+	constexpr TExternFunction ExternFunctionList[] = 
+	{
+		{AJB::OnToggleFullMapVisibility, 2427}, // Function BP_AJBInGameHUD.BP_AJBInGameHUD_C.OnToggleFullMapVisibility
+		//{AJB::CreaditKys, 142420} // AJBCreadit.AJBCreadit_C.ReceiveBeginPlay
+
+		// More will be added later.
+	};
+
+	for (TExternFunction const& Entry : ExternFunctionList)
+	{
+		if (This->Name.ComparisonIndex == Entry.FunctionIndex)
+		{
+			Entry.Function(Obj);
 			break;
 		}
 	}
-	if (bLogInvoke)
-	{
-		for (const int32& FuncNameIndex : FunctionBlacklist)
-		{
-			if (This->Name.ComparisonIndex == FuncNameIndex)
-			{
-				bLogInvoke = false;
-				break;
-			}
-		}
-	}
-	if (bLogInvoke)
-	{
-		for (const int32& ClassFuncNameIndex : DynamicClassFunctionIndexArray)
-		{
-			if (ClassFuncNameIndex != -1 && This->Name.ComparisonIndex == ClassFuncNameIndex)
-			{
-				bLogInvoke = false;
-				break;
-			}
-		}
-	}
 
-	if (bLogInvoke)
+	// Why is it called "Creadit" and not "Credit"? Most likely a misspelling, is it stupid? Yes.
+	static int CreaditFrame{0};
+
+	if (CreaditFrame < 60)
 	{
-		LogA(OFF::Invoke.GetName(), std::format("[UFunction]: {} | [ComparisonIndex]: {} | [UObject]: {} | [ComparisonIndex]: {}", This->GetFullName(), This->Name.ComparisonIndex, Obj->GetFullName(), Obj->Name.ComparisonIndex));
+		CreaditFrame++;
+	}
+	else if (CreaditFrame == 60) // Equal to and not higher than by intentional design, *if* something happens where it goes over then something else has broken or a race condition has occurred. 
+	{
+		if (This->Name.ComparisonIndex == 8315 && AJB::CreaditPointer && AJB::CreaditPointer->Creadit)
+		{
+			SDK::UWB_Credit_C* Trash = AJB::CreaditPointer->Creadit;
+
+			// Hiding it is good enough, apparently anything else breaks all logic in the game, BAD DESIGN.
+			// "A delaye, a dela. A delayed gamne, a delayepb. Bad Game Design." - Shigeru Meat
+			Trash->SetVisibility(SDK::ESlateVisibility::Collapsed); 		
+
+			CreaditFrame = 0;
+			// You should kill yourself... NOW!
+			Trash->RemoveFromParent(); 
+		
+			//Trash->Flags = static_cast<SDK::EObjectFlags>(static_cast<int32>(Trash->Flags) | static_cast<int32>(UFunctions::EInternalObjectFlags::PendingKill));
+			/*	Nevermind I don't wanna do that because apparently it only constructs itself once or atleast is persistent enough to not always exist in the constructor.
+
+			CreaditFrame++;
+
+			OFF::Invoke.VerifyFC<Decl::Invoke>()(This, Obj, FFrame_Stack, Result);
+
+			AJB::CreaditPointer->ReceiveEndPlay(SDK::EEndPlayReason::EEndPlayReason_MAX);
+
+			if (CreaditFrame > 60)
+			{
+				CreaditFrame = 0;
+
+				// If I don't null this out it will hurt performance for pointless checks since this condition is based on EVERY SINGLE BEGIN PLAY FUNCTION EVER.
+				// So I'm giving it atleast 60 ticks or about one average frame/tickrate/second to clear itself out before killing the pointer, otherwise thanks to multithreading it will get nulled way too early.
+				AJB::CreaditPointer = nullptr;	
+			}
+		
+			return;*/
+		}
 	}
 
 	OFF::Invoke.VerifyFC<Decl::Invoke>()(This, Obj, FFrame_Stack, Result);
@@ -1096,7 +1250,7 @@ bool UFunctions::FindFileInPakFiles(__int64* This, const wchar_t* Filename, __in
 		// If the file already exists within the pak file
 		if (X & 0b00100000 && GetFileAttributesW(Filename) != INVALID_FILE_ATTRIBUTES)
 		{
-			std::wstring WFile(Filename);
+			//std::wstring WFile(Filename);
 			//LogA("FindFileInPakFiles OVERRIDE", std::string(WFile.begin(), WFile.end()));
 			return false;
 		}
