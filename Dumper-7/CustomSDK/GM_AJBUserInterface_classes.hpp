@@ -18,19 +18,19 @@ namespace SDK
 {
 
 // BlueprintGeneratedClass GM_AJBUserInterface.GM_AJBUserInterface_C
-// 0x0038 (0x0400 - 0x03C8)
+// 0x0030 (0x03F8 - 0x03C8)
 class AGM_AJBUserInterface_C final : public AGameModeBase
 {
 public:
 	struct FPointerToUberGraphFrame               UberGraphFrame;                                    // 0x03C8(0x0008)(Transient, DuplicateTransient)
 	class UBPAC_LoadTags_C*                       BPAC_LoadTags;                                     // 0x03D0(0x0008)(BlueprintVisible, ZeroConstructor, InstancedReference, IsPlainOldData, NonTransactional, NoDestructor, HasGetValueTypeHash)
 	class USceneComponent*                        DefaultSceneRoot;                                  // 0x03D8(0x0008)(BlueprintVisible, ZeroConstructor, InstancedReference, IsPlainOldData, NonTransactional, NoDestructor, HasGetValueTypeHash)
-	class FText                                   VersioningInfo;                                    // 0x03E0(0x0018)(Edit, BlueprintVisible)
+	class FString                                 VersioningInfo;                                    // 0x03E0(0x0010)(Edit, BlueprintVisible)
 	class UUserWidget*                            CurrentScopeWidget;                                // 0x03F8(0x0008)(Edit, BlueprintVisible, ZeroConstructor, InstancedReference, IsPlainOldData, NoDestructor, HasGetValueTypeHash)
 
 public:
 	void UserConstructionScript();
-	void SetGlobalGameModeScopeVersioningInfo(const class FString& NewVersioningInfo);
+	void SetGlobalGameModeScopeVersioningInfo(class FString* NewVersioningInfo);
 	void ReceiveBeginPlay();
 	FText* GetVersioningInfo();
 	void ExecuteUbergraph_GM_AJBUserInterface(int32 EntryPoint);
@@ -44,13 +44,20 @@ public:
 	{
 		return GetDefaultObjImpl<AGM_AJBUserInterface_C>();
 	}
+
+	template <class UClass>
+	UClass* GetCurrentScopeWidget()
+	{
+		return reinterpret_cast<UClass*>(CurrentScopeWidget);
+	}
+
 };
 static_assert(alignof(AGM_AJBUserInterface_C) == 0x000008, "Wrong alignment on AGM_AJBUserInterface_C"); \
-static_assert(sizeof(AGM_AJBUserInterface_C) == 0x000400, "Wrong size on AGM_AJBUserInterface_C"); \
+static_assert(sizeof(AGM_AJBUserInterface_C) == 0x0003F8, "Wrong size on AGM_AJBUserInterface_C"); \
 static_assert(offsetof(AGM_AJBUserInterface_C, UberGraphFrame) == 0x0003C8, "Member 'AGM_AJBUserInterface_C::UberGraphFrame' has a wrong offset!");
 static_assert(offsetof(AGM_AJBUserInterface_C, BPAC_LoadTags) == 0x0003D0, "Member 'AGM_AJBUserInterface_C::BPAC_LoadTags' has a wrong offset!");
 static_assert(offsetof(AGM_AJBUserInterface_C, DefaultSceneRoot) == 0x0003D8, "Member 'AGM_AJBUserInterface_C::DefaultSceneRoot' has a wrong offset!");
 static_assert(offsetof(AGM_AJBUserInterface_C, VersioningInfo) == 0x0003E0, "Member 'AGM_AJBUserInterface_C::VersioningInfo' has a wrong offset!");
-static_assert(offsetof(AGM_AJBUserInterface_C, CurrentScopeWidget) == 0x0003F8, "Member 'AGM_AJBUserInterface_C::CurrentScopeWidget' has a wrong offset!");
+static_assert(offsetof(AGM_AJBUserInterface_C, CurrentScopeWidget) == 0x0003F0, "Member 'AGM_AJBUserInterface_C::CurrentScopeWidget' has a wrong offset!");
 
 }

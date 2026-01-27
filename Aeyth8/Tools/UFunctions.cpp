@@ -612,10 +612,6 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		}
 
 	}
-	else if (StrCommand == "race")
-	{
-		AJB::MOD_GlobalPatcher->SetWidgetText(static_cast<SDK::UWBP_AJBTitleScreen_C*>(static_cast<SDK::AGM_AJBUserInterface_C*>(AJB::GWorld()->AuthorityGameMode)->CurrentScopeWidget)->VersioningInfo->TXT_VERSION, *AJB::StrDLLCommitVersion);
-	}
 	//LogA("ConsoleCommand", std::format("[Owning PlayerController]: {} | [Command]: {}", This->GetFullName(), StrCommand));
 
 	return OFF::ConsoleCommand.VerifyFC<Decl::ConsoleCommand>()(This, Result, Command, bWriteToLog);
@@ -825,13 +821,10 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 		}
 	}
 
-	/*if (CurrentGameMode && CurrentGameMode->IsA(SDK::AGM_AJBUserInterface_C::StaticClass()))
+	if (CurrentGameMode && CurrentGameMode->IsA(SDK::AGM_AJBUserInterface_C::StaticClass()))
 	{
-		LogA("PIECE OF SH", CurrentGameMode->GetFullName());
-		static_cast<SDK::AGM_AJBUserInterface_C*>(CurrentGameMode)->SetGlobalGameModeScopeVersioningInfo(AJB::DLLCommitVersion);
-		LogA("SET INFO", reinterpret_cast<SDK::FString*>(&static_cast<SDK::AGM_AJBUserInterface_C*>(CurrentGameMode)->VersioningInfo)->ToString());
-		
-	}*/
+		if (AJB::StrDLLCommitVersion) static_cast<SDK::AGM_AJBUserInterface_C*>(CurrentGameMode)->SetGlobalGameModeScopeVersioningInfo(AJB::StrDLLCommitVersion);
+	}
 	
 	/*
 	AJB::TAutoConsoleVariable<float>& CVarMaxFPS = reinterpret_cast<AJB::TAutoConsoleVariable<float>&>(PB(0x32557F0));

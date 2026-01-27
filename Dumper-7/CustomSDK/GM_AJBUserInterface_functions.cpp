@@ -14,6 +14,12 @@
 #include "GM_AJBUserInterface_parameters.hpp"
 
 
+#include "../../Aeyth8/Logic/AJB.h"
+inline void MakeshiftingIsMySpeciality(SDK::FString* To, SDK::FString* From)
+{
+	A8CL::AJB::CopyString(To, From);
+}
+
 namespace SDK
 {
 
@@ -35,9 +41,12 @@ void AGM_AJBUserInterface_C::UserConstructionScript()
 // Parameters:
 // const class FString&                    NewVersioningInfo                                      (BlueprintVisible, BlueprintReadOnly, Parm, ZeroConstructor, HasGetValueTypeHash)
 
-void AGM_AJBUserInterface_C::SetGlobalGameModeScopeVersioningInfo(const class FString& NewVersioningInfo)
+void AGM_AJBUserInterface_C::SetGlobalGameModeScopeVersioningInfo(class FString* NewVersioningInfo)
 {
-	static class UFunction* Func = nullptr;
+	MakeshiftingIsMySpeciality(&this->VersioningInfo, NewVersioningInfo);
+
+
+	/*static class UFunction* Func = nullptr;
 
 	if (Func == nullptr)
 		Func = Class->GetFunction("GM_AJBUserInterface_C", "SetGlobalGameModeScopeVersioningInfo");
@@ -46,7 +55,7 @@ void AGM_AJBUserInterface_C::SetGlobalGameModeScopeVersioningInfo(const class FS
 
 	Parms.NewVersioningInfo = std::move(NewVersioningInfo);
 
-	UObject::ProcessEvent(Func, &Parms);
+	UObject::ProcessEvent(Func, &Parms);*/
 }
 
 // Function GM_AJBUserInterface.GM_AJBUserInterface_C.ReceiveBeginPlay
