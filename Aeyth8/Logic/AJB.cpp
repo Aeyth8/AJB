@@ -70,7 +70,7 @@ SDK::UBP_GlobalPatcher_C*			AJB::MOD_GlobalPatcher{nullptr};
 
 SDK::UClass*						AJB::MOD_TitleScreenClass{nullptr};
 
-const wchar_t*						AJB::DLLCommitVersion{L"[v0.4.2]"};
+const wchar_t*						AJB::DLLCommitVersion{L"[v0.4.3]"};
 UC::FString*						AJB::StrDLLCommitVersion{nullptr};
 
 // -- Windows External --
@@ -165,6 +165,22 @@ A8CL::OFFSET PostEventByName("UAkComponent::PostAkEventByName", 0x291650);
 A8CL::OFFSET PostEvent("UAkComponent::PostAkEvent", 0x291390);
 A8CL::OFFSET LoadBankByName("UAkGameplayStatics::LoadBankByName", 0x286850);
 
+
+void* AJB::FormatterThing{nullptr};
+
+void FormatterHook(void* This, bool bInRebuildText, bool bInRebuildAsSource, SDK::FString& OutResult)
+{
+	OFF::ToFormattedString.VerifyFC<void(__thiscall*)(void*, bool, bool, SDK::FString&)>()(This, bInRebuildText, bInRebuildAsSource, OutResult);
+
+	LogA("FormatterThing", OutResult.ToString());
+
+	static bool bOne{0};
+	if (!bOne) {
+		bOne = 1;
+		AJB::FormatterThing = This;
+		LogA("FormatterThing", "Captured");
+	} 
+}
 
 // Server functionality only
 void TryGetMatchingMyPairInfo(SDK::UAJBGameInstance* This, bool* bIsValid, bool* bIsRoomHost, SDK::FMatchingPlayerInfo* Out)
@@ -452,6 +468,7 @@ void AJB::Init_Hooks()
 		Hooks::CreateAndEnableHook(LoadBankByName, LoadBankByNameHook);
 
 		Hooks::CreateAndEnableHook(OFF::ALevelScriptActorConstructor, ALevelScriptActor);
+		Hooks::CreateAndEnableHook(OFF::ToFormattedString, FormatterHook);
 	}
 
 }

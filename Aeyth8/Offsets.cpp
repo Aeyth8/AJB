@@ -49,6 +49,8 @@ namespace OFF
 	OFFSET BroadcastDelegate("TMulticastDelegate<void (void),FDefaultDelegateUserPolicy>::Broadcast", 0x1E3620);
 
 	OFFSET ALevelScriptActorConstructor("ALevelScriptActor::ALevelScriptActor", 0x147E150);
+	OFFSET ToFormattedString("FFormatArgumentValue::ToFormattedString", 0x60F080);
+
 	/*
 	
 	UWorld::DestroyActor 0x1484190 (lowest level)

@@ -102,6 +102,9 @@
     <Filter Include="Aeyth8\A8CL\CPUReg">
       <UniqueIdentifier>{205b1ce5-1a35-44dc-9614-b33fb5f55569}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SDK\Custom\TitleScreen\Versioning">
+      <UniqueIdentifier>{57b49975-37ef-468d-988d-ad45ec96a05b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -296,6 +299,12 @@
     <ClCompile Include="Dumper-7\SDK\AJBCreadit_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
+    <ClCompile Include="Dumper-7\CustomSDK\WBP_TLVersionInfo_functions.cpp">
+      <Filter>SDK\Custom\TitleScreen\Versioning</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\CustomSDK\GM_AJBUserInterface_functions.cpp">
+      <Filter>SDK\Custom\TitleScreen\GameMode</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Aeyth8\Logger.hpp">
@@ -423,6 +432,21 @@
     </ClInclude>
     <ClInclude Include="Aeyth8\A8CL\CPUReg\CPUReg.h">
       <Filter>Aeyth8\A8CL\CPUReg</Filter>
+    </ClInclude>
+    <ClInclude Include="Dumper-7\CustomSDK\WBP_TLVersionInfo_classes.hpp">
+      <Filter>SDK\Custom\TitleScreen\Versioning</Filter>
+    </ClInclude>
+    <ClInclude Include="Dumper-7\CustomSDK\WBP_TLVersionInfo_parameters.hpp">
+      <Filter>SDK\Custom\TitleScreen\Versioning</Filter>
+    </ClInclude>
+    <ClInclude Include="Dumper-7\CustomSDK\GM_AJBUserInterface_classes.hpp">
+      <Filter>SDK\Custom\TitleScreen\GameMode</Filter>
+    </ClInclude>
+    <ClInclude Include="Dumper-7\CustomSDK\GM_AJBUserInterface_parameters.hpp">
+      <Filter>SDK\Custom\TitleScreen\GameMode</Filter>
+    </ClInclude>
+    <ClInclude Include="Dumper-7\CustomSDK\BPAC_LoadTags_classes.hpp">
+      <Filter>SDK\Custom\Global</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

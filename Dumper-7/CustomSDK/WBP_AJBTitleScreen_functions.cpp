@@ -50,6 +50,18 @@ void UWBP_AJBTitleScreen_C::OnButtonPressed()
 	UObject::ProcessEvent(Func, nullptr);
 }
 
+// Function WBP_AJBTitleScreen.WBP_AJBTitleScreen_C.Construct
+// (BlueprintCosmetic, Event, Public, BlueprintEvent)
+
+void UWBP_AJBTitleScreen_C::Construct()
+{
+	static class UFunction* Func = nullptr;
+
+	if (Func == nullptr)
+		Func = Class->GetFunction("WBP_AJBTitleScreen_C", "Construct");
+
+	UObject::ProcessEvent(Func, nullptr);
+}
 
 // Function WBP_AJBTitleScreen.WBP_AJBTitleScreen_C.ExecuteUbergraph_WBP_AJBTitleScreen
 // ()

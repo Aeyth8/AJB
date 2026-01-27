@@ -157,10 +157,15 @@ using namespace Global;
 
 #include "../../Dumper-7/SDK/WB_ModeSelect_Button_PvE_classes.hpp"
 
+// A new gamemode base has been designed specifically for my custom UI, instead of multiple gamemodes hardcoded with logic.
+//#include "../../Dumper-7/CustomSDK/GM_AJBTitleScreen_classes.hpp"	// Custom SDK header (NOT GAME NATIVE)
+
 #include "../../Dumper-7/CustomSDK/BP_GlobalPatcher_classes.hpp"	// Custom SDK header (NOT GAME NATIVE)
 #include "../../Dumper-7/CustomSDK/WBP_OptionsMenu_classes.hpp"		// Custom SDK header (NOT GAME NATIVE)
 #include "../../Dumper-7/CustomSDK/WBP_AJBTitleScreen_classes.hpp"	// Custom SDK header (NOT GAME NATIVE)
-#include "../../Dumper-7/CustomSDK/GM_AJBTitleScreen_classes.hpp"	// Custom SDK header (NOT GAME NATIVE)
+#include "../../Dumper-7/CustomSDK/GM_AJBUserInterface_classes.hpp" // Custom SDK header (NOT GAME NATIVE)
+
+#include "../../Dumper-7/CustomSDK/WBP_TLVersionInfo_classes.hpp"	// Custom SDK header (NOT GAME NATIVE)
 
 
 #include "BytePatcher.h"
@@ -596,6 +601,21 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	{
 		LogA("NewName", AJB::GetBlueprintClass<SDK::UAJBPlayerInfoUtility>()->MakeAutoPlayerName(L"Feck", false, false).ToString());
 	}
+	else if (StrCommand == "lemon")
+	{
+		for (SDK::UTextBlock* Block : Pointers::FindObjects<SDK::UTextBlock>())
+		{
+			if (Block)
+			{
+				AJB::MOD_GlobalPatcher->SetWidgetText(Block, L"LEMON POSSESSION");
+			}
+		}
+
+	}
+	else if (StrCommand == "race")
+	{
+		AJB::MOD_GlobalPatcher->SetWidgetText(static_cast<SDK::UWBP_AJBTitleScreen_C*>(static_cast<SDK::AGM_AJBUserInterface_C*>(AJB::GWorld()->AuthorityGameMode)->CurrentScopeWidget)->VersioningInfo->TXT_VERSION, *AJB::StrDLLCommitVersion);
+	}
 	//LogA("ConsoleCommand", std::format("[Owning PlayerController]: {} | [Command]: {}", This->GetFullName(), StrCommand));
 
 	return OFF::ConsoleCommand.VerifyFC<Decl::ConsoleCommand>()(This, Result, Command, bWriteToLog);
@@ -737,7 +757,11 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 		if (AJB::MOD_GlobalPatcherClass)
 		{
 			AJB::MOD_GlobalPatcher = (SDK::UBP_GlobalPatcher_C*)Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(AJB::MOD_GlobalPatcherClass, AJB::GEngine(), Pointers::FString2FName(GlobalPatchObjectBlueprintPath), 0, EInternalObjectFlags::RootSet, 0, 0, 0, 0);
-			if (AJB::MOD_GlobalPatcher) LogA("Global Patcher", std::format("[ProofOfExistenceSignature]: {} | [Object]: {}", AJB::MOD_GlobalPatcher->ProofOfExistenceSignature, AJB::MOD_GlobalPatcher->GetFullName()));
+			if (AJB::MOD_GlobalPatcher)
+			{
+				LogA("Global Patcher", std::format("[ProofOfExistenceSignature]: {} | [Object]: {}", AJB::MOD_GlobalPatcher->ProofOfExistenceSignature, AJB::MOD_GlobalPatcher->GetFullName()));
+
+			}
 		}		
 
 
@@ -801,47 +825,13 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 		}
 	}
 
-	if (CurrentGameMode && CurrentGameMode->IsA(SDK::AGM_AJBTitleScreen_C::StaticClass()))
+	/*if (CurrentGameMode && CurrentGameMode->IsA(SDK::AGM_AJBUserInterface_C::StaticClass()))
 	{
-		// For some STUPID reason this worthless piece of trash widget only creates itself once, it refuses to exist after being called again, so I'm just gonna make it in C++
-		// It has pissed me off for two and a half hours too long.
-		SDK::AGM_AJBTitleScreen_C* GameMode = static_cast<SDK::AGM_AJBTitleScreen_C*>(CurrentGameMode);
-
-		// I genuinely have no clue what I cursed this blueprint with because it requires me to LOAD THE CLASS EVERY SINGLE TIME, even though it already has an archetype, or else the game just dies for no reasonable explanation.
-		// This works but it shouldn't have come to this, maybe in the future when I'm not sleep deprived of 24 hours I can fix this crap.
-		constexpr const wchar_t* TitleScreenBlueprintPath{L"/Game/Aeyth8/Blueprints/Titlescreen/WBP_AJBTitleScreen.WBP_AJBTitleScreen_C"};		
-		AJB::MOD_TitleScreenClass = UFunctions::StaticLoadClass(SDK::UUserWidget::StaticClass(), AJB::GEngine(), TitleScreenBlueprintPath, nullptr, 0, nullptr);
-
-		if (AJB::MOD_TitleScreenClass)
-		{
-			SDK::UWBP_AJBTitleScreen_C* TitleScreenWidget = (SDK::UWBP_AJBTitleScreen_C*)Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(AJB::MOD_TitleScreenClass, static_cast<SDK::UGameViewportClient*>(AJB::GEngine()->GameViewport), Pointers::FString2FName(TitleScreenBlueprintPath), 0, EInternalObjectFlags::None, 0, 0, 0, 0);
-
-			if (TitleScreenWidget)
-			{
-				GameMode->TitleScreenWidget = TitleScreenWidget;
-				//TitleScreenWidget->AddToViewport(0);
-
-				if (AJB::StrDLLCommitVersion)
-				{
-					// I have to use the patcher object because even the stupid object function fails to work the second time, I want to delete myself.
-					AJB::MOD_GlobalPatcher->SetWidgetText(TitleScreenWidget->TXT_VERSION, *AJB::StrDLLCommitVersion);
-				}
-			}
-		}
-		/*SDK::UWBP_AJBTitleScreen_C* TitleScreenWidget = static_cast<SDK::AGM_AJBTitleScreen_C*>(CurrentGameMode)->TitleScreenWidget;
-		if (TitleScreenWidget && AJB::StrDLLCommitVersion)
-		{
-			//LogA("TitleScreen", TitleScreenWidget->GetFullName());
-			
-		}*/
-
-		/*SDK::UWorld* OwningWorld = GetTypedOuter<SDK::UWorld>(This);
-		for (SDK::ULevel*& Level : OwningWorld->Levels)
-		{
-			LogA("Level", Level->GetFullName());
-		}*/
+		LogA("PIECE OF SH", CurrentGameMode->GetFullName());
+		static_cast<SDK::AGM_AJBUserInterface_C*>(CurrentGameMode)->SetGlobalGameModeScopeVersioningInfo(AJB::DLLCommitVersion);
+		LogA("SET INFO", reinterpret_cast<SDK::FString*>(&static_cast<SDK::AGM_AJBUserInterface_C*>(CurrentGameMode)->VersioningInfo)->ToString());
 		
-	}
+	}*/
 	
 	/*
 	AJB::TAutoConsoleVariable<float>& CVarMaxFPS = reinterpret_cast<AJB::TAutoConsoleVariable<float>&>(PB(0x32557F0));
@@ -1172,7 +1162,7 @@ void UFunctions::Invoke(SDK::UFunction* This, SDK::UObject* Obj, void* FFrame_St
 	}
 
 	// Why is it called "Creadit" and not "Credit"? Most likely a misspelling, is it stupid? Yes.
-	static int CreaditFrame{0};
+	static thread_local int CreaditFrame{0};
 
 	if (CreaditFrame < 60)
 	{
@@ -1182,13 +1172,14 @@ void UFunctions::Invoke(SDK::UFunction* This, SDK::UObject* Obj, void* FFrame_St
 	{
 		if (This->Name.ComparisonIndex == 8315 && AJB::CreaditPointer && AJB::CreaditPointer->Creadit)
 		{
+			CreaditFrame = 0;
 			SDK::UWB_Credit_C* Trash = AJB::CreaditPointer->Creadit;
 
 			// Hiding it is good enough, apparently anything else breaks all logic in the game, BAD DESIGN.
 			// "A delaye, a dela. A delayed gamne, a delayepb. Bad Game Design." - Shigeru Meat
 			Trash->SetVisibility(SDK::ESlateVisibility::Collapsed); 		
 
-			CreaditFrame = 0;
+			
 			// You should kill yourself... NOW!
 			Trash->RemoveFromParent(); 
 		

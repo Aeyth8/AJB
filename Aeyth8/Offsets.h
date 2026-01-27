@@ -50,6 +50,7 @@ namespace OFF
 	extern OFFSET StaticConstructObject;
 
 	extern OFFSET ALevelScriptActorConstructor;
+	extern OFFSET ToFormattedString;
 
 	// Native Game Functions
 

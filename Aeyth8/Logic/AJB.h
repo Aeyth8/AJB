@@ -114,12 +114,14 @@ namespace SDK
 	class FName;
 	struct FFlowStateHandler;
 	struct FGameplayTag;
-
+	
+	class AAJBCreadit_C;
+	
 	// Mod accessible only
 	class UWBP_OptionsMenu_C;
 	class UBP_GlobalPatcher_C;
-
-	class AAJBCreadit_C;
+	class AGM_AJBUserInterface_C;
+	
 }
 
 namespace A8CL
@@ -188,6 +190,8 @@ namespace AJB
 
 	extern __int32* PlayerPoints;
 	extern bool* bDebugInputMode;
+
+	extern void* FormatterThing;
 
 	/* -- MOD --
 		
