@@ -174,6 +174,16 @@ using namespace Global;
 #include "../../Dumper-7/SDK/WB_TestModePage_classes.hpp"
 
 #include "../../Dumper-7/SDK/AJBCreadit_classes.hpp"
+#include "UnrealExternWrapper.h"
+
+#include "../../Dumper-7/SDK/BP_AJBSimpleMatchGameMode_classes.hpp"
+#include "../../Dumper-7/SDK/WB_ModeSelect_Txt_PvE_classes.hpp"
+#include "../../Dumper-7/SDK/WB_ModeSelect_Txt_Tutorial_classes.hpp"
+#include "../../Dumper-7/SDK/WB_ModeSelect_Button_EndGame_classes.hpp"
+#include "../../Dumper-7/SDK/WB_ModeSelect_Txt_Shop_classes.hpp"
+#include "../../Dumper-7/SDK/WB_TestModeMenuBase_classes.hpp"
+
+static bool* TOGGLEDEBUGBADGAMEDESIGN{nullptr};
 
 void UFunctions::UConsole(SDK::UConsole* This, SDK::FString& Command)
 {
@@ -233,6 +243,10 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 {
 	std::string StrCommand = Command->ToString();
 
+
+	using SetInputModeGameAndUI = decltype(&SDK::UWidgetBlueprintLibrary::SetInputMode_GameAndUIEx);
+	using SetInputModeGameOnly = decltype(&SDK::UWidgetBlueprintLibrary::SetInputMode_GameOnly);
+
 	if (StrCommand == "AJBExecInternal PlayBG Sound.BGM.Play.BGM01.Attract") // Hardcoding this until I finish my console command parser (but this is a bad practice)
 	{
 		SDK::ABP_AJBWwiseManager_C* Manager = Pointers::SpawnActor<SDK::ABP_AJBWwiseManager_C>();
@@ -283,7 +297,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	else if (StrCommand == "lockmouse")
 	{
 		SDK::APlayerController* Player = Pointers::Player();
-		AJB::GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->SetInputMode_GameOnly(Player);
+		OFF::SetInputGameOnly.Call<SetInputModeGameOnly>()(Player);
 	}
 	else if (StrCommand == "netid")
 	{
@@ -326,7 +340,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		bool Success{false};
 		SDK::ABP_AJBOutGameHUD_C* HUD{nullptr};
 
-		AJB::GetBlueprintClass<SDK::UBPF_AJBOutGameHUD_C>()->GetAJBOutGameHUD_BP(0, AJB::GWorld(), &Success, &HUD);
+		AJB::GetBlueprintClass<SDK::UBPF_AJBOutGameHUD_C>()->GetAJBOutGameHUD_BP(0, GWorld, &Success, &HUD);
 		if (HUD)
 		{
 			//HUD->ExecuteUbergraph_BP_AJBOutGameHUD(946);
@@ -354,7 +368,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		bool Success{false};
 		SDK::ABP_AJBOutGameHUD_C* HUD{nullptr};
 
-		AJB::GetBlueprintClass<SDK::UBPF_AJBOutGameHUD_C>()->GetAJBOutGameHUD_BP(0, AJB::GWorld(), &Success, &HUD);
+		AJB::GetBlueprintClass<SDK::UBPF_AJBOutGameHUD_C>()->GetAJBOutGameHUD_BP(0, GWorld, &Success, &HUD);
 		if (HUD)
 		{
 			HUD->ShowCharacterSelect();
@@ -376,13 +390,6 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			LogA("Proxy " + std::to_string(Int), std::format("[IsTenpoHost]: {} | [RoomHostUserId] {} | [OutGameProxyState]: {}", Proxy->IsTenpoHost(), Proxy->RoomHostUserID.ToString(), TenpoStatus[(unsigned char)Proxy->OutGameProxyState]));
 		}
 	}
-	else if (StrCommand == "host")
-	{
-		if (!AJB::OutGameProxy && !(AJB::OutGameProxy = Pointers::GetLastOf<SDK::ABP_AJBOutGameProxy_C>(false))) AJB::OutGameProxy = Pointers::SpawnActor<SDK::ABP_AJBOutGameProxy_C>();
-		//AJB::OutGameProxy->DebugSetupLoginPlayerInfo(true);
-		//AJB::OutGameProxy->StartTenpoHostServer();
-		Pointers::GetLastOf<SDK::UAJBInGameServerInfo>()->InitializeConnection(AJB::GWorld());
-	}
 	else if (StrCommand == "key")
 	{
 		LogA("Key??!!?", SDK::UClass::FindClass("WidgetBlueprintGeneratedClass WBP_OptionsMenu.WBP_OptionsMenu_C")->GetFullName());
@@ -391,7 +398,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 
 		SDK::ABP_AJBOutGameHUD_C* HUD{nullptr};
 
-		AJB::GetBlueprintClass<SDK::UBPF_AJBOutGameHUD_C>()->GetAJBOutGameHUD_BP(0, AJB::GWorld(), 0, &HUD);
+		AJB::GetBlueprintClass<SDK::UBPF_AJBOutGameHUD_C>()->GetAJBOutGameHUD_BP(0, GWorld, 0, &HUD);
 		if (HUD)
 		{
 			HUD->OnShowDebugMenu();
@@ -401,7 +408,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	{		
 		if (AJB::MOD_OptionsMenu)
 		{
-			LogA(AJB::MOD_OptionsMenu->GetFullName(), std::format("[bPauseMenuIsVisible]: {} | [Visibility]: {}", AJB::MOD_OptionsMenu->bPauseMenuIsVisible, AJB::MOD_OptionsMenu->Visibility == SDK::ESlateVisibility::Visible ? "Visible" : "Collapsed"));
+			if (CMLA::Debug.GetAsBool()) LogA(AJB::MOD_OptionsMenu->GetFullName(), std::format("[bPauseMenuIsVisible]: {} | [Visibility]: {}", AJB::MOD_OptionsMenu->bPauseMenuIsVisible, AJB::MOD_OptionsMenu->Visibility == SDK::ESlateVisibility::Visible ? "Visible" : "Collapsed"));
 
 			SDK::APlayerController* Player = Pointers::Player();
 			if (Player)
@@ -414,11 +421,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 					HUD->SetupForceInvisibleAllWidgetsFlag(AJB::MOD_OptionsMenu->bPauseMenuIsVisible);
 				}
 
-				//Opposite ? AJB::GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->SetInputMode_UIOnly(Player, OptionsMenu, true) : /* if (!Opposite)*/ AJB::GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->SetInputMode_GameOnly(Player);
-
-				AJB::MOD_OptionsMenu->bPauseMenuIsVisible ? AJB::GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->SetInputMode_GameAndUI(Player, AJB::MOD_OptionsMenu, true, false) : /* if (!Opposite)*/ AJB::GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->SetInputMode_GameOnly(Player);
-				//ToggleSwitchMenu ? AJB::MOD_OptionsMenu->SetVisibility(SDK::ESlateVisibility::Visible) : AJB::MOD_OptionsMenu->SetVisibility(SDK::ESlateVisibility::Collapsed);
-				//if (OptionsMenu) OptionsMenu->SetOnlineStatus(Opposite);
+				AJB::MOD_OptionsMenu->bPauseMenuIsVisible ? OFF::SetInputMode_GameAndUIEx.Call<SetInputModeGameAndUI>()(Player, AJB::MOD_OptionsMenu, SDK::EMouseLockMode::LockAlways, false) :  OFF::SetInputGameOnly.Call<SetInputModeGameOnly>()(Player);
 			}
 		}		
 	}
@@ -459,7 +462,86 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	}
 	else if (StrCommand == "toggledebugmenu")
 	{
-		constexpr int MenuPage = 3;
+		static SDK::UClass* Classes[4]{nullptr};
+		static SDK::UUserWidget* Menus[4]{nullptr};
+
+		constexpr static const wchar_t* WidgetsToLoad[] =
+		{
+			L"/Game/AJB/Debug/UI/WB_AJB_DebugMenuPage.WB_AJB_DebugMenuPage_C",
+			L"/Game/AJB/Debug/UI/WB_DebugMenu.WB_DebugMenu_C",
+			L"/Game/AJB/Debug/UI/WB_DebugMenu_OutGame.WB_DebugMenu_OutGame_C",
+			L"/Game/AJB/Debug/UI/WB_DebugMenuPage_NetPlayerInfo.WB_DebugMenuPage_NetPlayerInfo_C"
+		};
+
+		static bool bInitialized{false};
+		if (!bInitialized)
+		{
+			bInitialized = true;
+
+			int i{0};
+
+			for (const wchar_t* const& Name : WidgetsToLoad)
+			{
+				Classes[i] = UFunctions::StaticLoadClass(SDK::UUserWidget::StaticClass(), GEngine, Name, nullptr, 0, nullptr);
+				
+				if (!Classes[i])
+				{
+					bInitialized = false;
+					break;
+				}
+				else
+				{
+					Menus[i] = (SDK::UUserWidget*)Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(Classes[i], static_cast<SDK::UGameViewportClient*>(GEngine->GameViewport), Pointers::FString2FName(Name), 0, EInternalObjectFlags::RootSet, 0, 0, 0, 0);
+					if (!Menus[i])
+					{
+						bInitialized = false;
+						break;
+					}
+					/*else
+					{
+						LogA("Menu", Menus[i]->GetFullName());
+						Menus[i]->AddToViewport(112);
+						Menus[i]->SetVisibility(SDK::ESlateVisibility::Visible);
+					}*/
+				}
+
+				i++;
+			}
+		}
+
+		if (Menus[2])
+		{
+			SDK::UUserWidget* MenuObj = Menus[2];
+
+			static bool bToggled{false};
+			bToggled = !bToggled;
+			if (bToggled)
+			{
+				OFF::SetInputMode_GameAndUIEx.Call<SetInputModeGameAndUI>()(Pointers::Player(), MenuObj, SDK::EMouseLockMode::LockAlways, false);
+				if (!MenuObj->IsInViewport())
+				{
+					MenuObj->AddToViewport(112);
+				}
+
+				MenuObj->SetVisibility(SDK::ESlateVisibility::Visible);
+
+
+				reinterpret_cast<SDK::UWB_TestModePage_C*>(MenuObj)->ViewPriority = SDK::EAJBUIViewPortPriority::Top;
+				reinterpret_cast<SDK::UWB_TestModePage_C*>(MenuObj)->SetUserFocus(Pointers::Player());
+
+				SDK::ABP_AJBOutGameHUD_C* HUD{nullptr};
+				AJB::GetBlueprintClass<SDK::UBPF_AJBOutGameHUD_C>()->GetAJBOutGameHUD_BP(0, GWorld.GetPointer(), 0, &HUD);
+				if (HUD) HUD->OnShowDebugMenu();
+			}
+			else
+			{
+				OFF::SetInputGameOnly.Call<SetInputModeGameOnly>()(Pointers::Player());
+				MenuObj->SetVisibility(SDK::ESlateVisibility::Collapsed);
+
+				reinterpret_cast<SDK::UWB_TestModeMenuBase_C*>(Menus[2])->CloseWindow();
+			}
+		}
+		/*constexpr int MenuPage = 3;
 
 		static SDK::UClass* Classes[4]{nullptr};
 		static SDK::UUserWidget* Menus[4]{nullptr};
@@ -485,10 +567,10 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			{
 				i++;
 
-				Classes[i] = UFunctions::StaticLoadClass(SDK::UUserWidget::StaticClass(), AJB::GEngine(), Widgy, nullptr, 0, nullptr);
+				Classes[i] = UFunctions::StaticLoadClass(SDK::UUserWidget::StaticClass(), GEngine, Widgy, nullptr, 0, nullptr);
 				if (Classes[i])
 				{
-					Menus[i] = (SDK::UUserWidget*)Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(Classes[i], static_cast<SDK::UGameViewportClient*>(AJB::GEngine()->GameViewport), Pointers::FString2FName(Widgy), 0, EInternalObjectFlags::RootSet, 0, 0, 0, 0);
+					Menus[i] = (SDK::UUserWidget*)Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(Classes[i], static_cast<SDK::UGameViewportClient*>(GEngine->GameViewport), Pointers::FString2FName(Widgy), 0, EInternalObjectFlags::RootSet, 0, 0, 0, 0);
 
 
 					if (i == MenuPage)
@@ -502,7 +584,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			
 			SDK::ABP_AJBOutGameHUD_C* HUD{nullptr};
 
-			AJB::GetBlueprintClass<SDK::UBPF_AJBOutGameHUD_C>()->GetAJBOutGameHUD_BP(0, AJB::GWorld(), 0, &HUD);
+			AJB::GetBlueprintClass<SDK::UBPF_AJBOutGameHUD_C>()->GetAJBOutGameHUD_BP(0, GWorld, 0, &HUD);
 			if (HUD)
 			{
 				
@@ -510,7 +592,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 				//HUD->DebugMenuOutGameClassPtr.WeakPtr.ObjectIndex = Classes[2]->Index;
 				HUD->OnShowDebugMenu();
 
-				AJB::GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->SetInputMode_GameAndUI(Pointers::Player(), Menus[MenuPage], true, false);
+				OFF::SetInputMode_GameAndUIEx.Call<SetInputModeGameAndUI>()(Pointers::Player(), Menus[MenuPage], SDK::EMouseLockMode::LockAlways, false);
 				if (Menus[MenuPage] && Menus[MenuPage]->IsA(SDK::UWB_TestModePage_C::StaticClass()))
 				{
 					reinterpret_cast<SDK::UWB_TestModePage_C*>(Menus[MenuPage])->ViewPriority = SDK::EAJBUIViewPortPriority::Top;
@@ -522,8 +604,8 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		}
 		else
 		{
-			AJB::GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->SetInputMode_GameAndUI(Pointers::Player(), Menus[MenuPage], true, false);
-		}
+			OFF::SetInputMode_GameAndUIEx.Call<SetInputModeGameAndUI>()(Pointers::Player(), Menus[MenuPage], SDK::EMouseLockMode::LockAlways, false);
+		}*/
 	}
 	else if (StrCommand == "textmenu")
 	{
@@ -608,10 +690,28 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			if (Block)
 			{
 				AJB::MOD_GlobalPatcher->SetWidgetText(Block, L"LEMON POSSESSION");
+				LogA("Lemon", Block->GetFullName());
 			}
 		}
 
 	}
+	else if (StrCommand == "screen")
+	{
+		AJB::GetBlueprintClass<SDK::ULoadingScreenSystemBPLibrary>()->StartManualLoadingScreen(0);
+	}
+	else if (StrCommand == "toggledebug")
+	{
+		if (TOGGLEDEBUGBADGAMEDESIGN)
+		{
+			*TOGGLEDEBUGBADGAMEDESIGN = !*TOGGLEDEBUGBADGAMEDESIGN;
+			// Wow this actually works BEAUTIFULLY, it's so bad and needs to be removed and redesigned but for debugging ITS SUPER USEFUL
+		}
+	}
+	/*else if (StrCommand == "sync")
+	{
+		AJB::Instance->BattleSettings.AILevel = 3;
+		AJB::Instance->BattleSettings.DamageAreaType = 10;
+	}*/
 	//LogA("ConsoleCommand", std::format("[Owning PlayerController]: {} | [Command]: {}", This->GetFullName(), StrCommand));
 
 	return OFF::ConsoleCommand.VerifyFC<Decl::ConsoleCommand>()(This, Result, Command, bWriteToLog);
@@ -688,6 +788,21 @@ UFunctions::BrowseReturnVal UFunctions::Browse(SDK::UEngine* This, SDK::FWorldCo
 		SDK::FString Redirect{DefaultMap};
 		Call<Decl::CopyString>(OFF::CopyString.PlusBase())(&URL.Map, &Redirect);
 	}
+	else if (wcscmp(URL.Map.CStr(), L"/Game/AJB/Maps/SimpleStartLocationSelect_P") == 0)
+	{
+		for (SDK::FString& Entry : URL.Op)
+		{
+			if (Entry.ToString().find("NPC=") != std::string::npos)
+			{
+				//static SDK::FString NPCNum = SDK::FString{CMLA::HardcodedNPCNum.GetArgumentAsString()};
+				std::wstring NPCNumStr(L"NPC=");
+				NPCNumStr += CMLA::HardcodedNPCNum.GetArgumentAsString();
+				static SDK::FString NPCNum = SDK::FString{NPCNumStr.c_str()};
+				AJB::CopyString(&Entry, &NPCNum);
+				break;
+			}
+		}
+	}
 
 	LogA("Browse", Helpers::FURLParser(URL));
 	
@@ -718,7 +833,7 @@ Class* GetTypedOuter(T* Object)
 
 SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPlayer* NewPlayer, SDK::ENetRole InRemoteRole, SDK::FString& Portal, SDK::FString& Options, SDK::FUniqueNetIdRepl& UniqueId, SDK::FString& ErrorMessage)
 {
-	LogA("Login", "Called.");
+	LogA("Login", std::format("[PlayerController]: {} | [NewPlayer]: {} | [InRemoteRole]: {} | [Options]: {} | [ErrorMessage]: {}", This->GetFullName(), NewPlayer->GetFullName(), std::string((*reinterpret_cast<ENetRole*>(&InRemoteRole)).ToString()), Portal.ToString(), ErrorMessage.ToString()));
 
 	/*if (Options.ToString().rfind("?Name") != std::string::npos)
 	{
@@ -729,7 +844,11 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 	SDK::AGameModeBase* CurrentGameMode = AJB::GetGameMode();
 
 	if (AJB::PlayerPoints) *AJB::PlayerPoints = 1170;
-	if (AJB::Instance && AJB::Instance->ArcadeTimeManager) AJB::Instance->ArcadeTimeManager = nullptr;
+	if (AJB::Instance)
+	{
+		//AJB::Instance->NPCNum = wcstol(CMLA::HardcodedNPCNum.GetArgumentAsString(), nullptr, 10); Does nothing
+		if (AJB::Instance->ArcadeTimeManager) AJB::Instance->ArcadeTimeManager = nullptr;
+	}
 	if (AJB::MOD_OptionsMenu)
 	{
 		//LogA(AJB::MOD_OptionsMenu->IsInViewport() ? "In Viewport" : "Not In Viewport", AJB::GEngine()->GameViewport->GetFullName());
@@ -749,10 +868,10 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 		constexpr const wchar_t* GlobalPatchObjectBlueprintPath{L"/Game/Aeyth8/Blueprints/Global/BP_GlobalPatcher.BP_GlobalPatcher_C"};
 		constexpr const wchar_t* OptionsMenuBlueprintPath{L"/Game/Aeyth8/Blueprints/UI/OptionsMenu/WBP_OptionsMenu.WBP_OptionsMenu_C"};
 		
-		AJB::MOD_GlobalPatcherClass = UFunctions::StaticLoadClass(AJB::CoreUObject, AJB::GEngine(), GlobalPatchObjectBlueprintPath, nullptr, 0, nullptr);
+		AJB::MOD_GlobalPatcherClass = UFunctions::StaticLoadClass(AJB::CoreUObject, GEngine, GlobalPatchObjectBlueprintPath, nullptr, 0, nullptr);
 		if (AJB::MOD_GlobalPatcherClass)
 		{
-			AJB::MOD_GlobalPatcher = (SDK::UBP_GlobalPatcher_C*)Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(AJB::MOD_GlobalPatcherClass, AJB::GEngine(), Pointers::FString2FName(GlobalPatchObjectBlueprintPath), 0, EInternalObjectFlags::RootSet, 0, 0, 0, 0);
+			AJB::MOD_GlobalPatcher = (SDK::UBP_GlobalPatcher_C*)Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(AJB::MOD_GlobalPatcherClass, GEngine, Pointers::FString2FName(GlobalPatchObjectBlueprintPath), 0, EInternalObjectFlags::RootSet, 0, 0, 0, 0);
 			if (AJB::MOD_GlobalPatcher)
 			{
 				LogA("Global Patcher", std::format("[ProofOfExistenceSignature]: {} | [Object]: {}", AJB::MOD_GlobalPatcher->ProofOfExistenceSignature, AJB::MOD_GlobalPatcher->GetFullName()));
@@ -761,10 +880,10 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 		}		
 
 
-		AJB::MOD_OptionsMenuClass = UFunctions::StaticLoadClass(SDK::UUserWidget::StaticClass(), AJB::GEngine(), OptionsMenuBlueprintPath, nullptr, 0, nullptr);
+		AJB::MOD_OptionsMenuClass = UFunctions::StaticLoadClass(SDK::UUserWidget::StaticClass(), GEngine, OptionsMenuBlueprintPath, nullptr, 0, nullptr);
 		if (AJB::MOD_OptionsMenuClass)
 		{
-			AJB::MOD_OptionsMenu = (SDK::UWBP_OptionsMenu_C*)Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(AJB::MOD_OptionsMenuClass, static_cast<SDK::UGameViewportClient*>(AJB::GEngine()->GameViewport), Pointers::FString2FName(OptionsMenuBlueprintPath), 0, EInternalObjectFlags::RootSet, 0, 0, 0, 0);
+			AJB::MOD_OptionsMenu = (SDK::UWBP_OptionsMenu_C*)Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(AJB::MOD_OptionsMenuClass, static_cast<SDK::UGameViewportClient*>(GEngine->GameViewport), Pointers::FString2FName(OptionsMenuBlueprintPath), 0, EInternalObjectFlags::RootSet, 0, 0, 0, 0);
 			//	OptionsMenu = static_cast<SDK::UWBP_OptionsMenu_C*>(AJB::GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->Create(AJB::GWorld(), PrototypeMenu, Pointers::Player()));
 			if (AJB::MOD_OptionsMenu)
 			{
@@ -821,10 +940,226 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 		}
 	}
 
-	if (CurrentGameMode && CurrentGameMode->IsA(SDK::AGM_AJBUserInterface_C::StaticClass()))
-	{
-		if (AJB::StrDLLCommitVersion) static_cast<SDK::AGM_AJBUserInterface_C*>(CurrentGameMode)->SetGlobalGameModeScopeVersioningInfo(AJB::StrDLLCommitVersion);
+	if (CurrentGameMode)		
+	{		
+		if (CurrentGameMode->IsA(SDK::AGM_AJBUserInterface_C::StaticClass()))
+		{
+			if (AJB::StrDLLCommitVersion) static_cast<SDK::AGM_AJBUserInterface_C*>(CurrentGameMode)->SetGlobalGameModeScopeVersioningInfo(AJB::StrDLLCommitVersion);
+		}
+		else if (CurrentGameMode->IsA(SDK::ABP_AJBSimpleMatchGameMode_C::StaticClass()) && AJB::MOD_GlobalPatcher)
+		{
+			struct RetainerBoxSubclass : SDK::UWB_ModeSelectTextBase_C { SDK::URetainerBox* RetainerBox; };
+			/*enum ETextBlockTypeIndex : int32
+			{
+
+				TRAINING	= 0,
+				PVE			= 1,
+				TUTORIAL	= 2,
+				SHOP		= 3, // Because designing a new UI is so exhausting I will temporarily redirect this button to work for hosting multiplayer
+				ENDGAME		= 4
+			};
+
+			ETextBlockTypeIndex TBTIndex{0};
+
+			static SDK::TSubclassOf<SDK::UWB_ModeSelectTextBase_C> Classes[4] =
+			{
+				SDK::UWB_ModeSelect_Txt_Training_C::StaticClass(),
+				SDK::UWB_ModeSelect_Txt_PvE_C::StaticClass(),
+				SDK::UWB_ModeSelect_Txt_Tutorial_C::StaticClass(),
+				SDK::UWB_ModeSelect_Txt_Shop_C::StaticClass(),
+				//SDK::UWB_ModeSelect_Button_EndGame_C::StaticClass(),
+			};*/
+
+			struct TClassType
+			{
+				SDK::UClass*	Class;
+				const wchar_t*	TranslationString;
+				int				BestPlacementIndex;
+			};
+
+			static TClassType ClassTypes[4] =
+			{
+				{SDK::UWB_ModeSelect_Txt_Training_C::StaticClass(), L"TRAINING",		   1},
+				{SDK::UWB_ModeSelect_Txt_PvE_C::StaticClass(),		L"DEALER'S CHALLENGE", 4},
+				{SDK::UWB_ModeSelect_Txt_Tutorial_C::StaticClass(), L"TUTORIAL",		   1},
+				{SDK::UWB_ModeSelect_Txt_Shop_C::StaticClass(),		L"MULTIPLAYER",		   3}
+			};
+
+			std::vector<RetainerBoxSubclass*> GlobalTextBlocks = Pointers::FindObjects<RetainerBoxSubclass>(false);
+			for (int GlobalIndex{0}; GlobalIndex < GlobalTextBlocks.size(); ++GlobalIndex)
+			{
+				RetainerBoxSubclass* CurrentObject = GlobalTextBlocks[GlobalIndex];
+				SDK::UClass* CurrentClass = GlobalTextBlocks[GlobalIndex]->Class;
+
+				if (CurrentObject && CurrentClass)
+				{
+					if (CurrentObject->Flags & SDK::EObjectFlags::ArchetypeObject)
+					{
+						continue;
+					}
+
+					int ClassTypeIndex{0};
+					bool bClassMatches{false};
+
+					for (TClassType& ClassType : ClassTypes)
+					{
+						if (CurrentClass == ClassType.Class)
+						{
+							//LogA("SUCCESS", std::format("[CurrentObject]: {} | [CurrentClass]: {} | [IsArchetype]: {} [Flags]: {}", CurrentObject->GetFullName(), CurrentClass->GetFullName(), CurrentObject->Flags& SDK::EObjectFlags::ArchetypeObject ? "True" : "False", std::to_string((uint32)CurrentObject->Flags)));
+							bClassMatches = true;
+							break;
+						}
+
+						ClassTypeIndex++;
+					}
+
+					/*if (!bClassMatches) Apparently this condition is never met.
+					{
+						SDK::UWB_ModeSelectButtonBase_C* ActualButton = GetTypedOuter<SDK::UWB_ModeSelectButtonBase_C>(CurrentObject->RetainerBox->GetContent());
+						if (ActualButton) ActualButton->RemoveFromViewport();
+						continue;
+					}*/
+
+					SDK::URetainerBox* CurrentRetainer = CurrentObject->RetainerBox;
+					if (CurrentRetainer)
+					{
+						//LogA(std::to_string(GlobalIndex), GlobalTextBlocks[GlobalIndex]->GetFullName());
+						SDK::UWidget* Child = CurrentRetainer->GetContent();
+						if (Child && Child->IsA(SDK::UHorizontalBox::StaticClass()))
+						{
+							SDK::UHorizontalBox* Box = static_cast<SDK::UHorizontalBox*>(Child);
+							const int Count = Box->GetChildrenCount();
+
+							for (int i{0}; i < Count; ++i)
+							{
+								SDK::UWidget* Widget = Box->GetChildAt(i);
+								if (Widget->IsA(SDK::UTextBlock::StaticClass()))
+								{
+									if (i == ClassTypes[ClassTypeIndex].BestPlacementIndex)
+									{
+										SDK::FString NewChar{ClassTypes[ClassTypeIndex].TranslationString};
+										AJB::MOD_GlobalPatcher->SetWidgetText(static_cast<SDK::UTextBlock*>(Widget), NewChar);
+										/*if (i == 3)	Doesn't currently work and I don't have enough time to not only fix this but also bind it.
+										{
+											SDK::UWB_ModeSelectButtonBase_C* ActualButton = GetTypedOuter<SDK::UWB_ModeSelectButtonBase_C>(Widget);
+											if (ActualButton)
+											{
+												ActualButton->bIsEnabled = true;
+												ActualButton->bEnableSelect = true;
+												ActualButton->NeedPP = 0;
+												LogA("Outer", ActualButton->GetFullName());
+											}
+										}*/
+									}
+									else
+									{
+										static SDK::FString Blank{L" "};
+										AJB::MOD_GlobalPatcher->SetWidgetText(static_cast<SDK::UTextBlock*>(Widget), Blank);
+									}
+								}
+							}
+						}
+					}
+				}
+
+				//LogA("Class", std::format("[CurrentObject]: {} | [CurrentClass]: {} | [IsArchetype]: {} [Flags]: {}", CurrentObject->GetFullName(), CurrentClass->GetFullName(), CurrentObject->Flags & SDK::EObjectFlags::ArchetypeObject ? "True" : "False", std::to_string((uint32)CurrentObject->Flags)));
+
+			}
+
+
+
+
+
+
+
+
+
+
+
+
+			/*for (int GlobalIndex{0}; GlobalIndex < GlobalTextBlocks.size(); ++GlobalIndex)
+			{
+				
+				SDK::UClass* CurrentClass = GlobalTextBlocks[GlobalIndex]->StaticClass();
+				if (GlobalTextBlocks[GlobalIndex]->IsA(SDK::UWB_ModeSelectTextBase_C::StaticClass()))
+				{
+					LogA("UWB_ModeSelectTextBase_C", std::format("[CurrentClass]: {} | [Object]: {}", CurrentClass->GetFullName(), GlobalTextBlocks[GlobalIndex]->GetFullName()));
+				}
+
+				if (GlobalTextBlocks.size() > GlobalIndex)
+				{
+					RetainerBoxSubclass* NextEntry = GlobalTextBlocks[GlobalIndex + 1];
+
+					// We want the last object of each class.
+					//if (NextEntry && CurrentClass == NextEntry->StaticClass())
+					if (GlobalTextBlocks[GlobalIndex]->Name.ComparisonIndex == NextEntry->Name.ComparisonIndex)
+					{
+						LogA("SKIPPING", std::format("[CurrentClass]: {} / {} | [NextEntry]: {} / {}", CurrentClass->GetFullName(), GlobalTextBlocks[GlobalIndex]->GetFullName(), NextEntry->StaticClass()->GetFullName(), NextEntry->GetFullName()));
+						continue;
+					}
+				}
+				int ClassIdx{0};
+				bool bCaughtClass{false};
+
+				for (SDK::UClass*& Subclass : Classes)
+				{
+					LogA("Subclasses", std::format("[CurrentClass]: {} | [Subclass]: {}", GlobalTextBlocks[GlobalIndex]->GetFullName(), Subclass->GetFullName()));
+					if (CurrentClass == Subclass)
+					{
+						LogA("CAUGHT", std::format("[CurrentClass]: {} | [Subclass]: {}", GlobalTextBlocks[GlobalIndex]->GetFullName(), Subclass->GetFullName()));
+						bCaughtClass = true;
+						break;
+					}
+
+					++ClassIdx;
+				}
+				if (!bCaughtClass)
+				{
+					continue;
+				}
+
+				RetainerBoxSubclass* SubclassCast = reinterpret_cast<RetainerBoxSubclass*>(GlobalTextBlocks[GlobalIndex]);
+				SDK::URetainerBox* CurrentRetainer = SubclassCast->RetainerBox;					
+				if (CurrentRetainer)
+				{
+					LogA(std::to_string(GlobalIndex), GlobalTextBlocks[GlobalIndex]->GetFullName());
+					SDK::UWidget* Child = CurrentRetainer->GetContent();
+					if (Child && Child->IsA(SDK::UHorizontalBox::StaticClass()))
+					{
+						SDK::UHorizontalBox* Box = static_cast<SDK::UHorizontalBox*>(Child);
+						const int Count = Box->GetChildrenCount();
+
+						for (int i{0}; i < Count; ++i)
+						{
+							SDK::UWidget* Widget = Box->GetChildAt(i);
+
+							LogA(Widget->GetFullName(), std::format("[ChildrenCount]: {} | [Index]: {} | {}", Count, i, Widget->GetFullName()));
+
+							if (Widget->IsA(SDK::UTextBlock::StaticClass()))
+							{
+								if (i == 1)
+								{
+									//LogA("Char", static_cast<SDK::UTextBlock*>(Widget)->Text.ToString());
+
+									SDK::FString NewChar{StringTable[ClassIdx]};
+								
+									if (AJB::MOD_GlobalPatcher) AJB::MOD_GlobalPatcher->SetWidgetText(static_cast<SDK::UTextBlock*>(Widget), NewChar);
+								}
+								else
+								{
+									static SDK::FString Blank{L" "};
+									if (AJB::MOD_GlobalPatcher) AJB::MOD_GlobalPatcher->SetWidgetText(static_cast<SDK::UTextBlock*>(Widget), Blank);
+								}
+							
+							}
+						}
+					}
+				}
+			}*/
+			
+		}
 	}
+
 	
 	/*
 	AJB::TAutoConsoleVariable<float>& CVarMaxFPS = reinterpret_cast<AJB::TAutoConsoleVariable<float>&>(PB(0x32557F0));
@@ -946,6 +1281,7 @@ void UFunctions::ProcessEvent(SDK::UObject* This, SDK::UFunction* Function, LPVO
 void UFunctions::Invoke(SDK::UFunction* This, SDK::UObject* Obj, void* FFrame_Stack, void* Result)
 {
 	static bool bIsDebugging = CMLA::HookAndLogInvoke.GetAsBool();
+	TOGGLEDEBUGBADGAMEDESIGN = &bIsDebugging;
 
 	if (bIsDebugging)
 	{
@@ -989,6 +1325,10 @@ void UFunctions::Invoke(SDK::UFunction* This, SDK::UObject* Obj, void* FFrame_St
 			18269, // Function Engine.GameplayStatics.GetPlayerController
 			18277, // Function Engine.GameplayStatics.GetWorldDeltaSeconds
 			18592, // Function Engine.MaterialInstanceDynamic.SetScalarParameterValue
+			18517, // Function Engine.KismetArrayLibrary.Array_Get
+			18521, // Function Engine.KismetArrayLibrary.Array_Length
+			18259, // Function Engine.GameplayStatics.GetGameInstance
+
 
 
 			// Not UE Native
@@ -1154,47 +1494,80 @@ void UFunctions::Invoke(SDK::UFunction* This, SDK::UObject* Obj, void* FFrame_St
 		}
 	}
 
-	// Why is it called "Creadit" and not "Credit"? Most likely a misspelling, is it stupid? Yes.
-	static thread_local int CreaditFrame{0};
-
-	if (CreaditFrame < 60)
+	/*if (AJB::CreaditPointer && Obj == AJB::CreaditPointer && AJB::CreaditPointer->Creadit)
 	{
-		CreaditFrame++;
-	}
-	else if (CreaditFrame == 60) // Equal to and not higher than by intentional design, *if* something happens where it goes over then something else has broken or a race condition has occurred. 
-	{
-		if (This->Name.ComparisonIndex == 8315 && AJB::CreaditPointer && AJB::CreaditPointer->Creadit)
+		if (CMLA::Debug.GetAsBool())
 		{
-			CreaditFrame = 0;
-			SDK::UWB_Credit_C* Trash = AJB::CreaditPointer->Creadit;
+			LogA(OFF::Invoke.GetName(), std::format("[UFunction]: {} | [ComparisonIndex]: {} | [UObject]: {} | [ComparisonIndex]: {}", This->GetFullName(), This->Name.ComparisonIndex, Obj->GetFullName(), Obj->Name.ComparisonIndex));
+		}
 
+		SDK::UWB_Credit_C* Trash = AJB::CreaditPointer->Creadit;
+		if (Trash)
+		{
 			// Hiding it is good enough, apparently anything else breaks all logic in the game, BAD DESIGN.
 			// "A delaye, a dela. A delayed gamne, a delayepb. Bad Game Design." - Shigeru Meat
-			Trash->SetVisibility(SDK::ESlateVisibility::Collapsed); 		
+			Trash->SetVisibility(SDK::ESlateVisibility::Collapsed);
+		}
+
+		
 
 			
-			// You should kill yourself... NOW!
-			Trash->RemoveFromParent(); 
+		// You should kill yourself... NOW!
+		//Trash->RemoveFromParent(); 
 		
-			//Trash->Flags = static_cast<SDK::EObjectFlags>(static_cast<int32>(Trash->Flags) | static_cast<int32>(UFunctions::EInternalObjectFlags::PendingKill));
-			/*	Nevermind I don't wanna do that because apparently it only constructs itself once or atleast is persistent enough to not always exist in the constructor.
+		//Trash->Flags = static_cast<SDK::EObjectFlags>(static_cast<int32>(Trash->Flags) | static_cast<int32>(UFunctions::EInternalObjectFlags::PendingKill));
+			Nevermind I don't wanna do that because apparently it only constructs itself once or atleast is persistent enough to not always exist in the constructor.
 
-			CreaditFrame++;
+		CreaditFrame++;
 
-			OFF::Invoke.VerifyFC<Decl::Invoke>()(This, Obj, FFrame_Stack, Result);
+		OFF::Invoke.VerifyFC<Decl::Invoke>()(This, Obj, FFrame_Stack, Result);
 
-			AJB::CreaditPointer->ReceiveEndPlay(SDK::EEndPlayReason::EEndPlayReason_MAX);
+		AJB::CreaditPointer->ReceiveEndPlay(SDK::EEndPlayReason::EEndPlayReason_MAX);
 
-			if (CreaditFrame > 60)
+		if (CreaditFrame > 60)
+		{
+			CreaditFrame = 0;
+
+			// If I don't null this out it will hurt performance for pointless checks since this condition is based on EVERY SINGLE BEGIN PLAY FUNCTION EVER.
+			// So I'm giving it atleast 60 ticks or about one average frame/tickrate/second to clear itself out before killing the pointer, otherwise thanks to multithreading it will get nulled way too early.
+			AJB::CreaditPointer = nullptr;	
+		}
+		
+		return;
+	}*/
+
+	static int32 CreaditMainIndex{0};
+	static int32 CreaditWidgetIndex{0};
+	thread_local static bool bWidgetFlagChanged{false};
+
+	if (bWidgetFlagChanged)
+	{
+		bWidgetFlagChanged = false;
+		AJB::CreaditPointer->Creadit->SetVisibility(SDK::ESlateVisibility::Collapsed);
+	}
+
+	// Once the FName has been constructed the order and index will not change until relaunch, and even then it shouldn't really change unless mods get created first/etc.
+	if (CreaditMainIndex == 0)
+	{
+		if (AJB::CreaditPointer && Obj == AJB::CreaditPointer) CreaditMainIndex = AJB::CreaditPointer->Name.ComparisonIndex;
+	}
+	else 
+	{
+		if (CreaditWidgetIndex == 0)
+		{
+			if (AJB::CreaditPointer && AJB::CreaditPointer->Creadit)
 			{
-				CreaditFrame = 0;
-
-				// If I don't null this out it will hurt performance for pointless checks since this condition is based on EVERY SINGLE BEGIN PLAY FUNCTION EVER.
-				// So I'm giving it atleast 60 ticks or about one average frame/tickrate/second to clear itself out before killing the pointer, otherwise thanks to multithreading it will get nulled way too early.
-				AJB::CreaditPointer = nullptr;	
+				CreaditWidgetIndex = AJB::CreaditPointer->Creadit->Name.ComparisonIndex;
 			}
-		
-			return;*/
+		}
+		else if (Obj->Name.ComparisonIndex == CreaditWidgetIndex)
+		{
+			if (AJB::CreaditPointer->Creadit->Visibility != SDK::ESlateVisibility::Collapsed)
+			{
+				//AJB::CreaditPointer->Creadit->Visibility = SDK::ESlateVisibility::Collapsed;
+				bWidgetFlagChanged = true;
+			}
+			//LogA(OFF::Invoke.GetName(), std::format("[UFunction]: {} | [ComparisonIndex]: {} | [UObject]: {} | [ComparisonIndex]: {}", This->GetFullName(), This->Name.ComparisonIndex, Obj->GetFullName(), Obj->Name.ComparisonIndex));
 		}
 	}
 

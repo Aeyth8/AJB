@@ -145,7 +145,7 @@
       <ModuleDefinitionFile>
       </ModuleDefinitionFile>
       <AdditionalDependencies>$(OutDir)CPUReg.obj;%(AdditionalDependencies)</AdditionalDependencies>
-      <EntryPointSymbol>DllEntryPoint</EntryPointSymbol>
+      <EntryPointSymbol>ProxyEntrypoint</EntryPointSymbol>
     </Link>
     <MASM>
       <MakeAllSymbolsPublic>false</MakeAllSymbolsPublic>
@@ -185,13 +185,14 @@
     <ClInclude Include="Aeyth8\A8CL\Strings\CStrings.h" />
     <ClInclude Include="Aeyth8\CmdArgs\CommandLineArgs.h" />
     <ClInclude Include="Aeyth8\CmdArgs\Core\CMLA.h" />
-    <ClInclude Include="Aeyth8\Filesystem\FilesystemCore.h" />
     <ClInclude Include="Aeyth8\Global.hpp" />
     <ClInclude Include="Aeyth8\Hooks\Hooks.hpp" />
     <ClInclude Include="Aeyth8\Logger.hpp" />
     <ClInclude Include="Aeyth8\Logic\AJB.h" />
+    <ClInclude Include="Aeyth8\Logic\Multiplayer\LAN.h" />
     <ClInclude Include="Aeyth8\OffsetBase.h" />
     <ClInclude Include="Aeyth8\Offsets.h" />
+    <ClInclude Include="Aeyth8\Proxy8\Entry\ProxyEntry.hpp" />
     <ClInclude Include="Aeyth8\Proxy8\Proxy.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">true</ExcludedFromBuild>
     </ClInclude>
@@ -201,8 +202,8 @@
     <ClInclude Include="Aeyth8\Tools\BytePatcher.h" />
     <ClInclude Include="Aeyth8\Tools\Pointers.h" />
     <ClInclude Include="Aeyth8\Tools\UFunctions.hpp" />
+    <ClInclude Include="Aeyth8\Tools\UnrealExternWrapper.h" />
     <ClInclude Include="Aeyth8\UConsole\Core\ConsoleCommands.h" />
-    <ClInclude Include="Aeyth8\UConsole\Core\Logger.h" />
     <ClInclude Include="Dumper-7\CustomSDK\BPAC_LoadTags_classes.hpp" />
     <ClInclude Include="Dumper-7\CustomSDK\BP_GlobalPatcher_classes.hpp" />
     <ClInclude Include="Dumper-7\CustomSDK\BP_GlobalPatcher_parameters.hpp" />
@@ -252,7 +253,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Aeyth8\Logic\Multiplayer\LAN.cpp" />
     <ClCompile Include="Aeyth8\Offsets.cpp" />
+    <ClCompile Include="Aeyth8\Proxy8\Entry\ProxyEntry.cpp" />
     <ClCompile Include="Aeyth8\Proxy8\Proxy.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">Use</PrecompiledHeader>
@@ -313,6 +316,7 @@
     <ClCompile Include="Dumper-7\SDK\WB_ModeSelect_Button_SOLO_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\WB_ModeSelect_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\WB_PpBuyWindow_functions.cpp" />
+    <ClCompile Include="Dumper-7\SDK\WB_TestModeMenuBase_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\WB_TestModePage_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\WB_TimeLimitCountDown_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\WB_Training_functions.cpp" />
@@ -388,6 +392,9 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">$(OutDir)%(FileName).obj</ObjectFileName>
       <MakeAllSymbolsPublic Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">
       </MakeAllSymbolsPublic>
+    </MASM>
+    <MASM Include="Aeyth8\Proxy8\Entry\Entry.asm">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">/D B64 %(AdditionalOptions)</AdditionalOptions>
     </MASM>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

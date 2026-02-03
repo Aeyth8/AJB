@@ -191,8 +191,6 @@ namespace AJB
 	extern __int32* PlayerPoints;
 	extern bool* bDebugInputMode;
 
-	extern void* FormatterThing;
-
 	/* -- MOD --
 		
 	Not native in any form, only exists within the PC Port mod as custom blueprints.
@@ -200,7 +198,6 @@ namespace AJB
 
 	extern SDK::UClass* MOD_OptionsMenuClass;			// Options menu class, must be loaded to create an object.
 	extern SDK::UClass* MOD_GlobalPatcherClass;			// Global patcher class, must be loaded to create an object.
-	extern SDK::UClass* MOD_TitleScreenClass;			// Title screen class, has the ability to use localization from the DLL, and is spawned from the DLL because blueprints are pissing me off.
 
 	extern SDK::UWBP_OptionsMenu_C* MOD_OptionsMenu;	// Options menu, a self maintained Widget Blueprint that uses its own internal ticking system, communicates with this DLL internally by executing console commands that are parsed with a hook to (APlayerController::ConsoleCommand).
 	extern SDK::UBP_GlobalPatcher_C* MOD_GlobalPatcher;	// Global object used as a translation layer between my DLL logic and Unreal Engine blueprints.
@@ -222,18 +219,18 @@ namespace AJB
 
 	void Init_Hooks();									// Called before entry, modifies the game's runtime instance before it even starts up, applying bytepatches and hooks.
 	void Init_Engine();									// Called after entry, waits for the core game engine to initialize, and sets all pre-world variables.
-	void Init_Vars(SDK::UWorld* GWorld);				// Called after game world is initialized, retrieves and sets any applicable pointer variables.
+	void Init_Vars();									// Called after game world is initialized, retrieves and sets any applicable pointer variables.
 
 	// ===========================================
 	// **			POINTER FUNCTIONS			**
 	// ===========================================
 
-	SDK::UEngine* const& GEngine(const bool bLog = false);
-	SDK::UWorld* const& GWorld(const bool bLog = false);
+	SDK::UEngine* const& GUEngine(const bool bLog = false);
+	SDK::UWorld* const& GUWorld(const bool bLog = false);
 	SDK::APlayerController* GPlayer(const int& Index = 0);
 	SDK::UBlueprintFunctionLibrary* const& BlueprintFunctionLibrary();
 
-	SDK::AGameModeBase* GetGameMode(SDK::UWorld* OverrideWorld = GWorld());
+	SDK::AGameModeBase* GetGameMode(SDK::UWorld* OverrideWorld = GUWorld());
 	SDK::ABP_AJBInGamePlayerController_C* const& GetPlayer(const int& Index = 0);
 	SDK::ABP_AJBInGameCharacter_C* const& GetCharacter(const SDK::ABP_AJBInGamePlayerController_C* Player = GetPlayer());
 	SDK::ABP_PPV_VSFilter_C* GetPostProcessFilter(const SDK::ABP_AJBInGamePlayerController_C* Player = GetPlayer(), const bool bCreateIfNull = true); // Only accessible ingame from the PlayerController.

@@ -51,6 +51,9 @@ namespace OFF
 	OFFSET ALevelScriptActorConstructor("ALevelScriptActor::ALevelScriptActor", 0x147E150);
 	OFFSET ToFormattedString("FFormatArgumentValue::ToFormattedString", 0x60F080);
 
+	OFFSET SetInputGameOnly("UWidgetBlueprintLibrary::SetInputMode_GameOnly", 0x10C41D0);
+	OFFSET SetInputMode_GameAndUIEx("UWidgetBlueprintLibrary::SetInputMode_GameAndUIEx", 0x10C4060);
+
 	/*
 	
 	UWorld::DestroyActor 0x1484190 (lowest level)
@@ -67,8 +70,8 @@ namespace OFF
 
 	OFFSET ChangeState("UFlowStateUtil::ChangeState", 0x21CF10);
 	OFFSET TryGetMatchingMyPairInfo("UAJBGameInstance::TryGetMatchingMyPairInfo", 0x486FC0);
-
 	OFFSET GetUsername("GetUsername", 0x694650);
+	OFFSET GetNationalMatchSchedule("UAJBGameInstance::GetNationalMatchSchedule", 0x47E410);
 
 	/*
 	

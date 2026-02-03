@@ -28,6 +28,8 @@ namespace CMLA
 	CommandLineParameter<wchar_t> ConsoleKey(L"ConsoleKey", L"Tilde");
 	CommandLineParameter<wchar_t> MouseCursor(L"MouseCursor", L"/Game/Aeyth8/Blueprints/WBP_Cursor.WBP_Cursor_C");
 	CommandLineParameter<wchar_t> Username(L"Username", L"Aeyth8");
+	CommandLineParameter<wchar_t> Debug(L"debug");
+	CommandLineParameter<wchar_t> HardcodedNPCNum(L"npc", L"20");
 
 	// -- Global array for automated parsing, not generally needed for manual usage.
 	CArray<CommandLineParameter<wchar_t>*> GlobalCommandLineArgs = CommandLineParameter<wchar_t>::GCommands();

@@ -69,9 +69,6 @@
     <Filter Include="SDK\CPP\Widgets">
       <UniqueIdentifier>{05509038-9dbd-4d1d-9178-3081544b49da}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Aeyth8\Filesystem">
-      <UniqueIdentifier>{55d4838f-c7ec-4bb4-86fa-fd19a6fa946f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="SDK\Custom">
       <UniqueIdentifier>{dac963f0-78ec-4af4-9619-20333690e47c}</UniqueIdentifier>
     </Filter>
@@ -104,6 +101,12 @@
     </Filter>
     <Filter Include="SDK\Custom\TitleScreen\Versioning">
       <UniqueIdentifier>{57b49975-37ef-468d-988d-ad45ec96a05b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Aeyth8\Logic\Multiplayer">
+      <UniqueIdentifier>{6bdb2a78-842e-4233-ac93-743d9f2a721b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Aeyth8\Proxy8\Entry">
+      <UniqueIdentifier>{b11c1da5-c2ab-480f-9641-fcccbe624661}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -305,6 +308,15 @@
     <ClCompile Include="Dumper-7\CustomSDK\GM_AJBUserInterface_functions.cpp">
       <Filter>SDK\Custom\TitleScreen\GameMode</Filter>
     </ClCompile>
+    <ClCompile Include="Aeyth8\Logic\Multiplayer\LAN.cpp">
+      <Filter>Aeyth8\Logic\Multiplayer</Filter>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\Proxy8\Entry\ProxyEntry.cpp">
+      <Filter>Aeyth8\Proxy8\Entry</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\WB_TestModeMenuBase_functions.cpp">
+      <Filter>SDK\CPP\Widgets\DebugMenu</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Aeyth8\Logger.hpp">
@@ -391,12 +403,6 @@
     <ClInclude Include="Aeyth8\UConsole\Core\ConsoleCommands.h">
       <Filter>Aeyth8\UConsole\Core</Filter>
     </ClInclude>
-    <ClInclude Include="Aeyth8\UConsole\Core\Logger.h">
-      <Filter>Aeyth8</Filter>
-    </ClInclude>
-    <ClInclude Include="Aeyth8\Filesystem\FilesystemCore.h">
-      <Filter>Aeyth8\Filesystem</Filter>
-    </ClInclude>
     <ClInclude Include="Aeyth8\A8CL\CTypes\CArray.h">
       <Filter>Aeyth8\A8CL</Filter>
     </ClInclude>
@@ -448,6 +454,15 @@
     <ClInclude Include="Dumper-7\CustomSDK\BPAC_LoadTags_classes.hpp">
       <Filter>SDK\Custom\Global</Filter>
     </ClInclude>
+    <ClInclude Include="Aeyth8\Logic\Multiplayer\LAN.h">
+      <Filter>Aeyth8\Logic\Multiplayer</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\Proxy8\Entry\ProxyEntry.hpp">
+      <Filter>Aeyth8\Proxy8\Entry</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\Tools\UnrealExternWrapper.h">
+      <Filter>Aeyth8\Tools</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Dumper-7\NameCollisions.inl">
@@ -462,6 +477,9 @@
   <ItemGroup>
     <MASM Include="Aeyth8\A8CL\CPUReg\CPUReg.asm">
       <Filter>Aeyth8\A8CL\CPUReg</Filter>
+    </MASM>
+    <MASM Include="Aeyth8\Proxy8\Entry\Entry.asm">
+      <Filter>Aeyth8\Proxy8\Entry</Filter>
     </MASM>
   </ItemGroup>
 </Project>

@@ -68,8 +68,6 @@ SDK::UWBP_OptionsMenu_C*			AJB::MOD_OptionsMenu{nullptr};
 SDK::UClass*						AJB::MOD_GlobalPatcherClass{nullptr};
 SDK::UBP_GlobalPatcher_C*			AJB::MOD_GlobalPatcher{nullptr};
 
-SDK::UClass*						AJB::MOD_TitleScreenClass{nullptr};
-
 const wchar_t*						AJB::DLLCommitVersion{L"[v0.4.3]"};
 UC::FString*						AJB::StrDLLCommitVersion{nullptr};
 
@@ -137,6 +135,9 @@ void AddToWorld(SDK::UWorld* This, SDK::ULevel* Level, SDK::FTransform& LevelTra
 	return OFF::AddToWorld.VerifyFC<void(__thiscall*)(SDK::UWorld*, SDK::ULevel*, SDK::FTransform&, bool)>()(This, Level, LevelTransform, bConsiderTimeLimit);
 }*/
 
+SDK::ALevelScriptActor* __fastcall ALevelScriptActor(SDK::AActor* This, void* ObjectInitializer);
+void __fastcall GetNationalMatchSchedule(SDK::UAJBGameInstance*, bool*, bool*, SDK::FAJBMatchSchedule*, SDK::FAJBMatchScheduleDateTime*, SDK::FAJBMatchScheduleDateTime*);
+
 std::vector<Hooks::HookStructure> StandaloneHooks =
 {
 	{OFF::UConsole, UFunctions::UConsole},
@@ -150,10 +151,12 @@ std::vector<Hooks::HookStructure> StandaloneHooks =
 	{OFF::IsNonPakFileNameAllowed, UFunctions::IsNonPakFilenameAllowed},
 	{OFF::FindFileInPakFiles, UFunctions::FindFileInPakFiles},
 	{OFF::ChangeState, AJB::FlowUtilChangeState},
-	{OFF::ProcessMulticastDelegate, UFunctions::ProcessMulticastDelegate}, // unsure if I'm keeping this
+	//{OFF::ProcessMulticastDelegate, UFunctions::ProcessMulticastDelegate}, // unsure if I'm keeping this
 	{OFF::BroadcastDelegate, UFunctions::BroadcastDelegate},
 	{OFF::Invoke, UFunctions::Invoke},
-	{OFF::PrepareMapChange, UFunctions::PrepareMapChange},
+	//{OFF::PrepareMapChange, UFunctions::PrepareMapChange},
+	{OFF::ALevelScriptActorConstructor, ALevelScriptActor},
+	//{OFF::GetNationalMatchSchedule, GetNationalMatchSchedule},
 	/*{OFF::AddToWorld, AddToWorld},
 	{OFF::IsTimeLimitedExceeded, IsTimeLimitExceeded},*/
 	/*{OFF::RequestLevel, UFunctions::RequestLevel}, Temporarily disabled since it inevitably crashes and if it doesn't it will stall forever */
@@ -165,21 +168,18 @@ A8CL::OFFSET PostEventByName("UAkComponent::PostAkEventByName", 0x291650);
 A8CL::OFFSET PostEvent("UAkComponent::PostAkEvent", 0x291390);
 A8CL::OFFSET LoadBankByName("UAkGameplayStatics::LoadBankByName", 0x286850);
 
+void __fastcall GetNationalMatchSchedule(SDK::UAJBGameInstance* This, bool* OutCanPlaySoloMode, bool* OutCanPlayPairMode, SDK::FAJBMatchSchedule* OutMatchSchedule, SDK::FAJBMatchScheduleDateTime* OutSoloScheduleDateTime, SDK::FAJBMatchScheduleDateTime* OutPairScheduleDateTime)
+{
+	*OutCanPlaySoloMode = true;
+	*OutCanPlayPairMode = true;
 
-void* AJB::FormatterThing{nullptr};
+}
 
 void FormatterHook(void* This, bool bInRebuildText, bool bInRebuildAsSource, SDK::FString& OutResult)
 {
 	OFF::ToFormattedString.VerifyFC<void(__thiscall*)(void*, bool, bool, SDK::FString&)>()(This, bInRebuildText, bInRebuildAsSource, OutResult);
 
 	LogA("FormatterThing", OutResult.ToString());
-
-	static bool bOne{0};
-	if (!bOne) {
-		bOne = 1;
-		AJB::FormatterThing = This;
-		LogA("FormatterThing", "Captured");
-	} 
 }
 
 // Server functionality only
@@ -412,13 +412,15 @@ void AJB::Init_Hooks()
 
 		//constexpr BYTE NOP5[5]{NOP};
 		//BytePatcher::ReplaceBytes(PB(0x13CCB43), NOP5); // AJBGetMaxTickRate, no proper name but it's a wrapper that calls UEngine::GetMaxTickRate and this function enforces a 60fps cap if you set it to uncapped (t.MaxFPS 0)
-		//BytePatcher::ReplaceBytes(PB(0x13CCBD8), {NOP, NOP}); ^ Actual patch is this line right here that I am commenting on <----
+		//BytePatcher::ReplaceBytes(PB(0x13CCBD8), {NOP, NOP}); ^ Actual patch is this line right here that I am commenting on <---- ; WRONG both need to be patched I think but I didnt look at the binary to actually verify I just tested it again today
 		
 		//BytePatcher::ReplaceBytes(PB(0x49DEC0), {MOV, 01, RETN, NOP}); // UAJBUtilityFunctionLibrary::IsEditorPreview
 		BytePatcher::ReplaceBytes(PB(0x49DF00), ReturnZero); // UAJBUtilityFunctionLibrary::IsEnableGachaSchedule
 		BytePatcher::ReplaceBytes(PB(0x4978B0), { 0xB8, 0x90, 0x90, 0x00, 0x00, 0xC3, 0x90, 0x90, 0x90, 0x90, 0x90}); // UAJBSettings::GetDefaultCredit
-		BytePatcher::ReplaceBytes(PB(0x499AA0), {MOV, 01, RETN, NOP}); // UAJBUtilityFunctionLibrary::CanAJBArcadeGamePlay
+		BytePatcher::ReplaceBytes(PB(0x499AA0), {MOV, 1, RETN, NOP}); // UAJBUtilityFunctionLibrary::CanAJBArcadeGamePlay
+		//BytePatcher::ReplaceByte(PB(0x47E422), 0x74); // UAJBGameInstance::GetNationalMatchSchedule JNZ -> JZ
 
+		//BytePatcher::ReplaceBytes(PB(0x500B20), {MOV, 1, RETN, NOP, NOP}); // AAJBOutGameProxy::CanTenpoBattle
 		
 		/*
 		BYTE ShippingOnlyLaunch[33]{};
@@ -459,23 +461,35 @@ void AJB::Init_Hooks()
 
 		Hooks::CreateAndEnableHook(NetID, GetNetID);
 		Hooks::CreateAndEnableHook(CharacterNo, SetCharNo);
-		//Hooks::CreateAndEnableHook(ExecCharacterNo, execSetCharNo);
-		Hooks::CreateAndEnableHook(GSetString, SetString);
-		Hooks::CreateAndEnableHook(OpenCommand, GetOpenCommand);
-		Hooks::CreateAndEnableHook(ObjBlueprint, NewObjectFromBlueprint);
-		Hooks::CreateAndEnableHook(PostEventByName, PostEventByNameHook);
-		Hooks::CreateAndEnableHook(PostEvent, PostEventHook);
-		Hooks::CreateAndEnableHook(LoadBankByName, LoadBankByNameHook);
 
-		Hooks::CreateAndEnableHook(OFF::ALevelScriptActorConstructor, ALevelScriptActor);
-		Hooks::CreateAndEnableHook(OFF::ToFormattedString, FormatterHook);
+		//Hooks::CreateAndEnableHook(ExecCharacterNo, execSetCharNo);
+		if (CMLA::Debug.GetAsBool())
+		{
+			
+			
+			Hooks::CreateAndEnableHook(GSetString, SetString);			// Major problem that needs to be handled later.
+
+			Hooks::CreateAndEnableHook(PostEventByName, PostEventByNameHook);
+		}
+		
+
+		/* If I remember correctly none of these hooks did anything.
+		Hooks::CreateAndEnableHook(OpenCommand, GetOpenCommand);
+		Hooks::CreateAndEnableHook(ObjBlueprint, NewObjectFromBlueprint);		
+		Hooks::CreateAndEnableHook(PostEvent, PostEventHook);
+		Hooks::CreateAndEnableHook(LoadBankByName, LoadBankByNameHook);*/
+
+		
+
+		//Hooks::CreateAndEnableHook(OFF::ALevelScriptActorConstructor, ALevelScriptActor);
+		//Hooks::CreateAndEnableHook(OFF::ToFormattedString, FormatterHook);
 	}
 
 }
 
 void AJB::Init_Engine()
 {
-	while (AJB::GEngine() == nullptr) Sleep(25);
+	while (!GEngine) Sleep(25);
 
 	AJB::CoreUObject = SDK::UObject::FindClass("Class CoreUObject.Object");
 
@@ -493,29 +507,8 @@ void AJB::Init_Engine()
 	if (GConfigCache)
 	{
 		// Calls FConfigCacheIni::SetString
-	Call<void(__fastcall*)(void* This, const wchar_t* Section, const wchar_t* Key, const wchar_t* Value, SDK::FString* Filename)>(PB(0x6331F0))(GConfigCache, L"/Script/Engine.UserInterfaceSettings", L"SoftwareCursors", L"((Default, /Game/Aeyth8/Blueprints/WBP_Cursor.WBP_Cursor_C))", reinterpret_cast<SDK::FString*>(PB(0x3051380)));
-	LogA("GConfigCache", "Called");
-	/*for (SDK::TPair<SDK::FString, void*>& Pair : *reinterpret_cast<SDK::TMap<SDK::FString, void*>*>(GConfigCache))
-	{
-		LogA("Pair", Pair.First.ToString());
-	}*/
-	}
-	
-	if (Call<float(__fastcall*)()>(PB(0x176A220))() == 0)
-	{
-		//Call<void(__fastcall*)(SDK::UEngine*, float MaxFPS)>(PB(0x17820A0))(AJB::GEngine(), 60.0f);
-		/*TAutoConsoleVariable<float>& CVarMaxFPS = reinterpret_cast<TAutoConsoleVariable<float>&>(PB(0x32557F0));
-		float MaxFPS{1170.0f};
-		MaxFPS = CVarMaxFPS.Ref->ShadowedValue[1];
-		//MaxFPS = CVarMaxFPS.Ref->GetReferenceFromThread();
-
-		LogA("MaxFPS", std::to_string(MaxFPS));*/
-	}
-
-	SDK::TArray<SDK::FWorldContext*>* WorldList = &*reinterpret_cast<SDK::TArray<SDK::FWorldContext*>*>(GEngine()->Pad_B79[0]);
-	if (WorldList && WorldList->IsValid())
-	{
-		LogA("WorldList", "Valid!");
+		Call<void(__fastcall*)(void* This, const wchar_t* Section, const wchar_t* Key, const wchar_t* Value, SDK::FString* Filename)>(PB(0x6331F0))(GConfigCache, L"/Script/Engine.UserInterfaceSettings", L"SoftwareCursors", L"((Default, /Game/Aeyth8/Blueprints/WBP_Cursor.WBP_Cursor_C))", reinterpret_cast<SDK::FString*>(PB(0x3051380)));
+		LogA("GConfigCache", "Called");
 	}
 
 	if (!IsNull(AJB::MapSettings = SDK::UGameMapsSettings::GetDefaultObj()))
@@ -539,34 +532,7 @@ void AJB::Init_Engine()
 			AJB::StrDLLCommitVersion = &DLLCommitVersionSingleton;
 		}
 	}
-	/*SDK::UUserInterfaceSettings* Interface{nullptr};
 
-	//Interface = Call<SDK::UUserInterfaceSettings*(__fastcall*)()>(PB(0x1CDB90))();'
-	SDK::UClass* TheClass = Call<SDK::UClass*(__fastcall*)()>(PB(0x1908090))();
-	Interface = Call<SDK::UUserInterfaceSettings*(__fastcall*)(SDK::UClass*)>(OFF::CreateDefaultObject.PlusBase())(TheClass);
-	LogA("Interface", Interface->GetFullName());
-	Interface->DefaultCursor.AssetPathName = FString2FName(CMLA::MouseCursor.GetArgumentAsString());
-	SDK::UClass* Inter = UFunctions::StaticLoadClass(SDK::UObject::FindClass("Class Engine.UserInterfaceSettings"), nullptr, L"/Script/Engine.UserInterfaceSettings", nullptr, 0);
-	SDK::UUserInterfaceSettings* Face = (SDK::UUserInterfaceSettings*)UFunctions::StaticLoadObject(Inter, nullptr, L"/Script/Engine.UserInterfaceSettings", nullptr, 0, 0, 1);
-	LogA("Interface", Inter ? Inter->GetFullName() : "null");
-	LogA("Interface Obj", Face ? Face->GetFullName() : "null");*/
-	SDK::UUserInterfaceSettings* Interface{nullptr};
-
-	if (!IsNull(Interface = GetLastOf<SDK::UUserInterfaceSettings>()))
-	{
-		LogA("Interface", Interface->GetFullName());
-		BYTE i{0};
-		for (SDK::TPair<SDK::EMouseCursor, SDK::FSoftClassPath>& Entry : Interface->SoftwareCursors)
-		{
-			i++;
-			constexpr const char* MouseNames[]{"None", "Default", "TextEditBeam", "ResizeLeftRight", "ResizeUpDown", "ResizeSouthEast", "ResizeSouthWest", "CardinalCross", "Crosshairs", "Hand", "GrabHand", "GrabHandClosed", "SlashedCircle", "EyeDropper", "EMouseCursor_MAX"};
-			LogA(std::string(MouseNames[i]), Entry.Second.AssetPathName.ToString());
-
-			Entry.Second.AssetPathName = FString2FName(CMLA::MouseCursor.GetArgumentAsString());
-		}
-		//Interface->DefaultCursor.AssetPathName = FString2FName(CMLA::MouseCursor.GetArgumentAsString());
-	}
-	
 	while (AJB::PCPortWindow == nullptr)
 	{
 		AJB::PCPortWindow = FindWindowW(L"UnrealWindow", 0);
@@ -586,89 +552,75 @@ void AJB::Init_Engine()
 
 #include "../../Dumper-7/SDK/BPF_AJBGameInstance_classes.hpp"
 
-void AJB::Init_Vars(SDK::UWorld* GWorld)
+void AJB::Init_Vars()
 {
-	if (GWorld)
+	Instance = static_cast<SDK::UBP_AJBGameInstance_C*>(GWorld->OwningGameInstance);
+	Settings = static_cast<SDK::UAJBAMSystemSettings*>(Instance->AMSystemSettings);
+	System = static_cast<SDK::UAJBAMSystemObject*>(Instance->AMSystemObject);
+	PlayerPoints = (&System->PP);
+
+	/*SDK::FString ElSev{L"1170"};
+	SDK::FString Username{CMLA::Username.GetArgumentAsString()};
+	CopyString(&Instance->PlayerLoginInfo.SessionID, &ElSev);
+	CopyString(&Instance->PlayerLoginInfo.AccessCode, &ElSev);
+	CopyString(&Instance->PlayerLoginInfo.UserDataID, &ElSev);
+	CopyString(&Instance->PlayerLoginInfo.MatchingPlayerInfo.PlayerName, &Username);
+	CopyString(&Instance->PlayerLoginInfo.UserDataID, &ElSev);
+	Instance->PlayerLoginInfo.MatchingPlayerInfo.PlayerIconID = 5;
+	Instance->PlayerLoginInfo.bIsBNCard = true;
+	Instance->PlayerLoginInfo.bIsGuest = false;*/
+			
+	/*for (SDK::FCustomData& Data : Instance->PlayerLoginInfo.CustomData)
 	{
-		Instance = static_cast<SDK::UBP_AJBGameInstance_C*>(GWorld->OwningGameInstance);
-		Settings = static_cast<SDK::UAJBAMSystemSettings*>(Instance->AMSystemSettings);
-		System = static_cast<SDK::UAJBAMSystemObject*>(Instance->AMSystemObject);
-		PlayerPoints = (&System->PP);
-
-		SDK::FString ElSev{L"1170"};
-		SDK::FString Username{CMLA::Username.GetArgumentAsString()};
-		/*CopyString(&Instance->PlayerLoginInfo.SessionID, &ElSev);
-		CopyString(&Instance->PlayerLoginInfo.AccessCode, &ElSev);
-		CopyString(&Instance->PlayerLoginInfo.UserDataID, &ElSev);
-		CopyString(&Instance->PlayerLoginInfo.MatchingPlayerInfo.PlayerName, &Username);
-		CopyString(&Instance->PlayerLoginInfo.UserDataID, &ElSev);
-		Instance->PlayerLoginInfo.MatchingPlayerInfo.PlayerIconID = 5;
-		Instance->PlayerLoginInfo.bIsBNCard = true;
-		Instance->PlayerLoginInfo.bIsGuest = false;*/
-		
-		
-
-		/*for (SDK::FCustomData& Data : Instance->PlayerLoginInfo.CustomData)
+		LogA("charaSkinId", std::to_string(Data.charaSkinId));
+		Data.charaSkinId = 2;
+		for (SDK::FEmoteData& Emote : Data.EmoteData)
 		{
-			LogA("charaSkinId", std::to_string(Data.charaSkinId));
-			Data.charaSkinId = 2;
-			for (SDK::FEmoteData& Emote : Data.EmoteData)
-			{
-				LogA("Emote", Emote.EmoteName.ToString());
-				Emote.emoteId = 11;
-			}
-		}*/
-
-		if (!IsNull(Settings = static_cast<SDK::UAJBAMSystemSettings*>(Instance->AMSystemSettings)))
-		{
-			bDebugInputMode = (&Settings->bDebugInputMode);
-
-			Settings->CoinOptions.FreePlay = true;
-			//Settings->UpdateSettings.bIsServerMode = true;
-
-			*bDebugInputMode = CMLA::bDebugInputMode.GetAsBool();
+			LogA("Emote", Emote.EmoteName.ToString());
+			Emote.emoteId = 11;
 		}
+	}*/
 
-		if (!IsNull(PlayerPoints = &System->PP))
-		{
-			*PlayerPoints = 1170;
-		}
-		if (!IsNull(AJBSettings = SDK::UAJBSettings::GetDefaultObj()))
-		{
-			AJBSettings->bAvailableAllCharacters = true;
-			//AJBSettings->bAvailableAllStages = true;		I'm pretty sure everything is available and enabling this only allows you to open the PvE map on BR which puts you in an infinite loading screen. 
-			AJBSettings->bEnableSkinCustomDebug = true;
-			AJBSettings->bUseDebugClosedArcadeTimeSchedule = true;
-		}
+	/**(int*)&Instance->Pad_3A0[8] = 2; UAJBGameInstance::GetNationalMatchSchedule Modifies this*/
 
-		//if (Player()) Player()->bShowMouseCursor = true; // This works for the first level
+	if (!IsNull(Settings = static_cast<SDK::UAJBAMSystemSettings*>(Instance->AMSystemSettings)))
+	{
+		bDebugInputMode = (&Settings->bDebugInputMode);
 
-		SDK::UAJBArcadeTimeManager* TimeManager{nullptr};
-		if (!IsNull(TimeManager = Instance->ArcadeTimeManager))
-		{
+		Settings->CoinOptions.FreePlay = true;
+		//Settings->ShopEventSettings.bIsShopCompetition = true;
+		//Settings->UpdateSettings.bIsServerMode = true;
 
-			// Can 100% confirm that this somehow fixes being booted to the main menu when the store close time is up, 
-			// it also allows you to use the menu as if it wasn't closed.
-			// However it may be affecting listen servers so I probably need to find the function that uses this pointer and kill it manually, this is just a simple lazy fix that works for now.
-			// UPDATE: NO IT DOES NOT AFFECT LISTEN SERVERS SO THIS MAY BE PERMANENT
-			Instance->ArcadeTimeManager = nullptr;	
-		}
-		
-		//constexpr const static wchar_t* ModdedPauseMenu{L"WidgetBlueprintGeneratedClass'/Game/Aeyth8/UI/InGame/WBP_OptionsMenu.WBP_OptionsMenu_C'"};
-		//UFunctions::StaticLoadObject(SDK::UClass::FindClass("Class CoreUObject.Class"), nullptr, L"/Game/Aeyth8/UI/InGame/WBP_OptionsMenu.WBP_OptionsMenu_C", nullptr, 0, nullptr, true);
-		/*SDK::UClass* PauseMenu = UFunctions::StaticLoadClass(SDK::UWidgetBlueprintGeneratedClass::StaticClass(), nullptr, (wchar_t*)ModdedPauseMenu, nullptr);
-		LogA("PauseMenu", PauseMenu ? "YIPEE!" : "STUPID PIEC OF SH");
-		GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->Create(GWorld, PauseMenu, Player());*/
-		//LogA("PauseMenu", PauseMenu->GetFullName());
-		//reinterpret_cast<SDK::UBPF_AJBGameInstance_C*>(AJB::Instance)->SetPlayMode(SDK::EPlayMode::Pair, GWorld);
-		//reinterpret_cast<SDK::UBPF_AJBGameInstance_C*>(SDK::UKismetSystemLibrary::GetDefaultObj())->SetPlayMode(SDK::EPlayMode::Pair, GWorld);
+		*bDebugInputMode = CMLA::bDebugInputMode.GetAsBool();
 	}
-	//GetBlueprintClass<SDK::UAJBPlayerInfoUtility>()->MakeAutoPlayerName(L"Aether", 1, 0);
+
+	if (!IsNull(PlayerPoints = &System->PP))
+	{
+		*PlayerPoints = 1170;
+	}
+	if (!IsNull(AJBSettings = SDK::UAJBSettings::GetDefaultObj()))
+	{
+		AJBSettings->bAvailableAllCharacters = true;
+		//AJBSettings->bAvailableAllStages = true;		I'm pretty sure everything is available and enabling this only allows you to open the PvE map on BR which puts you in an infinite loading screen. 
+		AJBSettings->bEnableSkinCustomDebug = true;
+		AJBSettings->bUseDebugClosedArcadeTimeSchedule = true;
+	}
+
+	SDK::UAJBArcadeTimeManager* TimeManager{nullptr};
+	if (!IsNull(TimeManager = Instance->ArcadeTimeManager))
+	{
+		// Can 100% confirm that this somehow fixes being booted to the main menu when the store close time is up.
+		// It also allows you to use the menu as if it wasn't closed.
+		// I'm unaware of any negative sideeffects caused from doing this.
+		Instance->ArcadeTimeManager = nullptr;
+
+	}
+	
 }
 
 // -- Pointers
 
-SDK::UEngine* const& AJB::GEngine(const bool bLog)
+SDK::UEngine* const& AJB::GUEngine(const bool bLog)
 {
 	SDK::UEngine*& Engine = *reinterpret_cast<SDK::UEngine**>(OFF::GEngine.PlusBase());
 	if (bLog && IsNull(Engine))
@@ -678,7 +630,7 @@ SDK::UEngine* const& AJB::GEngine(const bool bLog)
 	return Engine;
 }
 
-SDK::UWorld* const& AJB::GWorld(const bool bLog)
+SDK::UWorld* const& AJB::GUWorld(const bool bLog)
 {
 	SDK::UWorld*& World = *reinterpret_cast<SDK::UWorld**>(OFF::GWorld.PlusBase());
 	if (bLog && IsNull(World))
@@ -892,23 +844,15 @@ void AJB::OnToggleFullMapVisibility(SDK::UObject* Object)
 			if (bToggled)
 			{
 				LogA("FullMapVisibility", MapCache->GetFullName());
-				GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->SetInputMode_GameAndUI(HUD->PlayerOwner, nullptr, true, false);
+				OFF::SetInputMode_GameAndUIEx.Call<decltype(&SDK::UWidgetBlueprintLibrary::SetInputMode_GameAndUIEx)>()(HUD->PlayerOwner, nullptr, SDK::EMouseLockMode::LockAlways, false);
 			}
 			else
 			{
-				AJB::GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->SetInputMode_GameOnly(HUD->PlayerOwner);
+				OFF::SetInputGameOnly.Call<decltype(&SDK::UWidgetBlueprintLibrary::SetInputMode_GameOnly)>()(HUD->PlayerOwner);
 			}
 		}
 	}
 }
-
-//void AJB::CreaditKys(SDK::UObject* Object)
-//{
-//	LogA("CreaditKys", "Killing credits...");
-//
-//	SDK::AAJBCreadit_C* Stupid = reinterpret_cast<SDK::AAJBCreadit_C*>(Object);
-//	Stupid->ReceiveEndPlay(SDK::EEndPlayReason::EEndPlayReason_MAX);
-//}
 
 // -- FMemory
 
