@@ -41,7 +41,9 @@ namespace A8CL
 		extern OFFSET SpawnActor;
 		extern OFFSET DestroyActor;
 		extern OFFSET ProcessMulticastDelegate;
-		extern OFFSET BroadcastDelegate;
+
+		extern OFFSET ClientTeamMessage;
+		extern OFFSET ClientTeamMessageImplementation;
 
 		extern OFFSET ActorDestroy;
 		extern OFFSET CopyString;
@@ -53,6 +55,7 @@ namespace A8CL
 		extern OFFSET StaticLoadObject;
 		extern OFFSET CreateDefaultObject;
 		extern OFFSET StaticConstructObject;
+		extern OFFSET BroadcastDelegate;
 
 		extern OFFSET ALevelScriptActorConstructor;
 		extern OFFSET ToFormattedString;

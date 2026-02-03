@@ -186,6 +186,8 @@ public:
 		typedef bool(__thiscall* PrepareMapChange)(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SDK::TArray<SDK::FName>& LevelNames);
 
 		typedef bool (__thiscall* RequestLevel)(SDK::ULevelStreaming* This, SDK::UWorld* PersistentWorld, bool bAllowLevelLoadRequests, EReqLevelBlock BlockPolicy);
+
+		typedef void(__thiscall* ClientTeamMessageImplementation)(SDK::APlayerController* This, SDK::APlayerState* SenderPlayerState, SDK::FString* String, SDK::FName Type, float MsgLifeTime);
 	};
 
 	
@@ -201,6 +203,8 @@ public:
 	static bool PrepareMapChange(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SDK::TArray<SDK::FName>& LevelNames);
 
 	static bool InitListen(SDK::UIpNetDriver* This, SDK::UObject* InNotify, SDK::FURL& LocalURL, bool bReuseAddressAndPort, SDK::FString& Error);
+
+	static void ClientTeamMessageImplementation(SDK::APlayerController* This, SDK::APlayerState* SenderPlayerState, SDK::FString* String, SDK::FName Type, float MsgLifeTime);
 
 	static SDK::APlayerController* Login(SDK::APlayerController* This, SDK::UPlayer* NewPlayer, SDK::ENetRole InRemoteRole, SDK::FString& Portal, SDK::FString& Options, SDK::FUniqueNetIdRepl& UniqueId, SDK::FString& ErrorMessage);
 

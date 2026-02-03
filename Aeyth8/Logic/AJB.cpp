@@ -28,6 +28,7 @@
 #include "../../Dumper-7/SDK/WB_PpBuyWindow_classes.hpp"
 
 #include "../../Dumper-7/SDK/AkAudio_classes.hpp"
+#include "../../Dumper-7/SDK/BP_SimpleStartLocationSelectGameMode_classes.hpp"
 
 /*
 
@@ -68,7 +69,7 @@ SDK::UWBP_OptionsMenu_C*			AJB::MOD_OptionsMenu{nullptr};
 SDK::UClass*						AJB::MOD_GlobalPatcherClass{nullptr};
 SDK::UBP_GlobalPatcher_C*			AJB::MOD_GlobalPatcher{nullptr};
 
-const wchar_t*						AJB::DLLCommitVersion{L"[v0.4.3]"};
+const wchar_t*						AJB::DLLCommitVersion{L"[v0.4.4]"};
 UC::FString*						AJB::StrDLLCommitVersion{nullptr};
 
 // -- Windows External --
@@ -156,6 +157,7 @@ std::vector<Hooks::HookStructure> StandaloneHooks =
 	{OFF::Invoke, UFunctions::Invoke},
 	//{OFF::PrepareMapChange, UFunctions::PrepareMapChange},
 	{OFF::ALevelScriptActorConstructor, ALevelScriptActor},
+	{OFF::ClientTeamMessageImplementation, UFunctions::ClientTeamMessageImplementation},
 	//{OFF::GetNationalMatchSchedule, GetNationalMatchSchedule},
 	/*{OFF::AddToWorld, AddToWorld},
 	{OFF::IsTimeLimitedExceeded, IsTimeLimitExceeded},*/

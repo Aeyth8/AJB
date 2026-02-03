@@ -317,6 +317,12 @@
     <ClCompile Include="Dumper-7\SDK\WB_TestModeMenuBase_functions.cpp">
       <Filter>SDK\CPP\Widgets\DebugMenu</Filter>
     </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\WB_Fade_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\BP_SimpleStartLocationSelectGameMode_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Aeyth8\Logger.hpp">

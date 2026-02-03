@@ -36,6 +36,9 @@ namespace OFF
 	OFFSET DestroyActor("UWorld::DestroyActor", 0x1484190);
 	OFFSET ProcessMulticastDelegate("ProcessMulticastDelegate", 0x20C010);
 
+	OFFSET ClientTeamMessage("APlayerController::ClientTeamMessage", 0x18C5F00);
+	OFFSET ClientTeamMessageImplementation("APlayerController::ClientTeamMessage_Implementation", 0x1606D20);
+
 	OFFSET ActorDestroy("AActor::Destroy", 0x11AC5E0);
 	OFFSET CopyString("FString::FString", 0x1E0EE0);
 	

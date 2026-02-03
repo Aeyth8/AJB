@@ -182,6 +182,10 @@ using namespace Global;
 #include "../../Dumper-7/SDK/WB_ModeSelect_Button_EndGame_classes.hpp"
 #include "../../Dumper-7/SDK/WB_ModeSelect_Txt_Shop_classes.hpp"
 #include "../../Dumper-7/SDK/WB_TestModeMenuBase_classes.hpp"
+#include "../../Dumper-7/SDK/WB_CharacterSelect_classes.hpp"
+#include "../../Dumper-7/SDK/WB_Fade_classes.hpp"
+#include "../../Dumper-7/SDK/BP_AJBBattleGameState_classes.hpp"
+#include "../../Dumper-7/SDK/BP_SimpleStartLocationSelectGameMode_classes.hpp"
 
 static bool* TOGGLEDEBUGBADGAMEDESIGN{nullptr};
 
@@ -286,6 +290,71 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			static_cast<SDK::AAJBInGamePlayerController*>(Player)->OnDebugSuicide();
 		}*/
 	}
+	else if (StrCommand.find("AJBExecInternalHost") != std::string::npos)
+	{
+		int PARM_Area{0};
+		int PARM_NPCCount{0};
+		int PARM_NPCDifficulty{0};
+		bool PARM_Respawn{false};
+
+		size_t AreaIdx = StrCommand.find("?Area=");
+		if (AreaIdx != std::string::npos)
+		{
+			AreaIdx += 6;
+			size_t AreaIdxEnd = StrCommand.find("?", AreaIdx);
+			if (AreaIdxEnd == std::string::npos)
+			{
+				AreaIdxEnd = StrCommand.length();
+			}
+
+			PARM_Area = std::stoi(StrCommand.substr(AreaIdx, AreaIdxEnd - AreaIdx));
+		}
+
+		size_t NPCIdx = StrCommand.find("?NPCNum=");
+		if (NPCIdx != std::string::npos)
+		{
+			NPCIdx += 8;
+			size_t NPCIdxEnd = StrCommand.find("?", NPCIdx);
+			if (NPCIdxEnd == std::string::npos)
+			{
+				NPCIdxEnd = StrCommand.length();
+			}
+
+			PARM_NPCCount = std::stoi(StrCommand.substr(NPCIdx, NPCIdxEnd - NPCIdx));
+		}
+		if (PARM_NPCCount != 0)
+		{
+			size_t NPCDifficultyIdx = StrCommand.find("?NPCDifficulty=");
+			if (NPCDifficultyIdx != std::string::npos)
+			{
+				NPCDifficultyIdx += 15;
+				size_t NPCDifficultyEndIdx = StrCommand.find('?', NPCDifficultyIdx); 
+				if (NPCDifficultyEndIdx == std::string::npos) 
+				{
+					NPCDifficultyEndIdx = StrCommand.length();
+				}
+
+				PARM_NPCDifficulty = std::stoi(StrCommand.substr(NPCDifficultyIdx, NPCDifficultyEndIdx - NPCDifficultyIdx));
+			}
+		}
+
+		PARM_Respawn = StrCommand.find("?Respawn") != std::string::npos;
+
+
+		SDK::FAJBBattleSettings TheSettings{};
+		TheSettings.AILevel = PARM_NPCDifficulty;
+		TheSettings.DamageAreaType = PARM_Area;
+		AJB::Instance->SetBattleSettings(TheSettings);
+		AJB::Instance->PlayMode = SDK::EPlayMode::Shop;
+		AJB::Instance->AreaTypeID = PARM_Area;
+
+		//AJB::Instance->DebugNPCCharaIndex = PARM_NPCCount;
+		AJB::Instance->NPCNum = PARM_NPCCount;
+		AJB::Instance->NPCNumMax = PARM_NPCCount;
+
+		AJB::Instance->bIsLocalSessionMode = true;
+		AJB::Instance->CreateSession();
+	}
 	else if (StrCommand == "hidemouse")
 	{
 		Pointers::Player()->bShowMouseCursor = false;
@@ -306,7 +375,11 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	else if (StrCommand == "battle")
 	{
 		SDK::FAJBBattleSettings& Settings = AJB::Instance->BattleSettings;
-		LogA("Battle Settings", std::format("AI Level: {} | Difficulty: {} | Damage Area Type: {} ", Settings.AILevel, (uint8)Settings.Pad_1, Settings.DamageAreaType));
+		LogA("Battle Settings", std::format("[AI Level]: {} | [Damage Area Type]: {} | [SessionLevel]: {} | [StageTypeID]: {} | [AreaTypeId]: {}", Settings.AILevel, Settings.DamageAreaType, AJB::Instance->SessionLevel.ToString(), AJB::Instance->StageTypeID, AJB::Instance->AreaTypeID));
+	}
+	else if (StrCommand == "colon")
+	{
+		AJB::Instance->SessionLevel = Pointers::FString2FName(L"AJBStage04_P");
 	}
 	else if (StrCommand == "filter")
 	{
@@ -365,14 +438,48 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	}
 	else if (StrCommand == "char")
 	{
-		bool Success{false};
+		static bool bToggle{false};
 		SDK::ABP_AJBOutGameHUD_C* HUD{nullptr};
 
-		AJB::GetBlueprintClass<SDK::UBPF_AJBOutGameHUD_C>()->GetAJBOutGameHUD_BP(0, GWorld, &Success, &HUD);
+		/*SDK::ULevelStreamingKismet::GetDefaultObj()->LoadLevelInstance(GWorld.GetPointer(), L"/Game/AJB/Maps/OutGame/AJBCharacterSelect", SDK::FVector{}, SDK::FRotator{}, 0);
+		SDK::ULevelStreamingKismet::GetDefaultObj()->LoadLevelInstance(GWorld.GetPointer(), L"/Game/AJB/Maps/OutGame/AJBOutGame_ENV01", SDK::FVector{}, SDK::FRotator{}, 0);*/
+		static SDK::UWB_ModeSelect_C* CurrentModeSelectPtr{nullptr};
+
+		bToggle = !bToggle;
+
+		
+
+		AJB::GetBlueprintClass<SDK::UBPF_AJBOutGameHUD_C>()->GetAJBOutGameHUD_BP(0, GWorld.GetPointer(), 0, &HUD);
 		if (HUD)
 		{
 			HUD->ShowCharacterSelect();
+			SDK::UWB_CharacterSelect_C* OutWidget{nullptr};
+			HUD->FindAJBWidgetOfClass(SDK::UWB_CharacterSelect_C::StaticClass(), (SDK::UAJBUserWidget**)&OutWidget);
+
+			if (OutWidget)
+			{
+				OutWidget->CurrentTimer = 9999999999999999.0f;
+				OutWidget->CountDownTimer = 9999999999999999.0f;
+				if (bToggle)
+				{
+					OutWidget->OpenWindow();
+				}
+				else
+				{
+					OutWidget->CloseWindow();
+					OutWidget->SetVisibility(SDK::ESlateVisibility::Collapsed);
+					Pointers::GetLastOf<SDK::UWB_Fade_C>(false)->bFinishedFade = true;
+				}
+			}
+			//Pointers::GetLastOf<SDK::AAJBHUDBase>(false)->SetupForceInvisibleAllWidgetsFlag(true);
 		}
+
+		CurrentModeSelectPtr = Pointers::GetLastOf<SDK::UWB_ModeSelect_C>(0);
+		if (CurrentModeSelectPtr)
+		{
+			bToggle ? CurrentModeSelectPtr->SetVisibility(SDK::ESlateVisibility::Collapsed) : CurrentModeSelectPtr->SetVisibility(SDK::ESlateVisibility::Visible);
+		}
+
 	}
 	else if (StrCommand == "skin")
 	{
@@ -388,20 +495,6 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		{
 			Int++;
 			LogA("Proxy " + std::to_string(Int), std::format("[IsTenpoHost]: {} | [RoomHostUserId] {} | [OutGameProxyState]: {}", Proxy->IsTenpoHost(), Proxy->RoomHostUserID.ToString(), TenpoStatus[(unsigned char)Proxy->OutGameProxyState]));
-		}
-	}
-	else if (StrCommand == "key")
-	{
-		LogA("Key??!!?", SDK::UClass::FindClass("WidgetBlueprintGeneratedClass WBP_OptionsMenu.WBP_OptionsMenu_C")->GetFullName());
-		SDK::FString Chumlee(L"SHUTUP, SHUTUP CHUMLEE, YOU STUPID F*CK. GOD. RICK I WAS JUST TRYING TO- KNOW YOUR PLACE, STUPID F*CKING IDIOT, IDIOT-");
-		if (AJB::MOD_OptionsMenu) AJB::MOD_OptionsMenu->SetDLLCommitVersion(Chumlee);
-
-		SDK::ABP_AJBOutGameHUD_C* HUD{nullptr};
-
-		AJB::GetBlueprintClass<SDK::UBPF_AJBOutGameHUD_C>()->GetAJBOutGameHUD_BP(0, GWorld, 0, &HUD);
-		if (HUD)
-		{
-			HUD->OnShowDebugMenu();
 		}
 	}
 	else if (StrCommand == "menu")
@@ -436,13 +529,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	{
 		if (AJB::Instance)
 		{
-			AJB::Instance->OperationParam->ResetOperationParam();
-			/*AJB::Instance->ResetBattleSettings();
-			AJB::Instance->AreaTypeID = 3;
-			if (SDK::ABP_AJBBattleGameMode_C* Game = AJB::GetGameMode<SDK::ABP_AJBBattleGameMode_C>(); Game != nullptr)
-			{
-				Game->DebugReset();
-			}*/
+			AJB::Instance->ResetBattleSettings();
 		}
 	}
 	else if (StrCommand == "area")
@@ -541,122 +628,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 				reinterpret_cast<SDK::UWB_TestModeMenuBase_C*>(Menus[2])->CloseWindow();
 			}
 		}
-		/*constexpr int MenuPage = 3;
-
-		static SDK::UClass* Classes[4]{nullptr};
-		static SDK::UUserWidget* Menus[4]{nullptr};
-
-		static bool ONE{0};
-		if (!ONE)
-		{
-			ONE = 1;
-
-			constexpr static const wchar_t* WidgetsToLoad[] =
-			{
-				L"/Game/AJB/Debug/UI/WB_AJB_DebugMenuPage.WB_AJB_DebugMenuPage_C",
-				L"/Game/AJB/Debug/UI/WB_DebugMenu.WB_DebugMenu_C",
-				L"/Game/AJB/Debug/UI/WB_DebugMenu_OutGame.WB_DebugMenu_OutGame_C",
-				L"/Game/AJB/Debug/UI/WB_DebugMenuPage_NetPlayerInfo.WB_DebugMenuPage_NetPlayerInfo_C"
-			};
-
-			
-			
-			
-			BYTE i{0};
-			for (const wchar_t* const& Widgy : WidgetsToLoad)
-			{
-				i++;
-
-				Classes[i] = UFunctions::StaticLoadClass(SDK::UUserWidget::StaticClass(), GEngine, Widgy, nullptr, 0, nullptr);
-				if (Classes[i])
-				{
-					Menus[i] = (SDK::UUserWidget*)Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(Classes[i], static_cast<SDK::UGameViewportClient*>(GEngine->GameViewport), Pointers::FString2FName(Widgy), 0, EInternalObjectFlags::RootSet, 0, 0, 0, 0);
-
-
-					if (i == MenuPage)
-					if (Menus[i])
-					{
-						Menus[i]->AddToViewport(112);
-						Menus[i]->SetVisibility(SDK::ESlateVisibility::Visible);
-					}
-				}
-			}
-			
-			SDK::ABP_AJBOutGameHUD_C* HUD{nullptr};
-
-			AJB::GetBlueprintClass<SDK::UBPF_AJBOutGameHUD_C>()->GetAJBOutGameHUD_BP(0, GWorld, 0, &HUD);
-			if (HUD)
-			{
-				
-
-				//HUD->DebugMenuOutGameClassPtr.WeakPtr.ObjectIndex = Classes[2]->Index;
-				HUD->OnShowDebugMenu();
-
-				OFF::SetInputMode_GameAndUIEx.Call<SetInputModeGameAndUI>()(Pointers::Player(), Menus[MenuPage], SDK::EMouseLockMode::LockAlways, false);
-				if (Menus[MenuPage] && Menus[MenuPage]->IsA(SDK::UWB_TestModePage_C::StaticClass()))
-				{
-					reinterpret_cast<SDK::UWB_TestModePage_C*>(Menus[MenuPage])->ViewPriority = SDK::EAJBUIViewPortPriority::Top;
-					reinterpret_cast<SDK::UWB_TestModePage_C*>(Menus[MenuPage])->SetUserFocus(Pointers::Player());
-				}
-			}
-
-
-		}
-		else
-		{
-			OFF::SetInputMode_GameAndUIEx.Call<SetInputModeGameAndUI>()(Pointers::Player(), Menus[MenuPage], SDK::EMouseLockMode::LockAlways, false);
-		}*/
-	}
-	else if (StrCommand == "textmenu")
-	{
-		if (AJB::MOD_GlobalPatcher)
-		{
-			/*SDK::UWBP_AJBTitleScreen_C* TitleScreenWidget = Pointers::FindObjects<SDK::UWBP_AJBTitleScreen_C>()[0];
-			if (TitleScreenWidget)
-			{
-				AJB::MOD_GlobalPatcher->SetWidgetText(TitleScreenWidget->TEXT_PressToStart, L"PULSE PARA INICIAR");
-				AJB::MOD_GlobalPatcher->SetWidgetText(TitleScreenWidget->TEXT_ScamWarning, L"Este proyecto es gratuito y de código abierto.\nSi has pagado dinero por él,\n¡has sido víctima de una estafa!");
-				AJB::MOD_GlobalPatcher->SetWidgetText(TitleScreenWidget->TEXT_DevelopedBy, L"Completamente desarrollado y modificado por");
-			}*/
-			SDK::UWB_ModeSelect_Txt_Training_C* Texter = Pointers::GetLastOf<SDK::UWB_ModeSelect_Txt_Training_C>();
-			{
-				SDK::UWidget* Child = Texter->RetainerBox_8->GetContent();
-				if (Child && Child->IsA(SDK::UHorizontalBox::StaticClass()))
-				{
-					SDK::UHorizontalBox* Box = static_cast<SDK::UHorizontalBox*>(Child);
-					const int Count = Box->GetChildrenCount();
-
-					for (int i{0}; i < Count; ++i)
-					{
-						SDK::UWidget* Widget = Box->GetChildAt(i);
-
-						LogA(Texter->GetFullName(), std::format("[ChildrenCount]: {} | [Index]: {} | {}", Count, i, Widget->GetFullName()));
-
-						if (Widget->IsA(SDK::UTextBlock::StaticClass()))
-						{
-							if (i == 1)
-							{
-								LogA("Char", static_cast<SDK::UTextBlock*>(Widget)->Text.ToString());
-
-								static SDK::FString NewChar{L"TRAINING"};
-								
-								if (AJB::MOD_GlobalPatcher) AJB::MOD_GlobalPatcher->SetWidgetText(static_cast<SDK::UTextBlock*>(Widget), NewChar);
-							}
-							else
-							{
-								static SDK::FString Blank{L" "};
-								if (AJB::MOD_GlobalPatcher) AJB::MOD_GlobalPatcher->SetWidgetText(static_cast<SDK::UTextBlock*>(Widget), Blank);
-							}
-							
-						}
-					}
-				}
-				//LogA(PVE->GetFullName(), PVE->DisplayButtonText.ToString());
-				//AJB::MOD_GlobalPatcher->SetWidgetText(PVE->AJBTextBlock_NeedPP, L"HELPPPP HELP ME HELPPPPPPPPPPPPPPPP");
-			}
-			
-		}
-	}
+	}	
 	else if (StrCommand == "host")
 	{
 		AJB::Instance->bIsLocalSessionMode = true;
@@ -666,22 +638,12 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	else if (StrCommand == "join")
 	{
 		AJB::Instance->bIsLocalSessionMode = true;
+		if (AJB::Instance->OnlineSession)
+		{
+			SDK::UDestroySessionCallbackProxy::DestroySession(GWorld.GetPointer(), This);
+		}
 		AJB::Instance->JoinSession();
 		AJB::Instance->PlayMode = SDK::EPlayMode::Shop;
-	}
-	else if (StrCommand == "multiplayer")
-	{
-		
-		AJB::Instance->StageTypeID = 3;
-		//AJB::Instance->NPCNum = 20;
-		//AJB::Instance->StageTypeID = 3;
-		/*SDK::FString Lemon{L"Lemon Possession"};
-		Call<Decl::CopyString>(OFF::CopyString.PlusBase())(&Pointers::GetLastOf<SDK::AAJBOutGameProxy>()->RoomHostUserID, &Lemon);
-		Pointers::GetLastOf<SDK::AAJBOutGameProxy>()->DebugSetupLoginPlayerInfo(1);*/
-	}
-	else if (StrCommand == "name")
-	{
-		LogA("NewName", AJB::GetBlueprintClass<SDK::UAJBPlayerInfoUtility>()->MakeAutoPlayerName(L"Feck", false, false).ToString());
 	}
 	else if (StrCommand == "lemon")
 	{
@@ -706,6 +668,10 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			*TOGGLEDEBUGBADGAMEDESIGN = !*TOGGLEDEBUGBADGAMEDESIGN;
 			// Wow this actually works BEAUTIFULLY, it's so bad and needs to be removed and redesigned but for debugging ITS SUPER USEFUL
 		}
+	}
+	else if (StrCommand == "communicate")
+	{
+		AJB::GetGameMode<SDK::ABP_AJBBattleGameMode_C>()->Say(L"WELL FECK");
 	}
 	/*else if (StrCommand == "sync")
 	{
@@ -788,7 +754,7 @@ UFunctions::BrowseReturnVal UFunctions::Browse(SDK::UEngine* This, SDK::FWorldCo
 		SDK::FString Redirect{DefaultMap};
 		Call<Decl::CopyString>(OFF::CopyString.PlusBase())(&URL.Map, &Redirect);
 	}
-	else if (wcscmp(URL.Map.CStr(), L"/Game/AJB/Maps/SimpleStartLocationSelect_P") == 0)
+	else if (wcscmp(URL.Map.CStr(), L"/Game/AJB/Maps/SimpleStartLocationSelect_P") == 0 && CMLA::HardcodedNPCNum.HasChanged())
 	{
 		for (SDK::FString& Entry : URL.Op)
 		{
@@ -812,6 +778,12 @@ UFunctions::BrowseReturnVal UFunctions::Browse(SDK::UEngine* This, SDK::FWorldCo
 	
 }
 
+void UFunctions::ClientTeamMessageImplementation(SDK::APlayerController* This, SDK::APlayerState* SenderPlayerState, SDK::FString* String, SDK::FName Type, float MsgLifeTime)
+{
+	LogA("ClientTeamMessageImplementation", std::format("[This]: {} | [SenderPlayerState]: {} | [String]: {} | [Type]: {} | [MsgLifeTime]: {}", This->GetFullName(), SenderPlayerState->GetFullName(), String->ToString(), Type.GetRawString(), std::to_string(MsgLifeTime)));
+	OFF::ClientTeamMessageImplementation.VerifyFC<Decl::ClientTeamMessageImplementation>()(This, SenderPlayerState, String, Type, MsgLifeTime);
+}
+
 bool UFunctions::InitListen(SDK::UIpNetDriver* This, SDK::UObject* InNotify, SDK::FURL& LocalURL, bool bReuseAddressAndPort, SDK::FString& Error)
 {
 	LogA("InitListen", This->GetFullName() + " | " + Helpers::FURLParser(LocalURL));
@@ -829,6 +801,28 @@ Class* GetTypedOuter(T* Object)
 /*
 0x176A260 UEngine::GetMaxTickRate
 0x176A220 UEngine::GetMaxFPS ? (idk for sure I got this offset from an AOB I made back when I sucked at decompilation and I dont feel like looking right now)
+*/
+
+/*
+
+SDK::FAJBBattleSettings
+
+1 Morioh Town (Trattoria Trussardi) | DamageAreaType = 7
+2 Morioh Town (Train Station) | DamageAreaType = 2
+3 Morioh Town (Angelo Rock) | DamageAreaType = 3
+4 Morioh Town (Rural) | DamageAreaType = 4
+5 Morioh Town (Owson) | DamageAreaType = 5
+6 Morioh Town (Kameyu) | DamageAreaType = 6
+7 Cairo | DamageAreaType = 8
+8 Farm | DamageAreaType = 9
+9 Colosseum | DamageAreaType = 10
+10 Venezia | DamageAreaType = 11
+
+PvE | DamageAreaType = 101
+Tutorial | DamageAreaType = 2
+
+No clue what 0-1 is
+
 */
 
 SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPlayer* NewPlayer, SDK::ENetRole InRemoteRole, SDK::FString& Portal, SDK::FString& Options, SDK::FUniqueNetIdRepl& UniqueId, SDK::FString& ErrorMessage)
@@ -1061,105 +1055,32 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 						}
 					}
 				}
-
-				//LogA("Class", std::format("[CurrentObject]: {} | [CurrentClass]: {} | [IsArchetype]: {} [Flags]: {}", CurrentObject->GetFullName(), CurrentClass->GetFullName(), CurrentObject->Flags & SDK::EObjectFlags::ArchetypeObject ? "True" : "False", std::to_string((uint32)CurrentObject->Flags)));
-
 			}
+		}
+		else if (CurrentGameMode->IsA(SDK::ABP_AJBBattleGameMode_C::StaticClass()))
+		{
+			SDK::ABP_AJBBattleGameMode_C* BattleMode = static_cast<SDK::ABP_AJBBattleGameMode_C*>(CurrentGameMode);
+			__assume (BattleMode != nullptr); // SHUTUP
+			SDK::ABP_AJBBattleGameState_C* GameState = static_cast<SDK::ABP_AJBBattleGameState_C*>(BattleMode->GameState);
 
+			GameState->bDisableTimeLimit_Debug_ = true;
 
-
-
-
-
-
-
-
-
-
-
-			/*for (int GlobalIndex{0}; GlobalIndex < GlobalTextBlocks.size(); ++GlobalIndex)
-			{
-				
-				SDK::UClass* CurrentClass = GlobalTextBlocks[GlobalIndex]->StaticClass();
-				if (GlobalTextBlocks[GlobalIndex]->IsA(SDK::UWB_ModeSelectTextBase_C::StaticClass()))
-				{
-					LogA("UWB_ModeSelectTextBase_C", std::format("[CurrentClass]: {} | [Object]: {}", CurrentClass->GetFullName(), GlobalTextBlocks[GlobalIndex]->GetFullName()));
-				}
-
-				if (GlobalTextBlocks.size() > GlobalIndex)
-				{
-					RetainerBoxSubclass* NextEntry = GlobalTextBlocks[GlobalIndex + 1];
-
-					// We want the last object of each class.
-					//if (NextEntry && CurrentClass == NextEntry->StaticClass())
-					if (GlobalTextBlocks[GlobalIndex]->Name.ComparisonIndex == NextEntry->Name.ComparisonIndex)
-					{
-						LogA("SKIPPING", std::format("[CurrentClass]: {} / {} | [NextEntry]: {} / {}", CurrentClass->GetFullName(), GlobalTextBlocks[GlobalIndex]->GetFullName(), NextEntry->StaticClass()->GetFullName(), NextEntry->GetFullName()));
-						continue;
-					}
-				}
-				int ClassIdx{0};
-				bool bCaughtClass{false};
-
-				for (SDK::UClass*& Subclass : Classes)
-				{
-					LogA("Subclasses", std::format("[CurrentClass]: {} | [Subclass]: {}", GlobalTextBlocks[GlobalIndex]->GetFullName(), Subclass->GetFullName()));
-					if (CurrentClass == Subclass)
-					{
-						LogA("CAUGHT", std::format("[CurrentClass]: {} | [Subclass]: {}", GlobalTextBlocks[GlobalIndex]->GetFullName(), Subclass->GetFullName()));
-						bCaughtClass = true;
-						break;
-					}
-
-					++ClassIdx;
-				}
-				if (!bCaughtClass)
-				{
-					continue;
-				}
-
-				RetainerBoxSubclass* SubclassCast = reinterpret_cast<RetainerBoxSubclass*>(GlobalTextBlocks[GlobalIndex]);
-				SDK::URetainerBox* CurrentRetainer = SubclassCast->RetainerBox;					
-				if (CurrentRetainer)
-				{
-					LogA(std::to_string(GlobalIndex), GlobalTextBlocks[GlobalIndex]->GetFullName());
-					SDK::UWidget* Child = CurrentRetainer->GetContent();
-					if (Child && Child->IsA(SDK::UHorizontalBox::StaticClass()))
-					{
-						SDK::UHorizontalBox* Box = static_cast<SDK::UHorizontalBox*>(Child);
-						const int Count = Box->GetChildrenCount();
-
-						for (int i{0}; i < Count; ++i)
-						{
-							SDK::UWidget* Widget = Box->GetChildAt(i);
-
-							LogA(Widget->GetFullName(), std::format("[ChildrenCount]: {} | [Index]: {} | {}", Count, i, Widget->GetFullName()));
-
-							if (Widget->IsA(SDK::UTextBlock::StaticClass()))
-							{
-								if (i == 1)
-								{
-									//LogA("Char", static_cast<SDK::UTextBlock*>(Widget)->Text.ToString());
-
-									SDK::FString NewChar{StringTable[ClassIdx]};
-								
-									if (AJB::MOD_GlobalPatcher) AJB::MOD_GlobalPatcher->SetWidgetText(static_cast<SDK::UTextBlock*>(Widget), NewChar);
-								}
-								else
-								{
-									static SDK::FString Blank{L" "};
-									if (AJB::MOD_GlobalPatcher) AJB::MOD_GlobalPatcher->SetWidgetText(static_cast<SDK::UTextBlock*>(Widget), Blank);
-								}
-							
-							}
-						}
-					}
-				}
-			}*/
-			
+			BattleMode->Say(L"WELL FECK");
+		}
+		else if (CurrentGameMode->IsA(SDK::ABP_SimpleStartLocationSelectGameMode_C::StaticClass()))
+		{
+			SDK::ABP_SimpleStartLocationSelectGameMode_C* MatchingGameMode = static_cast<SDK::ABP_SimpleStartLocationSelectGameMode_C*>(CurrentGameMode);
+			//MatchingGameMode->Say
+		}
+		if (NewPlayer->IsA(SDK::UIpConnection::StaticClass()))
+		{
+			// DOES NOT WORK DUE TO NO IMPLEMENTATION IN THE GAME MODE, I'm gonna have to find another way to synchronize it, there's plenty of RPC crap in the SDK that Namco implemented but I don't know how to use it nor do I honestly trust their bloated hellscape but it's worth a shot.
+			/*SDK::FString Message{L"DRIVING IN MY CAR RIGHT AFTER A BEEEEEEER"};
+			OFF::ClientTeamMessage.VerifyFC<void(__thiscall*)(SDK::APlayerController*, SDK::APlayerState*, SDK::FString*, SDK::FName, float)>()(This, This->PlayerState, &Message, SDK::FName{}, 0.0f);*/
+			//OFFSET::VFTable<void(__thiscall*)(SDK::AGameMode*, SDK::AActor*, SDK::FString*, SDK::FName)>(CurrentGameMode)[0x114](GetTypedOuter<SDK::AGameMode>(CurrentGameMode), This, &Message, SDK::FName{});
 		}
 	}
-
+	
 	
 	/*
 	AJB::TAutoConsoleVariable<float>& CVarMaxFPS = reinterpret_cast<AJB::TAutoConsoleVariable<float>&>(PB(0x32557F0));
@@ -1368,72 +1289,7 @@ void UFunctions::Invoke(SDK::UFunction* This, SDK::UObject* Obj, void* FFrame_St
 
 		int32 DynamicClassFunctionIndexArray[CFBL_Size]{ -1 };
 
-		// GIANT NOTE I lost motivation and kinda forgot what I even was doing here but it doesn't work and crashes for (in my opinion) NO REASON.
-		// Maybe I'll fix this one day, if not, just delete this block and the hook will work fine.
-
-		/*static bool bInitClassFunctions{false};
-		if (!bInitClassFunctions)
-		{
-			bInitClassFunctions = true;
-
-			uint16 Iteration{0};
-			for (const wchar_t* const* const & Entry : ClassFunctionBlacklist)
-			{
-				Iteration++;
-
-				SDK::UClass* Class{nullptr};
-				SDK::UFunction* Function{nullptr};
-
-				SDK::FName ClassFName = Pointers::FString2FName(Entry[0]);
-				SDK::FName FunctionFName = Pointers::FString2FName(Entry[1]);
-
-				for (int i{0}; i < SDK::UObject::GObjects->Num(); ++i)
-				{
-					SDK::UObject* Obj = SDK::UObject::GObjects->GetByIndex(i);
-
-					if (Obj && Obj->HasTypeFlag(SDK::EClassCastFlags::Class) && Obj->Name == ClassFName)
-					{
-						Class = static_cast<SDK::UClass*>(Obj);
-					}
-				}
-
-				//LogA("FoundClass", SDK::UObject::FindClass("WidgetBlueprintGeneratedClass WB_Credit.WB_Credit_C")->GetName());
-
-				if (Class)
-				{
-					bool bFinish{false};
-					for (const SDK::UStruct* Inheritance = Class; Inheritance; Inheritance->Super)
-					{
-						if (bFinish) break;
-
-						if (Inheritance->Name != ClassFName) continue;
-
-						for (SDK::UField* Field = Inheritance->Children; Field; Field->Next)
-						{
-							if (Field->HasTypeFlag(SDK::EClassCastFlags::Function) && Field->Name == FunctionFName)
-							{
-								bFinish = true;
-
-								Function = static_cast<SDK::UFunction*>(Field);
-
-								break;
-							}
-						}
-
-					}
-
-					if (Function)
-					{
-						DynamicClassFunctionIndexArray[Iteration] = Function->Name.ComparisonIndex;
-						LogA("GiantFunction", std::to_string(DynamicClassFunctionIndexArray[Iteration]));
-					}
-					else { bInitClassFunctions = false; }
-				}
-				else { bInitClassFunctions = false; }
-			}
-		}*/
-
-		bool bLogInvoke{ true };
+		bool bLogInvoke{true};
 
 		if (AJB::MOD_OptionsMenu && Obj->Name.ComparisonIndex == AJB::MOD_OptionsMenu->Name.ComparisonIndex)
 			bLogInvoke = false;
@@ -1480,8 +1336,6 @@ void UFunctions::Invoke(SDK::UFunction* This, SDK::UObject* Obj, void* FFrame_St
 	constexpr TExternFunction ExternFunctionList[] = 
 	{
 		{AJB::OnToggleFullMapVisibility, 2427}, // Function BP_AJBInGameHUD.BP_AJBInGameHUD_C.OnToggleFullMapVisibility
-		//{AJB::CreaditKys, 142420} // AJBCreadit.AJBCreadit_C.ReceiveBeginPlay
-
 		// More will be added later.
 	};
 
@@ -1493,48 +1347,6 @@ void UFunctions::Invoke(SDK::UFunction* This, SDK::UObject* Obj, void* FFrame_St
 			break;
 		}
 	}
-
-	/*if (AJB::CreaditPointer && Obj == AJB::CreaditPointer && AJB::CreaditPointer->Creadit)
-	{
-		if (CMLA::Debug.GetAsBool())
-		{
-			LogA(OFF::Invoke.GetName(), std::format("[UFunction]: {} | [ComparisonIndex]: {} | [UObject]: {} | [ComparisonIndex]: {}", This->GetFullName(), This->Name.ComparisonIndex, Obj->GetFullName(), Obj->Name.ComparisonIndex));
-		}
-
-		SDK::UWB_Credit_C* Trash = AJB::CreaditPointer->Creadit;
-		if (Trash)
-		{
-			// Hiding it is good enough, apparently anything else breaks all logic in the game, BAD DESIGN.
-			// "A delaye, a dela. A delayed gamne, a delayepb. Bad Game Design." - Shigeru Meat
-			Trash->SetVisibility(SDK::ESlateVisibility::Collapsed);
-		}
-
-		
-
-			
-		// You should kill yourself... NOW!
-		//Trash->RemoveFromParent(); 
-		
-		//Trash->Flags = static_cast<SDK::EObjectFlags>(static_cast<int32>(Trash->Flags) | static_cast<int32>(UFunctions::EInternalObjectFlags::PendingKill));
-			Nevermind I don't wanna do that because apparently it only constructs itself once or atleast is persistent enough to not always exist in the constructor.
-
-		CreaditFrame++;
-
-		OFF::Invoke.VerifyFC<Decl::Invoke>()(This, Obj, FFrame_Stack, Result);
-
-		AJB::CreaditPointer->ReceiveEndPlay(SDK::EEndPlayReason::EEndPlayReason_MAX);
-
-		if (CreaditFrame > 60)
-		{
-			CreaditFrame = 0;
-
-			// If I don't null this out it will hurt performance for pointless checks since this condition is based on EVERY SINGLE BEGIN PLAY FUNCTION EVER.
-			// So I'm giving it atleast 60 ticks or about one average frame/tickrate/second to clear itself out before killing the pointer, otherwise thanks to multithreading it will get nulled way too early.
-			AJB::CreaditPointer = nullptr;	
-		}
-		
-		return;
-	}*/
 
 	static int32 CreaditMainIndex{0};
 	static int32 CreaditWidgetIndex{0};

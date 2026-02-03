@@ -305,11 +305,13 @@
     <ClCompile Include="Dumper-7\SDK\BP_GameFlowStateManager_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\BP_HUDCountDownTimerWrapper_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\BP_PPV_VSFilter_functions.cpp" />
+    <ClCompile Include="Dumper-7\SDK\BP_SimpleStartLocationSelectGameMode_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\CoreUObject_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\Engine_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\FlowState_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\LoadingScreenSystem_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\WB_Credit_functions.cpp" />
+    <ClCompile Include="Dumper-7\SDK\WB_Fade_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\WB_InGameMain_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\WB_ModeSelectButtonBase_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\WB_ModeSelect_Button_PvE_functions.cpp" />
