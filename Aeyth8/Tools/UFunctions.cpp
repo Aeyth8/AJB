@@ -743,15 +743,19 @@ bool UFunctions::PrepareMapChange(SDK::UEngine* This, SDK::FWorldContext& WorldC
 
 UFunctions::BrowseReturnVal UFunctions::Browse(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SDK::FURL URL, SDK::FString& Error)
 {
-	constexpr const wchar_t* DefaultMap = L"/Game/Aeyth8/Maps/TitleScreen/PlaceholderTitleScreen";
-
 	if (!Global::bConstructedUConsole) { Global::bConstructedUConsole = Pointers::ConstructUConsole(SDK::FString(CMLA::ConsoleKey.GetArgumentAsString()));
 		LogA("Browse", "Constructed UConsole early.");
 	}
 
 	if (wcscmp(URL.Map.CStr(), L"/Game/AJB/Maps/AJBStartUp_P") == 0 || wcscmp(URL.Map.CStr(), L"/Game/AJB/Maps/AJBTitle_P") == 0)
 	{
-		SDK::FString Redirect{DefaultMap};
+		wchar_t* BadPractice = const_cast<wchar_t*>(CMLA::GameDefaultMap.GetArgumentAsString());
+		wchar_t* EndP = FindChar(BadPractice, L'.', true);
+
+		wchar_t RedirectionBuffer[260]{0};
+		wmemcpy(RedirectionBuffer, BadPractice, EndP - BadPractice);
+
+		static SDK::FString Redirect{RedirectionBuffer};
 		Call<Decl::CopyString>(OFF::CopyString.PlusBase())(&URL.Map, &Redirect);
 	}
 	else if (wcscmp(URL.Map.CStr(), L"/Game/AJB/Maps/SimpleStartLocationSelect_P") == 0 && CMLA::HardcodedNPCNum.HasChanged())
