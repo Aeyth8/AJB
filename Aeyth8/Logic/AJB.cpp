@@ -69,7 +69,7 @@ SDK::UWBP_OptionsMenu_C*			AJB::MOD_OptionsMenu{nullptr};
 SDK::UClass*						AJB::MOD_GlobalPatcherClass{nullptr};
 SDK::UBP_GlobalPatcher_C*			AJB::MOD_GlobalPatcher{nullptr};
 
-const wchar_t*						AJB::DLLCommitVersion{L"[v0.4.4]"};
+const wchar_t*						AJB::DLLCommitVersion{L"[v0.4.5]"};
 UC::FString*						AJB::StrDLLCommitVersion{nullptr};
 
 // -- Windows External --

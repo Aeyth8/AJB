@@ -12,6 +12,8 @@ TEMP_HLP TEMP_HardcodedLaunchParms[] =
 	{"-bDebugInputMode", 0}
 };
 
+static bool bShouldInject{false};
+
 int __stdcall WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd)
 {
 	int ArgC = __argc;
@@ -27,11 +29,16 @@ int __stdcall WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 			{
 				Parm.Duplicate = true;
 			}
+			else if (StringCompare(Arg, "-inject", false))
+			{
+				bShouldInject = true;
+			}
 		}
 	}
 
 
 	char FullPath[260]{0};
+	char DllPath[260]{0};
 
 	GetModuleFileNameA(0, FullPath, _countof(FullPath));
 
@@ -41,6 +48,12 @@ int __stdcall WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	for (; Modify < CharacterLength(FullPath); ++Modify)
 	{
 		FullPath[Modify] = 0;
+	}
+
+	if (bShouldInject)
+	{
+		memcpy(DllPath, FullPath, 260);
+		strcat_s(DllPath, "\\AJB\\Binaries\\Win64\\dxgi.dll");
 	}
 
 	strcat_s(FullPath, "\\AJB\\Binaries\\Win64\\AJB-Win64-Shipping.exe");
@@ -80,6 +93,26 @@ int __stdcall WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
         STARTUPINFOA si{};
         PROCESS_INFORMATION pi;
         if (CreateProcessA(FullPath, CommandLineOutput, nullptr, nullptr, false, CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi)) {
+			if (bShouldInject)
+			{
+				SuspendThread(pi.hThread);
+
+				LPVOID pDllPath = VirtualAllocEx(pi.hProcess, NULL, strlen(DllPath) + 1, MEM_COMMIT, PAGE_READWRITE);
+				if (pDllPath)
+				{
+					WriteProcessMemory(pi.hProcess, pDllPath, DllPath, strlen(DllPath) + 1, NULL);
+
+					LPTHREAD_START_ROUTINE pLoadLibrary = (LPTHREAD_START_ROUTINE)GetProcAddress(GetModuleHandleA("kernel32.dll"), "LoadLibraryA");
+
+					HANDLE hThread = CreateRemoteThread(pi.hProcess, NULL, 0, pLoadLibrary, pDllPath, 0, NULL);
+
+					WaitForSingleObject(hThread, INFINITE);
+
+					VirtualFreeEx(pi.hProcess, pDllPath, 0, MEM_RELEASE);
+					CloseHandle(hThread);
+					ResumeThread(pi.hThread);
+				}
+			}
             CloseHandle(pi.hProcess);
             CloseHandle(pi.hThread);
         }

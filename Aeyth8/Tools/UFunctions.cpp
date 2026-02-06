@@ -215,6 +215,10 @@ void UFunctions::UConsole(SDK::UConsole* This, SDK::FString& Command)
 	{
 		LogA("Owning GameMode", AJB::GetGameMode()->GetFullName());
 	}
+	else if (StrCommand == "playmode")
+	{
+		LogA("Current PlayMode", std::to_string((uint8)AJB::Instance->PlayMode));
+	}
 	/*else if (StrCommand == "time")
 	{
 		Pointers::Player<SDK::ABP_AJBOutGamePlayerController_C>()->OutGameProxy->CharacterSelectTimeoutTimer.Handle = 999;
@@ -354,6 +358,40 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 
 		AJB::Instance->bIsLocalSessionMode = true;
 		AJB::Instance->CreateSession();
+	}
+	else if (StrCommand.find("AJBExecInternalChar") != std::string::npos)
+	{
+		int NewChar = std::stoi(StrCommand.substr(20));
+
+		// Stupid game won't allow you to change characters if it's in "shop" mode.
+		SDK::EPlayMode CachedPlayMode = AJB::Instance->PlayMode;
+		if (CachedPlayMode != SDK::EPlayMode::None)
+		{
+			AJB::Instance->PlayMode = SDK::EPlayMode::None;
+		}
+
+		bool bLocalCache = AJB::Instance->bIsLocalSessionMode;
+		AJB::Instance->bIsLocalSessionMode = false;
+
+		AJB::SetSelectedCharacter((AJB::ESelectedCharacter)NewChar);
+
+		AJB::Instance->bIsLocalSessionMode = bLocalCache;
+		AJB::Instance->PlayMode = CachedPlayMode;
+	}
+	else if (StrCommand.find("AJBExecInternalMode") != std::string::npos)
+	{
+		uint8 NewPlayMode = std::stoi(StrCommand.substr(20));
+
+		if (NewPlayMode == 3)
+		{
+			AJB::Instance->bIsLocalSessionMode = true;
+		}
+		else
+		{
+			AJB::Instance->bIsLocalSessionMode = false;
+		}
+		
+		AJB::Instance->PlayMode = (SDK::EPlayMode)NewPlayMode;
 	}
 	else if (StrCommand == "hidemouse")
 	{
@@ -530,6 +568,9 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		if (AJB::Instance)
 		{
 			AJB::Instance->ResetBattleSettings();
+			AJB::Instance->PlayMode = SDK::EPlayMode::None;
+			AJB::Instance->bIsLocalSessionMode = false;
+			AJB::Instance->ClearPlayerLoginInfo();
 		}
 	}
 	else if (StrCommand == "area")
@@ -637,13 +678,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	}
 	else if (StrCommand == "join")
 	{
-		AJB::Instance->bIsLocalSessionMode = true;
-		if (AJB::Instance->OnlineSession)
-		{
-			SDK::UDestroySessionCallbackProxy::DestroySession(GWorld.GetPointer(), This);
-		}
-		AJB::Instance->JoinSession();
-		AJB::Instance->PlayMode = SDK::EPlayMode::Shop;
+		AJB::Instance->JoinSession();		
 	}
 	else if (StrCommand == "lemon")
 	{
@@ -878,59 +913,62 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 		}		
 
 
-		AJB::MOD_OptionsMenuClass = UFunctions::StaticLoadClass(SDK::UUserWidget::StaticClass(), GEngine, OptionsMenuBlueprintPath, nullptr, 0, nullptr);
-		if (AJB::MOD_OptionsMenuClass)
+		if (CMLA::Debug.GetAsBool())
 		{
-			AJB::MOD_OptionsMenu = (SDK::UWBP_OptionsMenu_C*)Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(AJB::MOD_OptionsMenuClass, static_cast<SDK::UGameViewportClient*>(GEngine->GameViewport), Pointers::FString2FName(OptionsMenuBlueprintPath), 0, EInternalObjectFlags::RootSet, 0, 0, 0, 0);
-			//	OptionsMenu = static_cast<SDK::UWBP_OptionsMenu_C*>(AJB::GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->Create(AJB::GWorld(), PrototypeMenu, Pointers::Player()));
-			if (AJB::MOD_OptionsMenu)
+			AJB::MOD_OptionsMenuClass = UFunctions::StaticLoadClass(SDK::UUserWidget::StaticClass(), GEngine, OptionsMenuBlueprintPath, nullptr, 0, nullptr);
+			if (AJB::MOD_OptionsMenuClass)
 			{
-				LogA("OptionsMenu Success", AJB::MOD_OptionsMenu->GetFullName());
-
-				AJB::MOD_OptionsMenu->AddToViewport(1170);
-				AJB::MOD_OptionsMenu->SetVisibility(SDK::ESlateVisibility::Collapsed);
-
-				if (AJB::StrDLLCommitVersion)
+				AJB::MOD_OptionsMenu = (SDK::UWBP_OptionsMenu_C*)Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(AJB::MOD_OptionsMenuClass, static_cast<SDK::UGameViewportClient*>(GEngine->GameViewport), Pointers::FString2FName(OptionsMenuBlueprintPath), 0, EInternalObjectFlags::RootSet, 0, 0, 0, 0);
+				//	OptionsMenu = static_cast<SDK::UWBP_OptionsMenu_C*>(AJB::GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->Create(AJB::GWorld(), PrototypeMenu, Pointers::Player()));
+				if (AJB::MOD_OptionsMenu)
 				{
-					AJB::MOD_OptionsMenu->SetDLLCommitVersion(*AJB::StrDLLCommitVersion);
-				}
-				
-				/*OptionsMenu->AddToViewport(111);
-				OptionsMenu->SetVisibility(SDK::ESlateVisibility::Collapsed);*/
-				//OptionsMenu->ToggleVisibility();
-				// AJBSimpleMatch_P's hud has a ZOrder of 30, the ALLNet status is a different story, the number is a lot higher. (IDK what it is) 
+					LogA("OptionsMenu Success", AJB::MOD_OptionsMenu->GetFullName());
 
-				// I read the source code and these flags seemingly do absolutely nothing.
-				//OptionsMenu->Flags = static_cast<SDK::EObjectFlags>(static_cast<int32>(OptionsMenu->Flags) | static_cast<int32>(EInternalObjectFlags::RootSet));
+					AJB::MOD_OptionsMenu->AddToViewport(1170);
+					AJB::MOD_OptionsMenu->SetVisibility(SDK::ESlateVisibility::Collapsed);
 
-				//float MaxFrameRate = Call<float(__fastcall*)()>(PB(0x176A220))();
-				/*float MaxFrameRate = Call<float(__fastcall*)(SDK::UEngine * This, float DeltaTime, bool bAllowFrameRateSmoothing)>(PB(0x13CCAE0))(Pointers::UEngine(), 0.0f, true);
-
-				MaxFrameRate > 60.0f ? OptionsMenu->InternalTickRate = MaxFrameRate * 1.5f : OptionsMenu->InternalTickRate = 60.0f;
-				LogA("AJBMaxTickRate", std::to_string(MaxFrameRate));*/
-
-
-
-				/* if (MaxFrameRate > 60.0f)
-				{
-					OptionsMenu->InternalTickRate = MaxFrameRate * 1.5f;
-				}
-				else
-				{
-					float MaxTickRate = Call<float(__fastcall*)(SDK::UEngine* This, float DeltaTime, bool bAllowFrameRateSmoothing)>(PB(0x176A260))(Pointers::UEngine(), 0.0f, true);
-					if (MaxTickRate == 0.0f)
+					if (AJB::StrDLLCommitVersion)
 					{
-						OptionsMenu->InternalTickRate = 120.0f;
+						AJB::MOD_OptionsMenu->SetDLLCommitVersion(*AJB::StrDLLCommitVersion);
+					}
+
+					/*OptionsMenu->AddToViewport(111);
+					OptionsMenu->SetVisibility(SDK::ESlateVisibility::Collapsed);*/
+					//OptionsMenu->ToggleVisibility();
+					// AJBSimpleMatch_P's hud has a ZOrder of 30, the ALLNet status is a different story, the number is a lot higher. (IDK what it is) 
+
+					// I read the source code and these flags seemingly do absolutely nothing.
+					//OptionsMenu->Flags = static_cast<SDK::EObjectFlags>(static_cast<int32>(OptionsMenu->Flags) | static_cast<int32>(EInternalObjectFlags::RootSet));
+
+					//float MaxFrameRate = Call<float(__fastcall*)()>(PB(0x176A220))();
+					/*float MaxFrameRate = Call<float(__fastcall*)(SDK::UEngine * This, float DeltaTime, bool bAllowFrameRateSmoothing)>(PB(0x13CCAE0))(Pointers::UEngine(), 0.0f, true);
+
+					MaxFrameRate > 60.0f ? OptionsMenu->InternalTickRate = MaxFrameRate * 1.5f : OptionsMenu->InternalTickRate = 60.0f;
+					LogA("AJBMaxTickRate", std::to_string(MaxFrameRate));*/
+
+
+
+					/* if (MaxFrameRate > 60.0f)
+					{
+						OptionsMenu->InternalTickRate = MaxFrameRate * 1.5f;
 					}
 					else
 					{
-						OptionsMenu->InternalTickRate = MaxTickRate * 1.5f;
-					}
+						float MaxTickRate = Call<float(__fastcall*)(SDK::UEngine* This, float DeltaTime, bool bAllowFrameRateSmoothing)>(PB(0x176A260))(Pointers::UEngine(), 0.0f, true);
+						if (MaxTickRate == 0.0f)
+						{
+							OptionsMenu->InternalTickRate = 120.0f;
+						}
+						else
+						{
+							OptionsMenu->InternalTickRate = MaxTickRate * 1.5f;
+						}
 
-				}*/
+					}*/
 
 
-			}			
+				}
+			}
 		}
 		else
 		{
@@ -1061,7 +1099,7 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 				}
 			}
 		}
-		else if (CurrentGameMode->IsA(SDK::ABP_AJBBattleGameMode_C::StaticClass()))
+		/*else if (CurrentGameMode->IsA(SDK::ABP_AJBBattleGameMode_C::StaticClass()))
 		{
 			SDK::ABP_AJBBattleGameMode_C* BattleMode = static_cast<SDK::ABP_AJBBattleGameMode_C*>(CurrentGameMode);
 			__assume (BattleMode != nullptr); // SHUTUP
@@ -1069,7 +1107,6 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 
 			GameState->bDisableTimeLimit_Debug_ = true;
 
-			BattleMode->Say(L"WELL FECK");
 		}
 		else if (CurrentGameMode->IsA(SDK::ABP_SimpleStartLocationSelectGameMode_C::StaticClass()))
 		{
@@ -1079,10 +1116,10 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 		if (NewPlayer->IsA(SDK::UIpConnection::StaticClass()))
 		{
 			// DOES NOT WORK DUE TO NO IMPLEMENTATION IN THE GAME MODE, I'm gonna have to find another way to synchronize it, there's plenty of RPC crap in the SDK that Namco implemented but I don't know how to use it nor do I honestly trust their bloated hellscape but it's worth a shot.
-			/*SDK::FString Message{L"DRIVING IN MY CAR RIGHT AFTER A BEEEEEEER"};
-			OFF::ClientTeamMessage.VerifyFC<void(__thiscall*)(SDK::APlayerController*, SDK::APlayerState*, SDK::FString*, SDK::FName, float)>()(This, This->PlayerState, &Message, SDK::FName{}, 0.0f);*/
+			//SDK::FString Message{L"DRIVING IN MY CAR RIGHT AFTER A BEEEEEEER"};
+			//OFF::ClientTeamMessage.VerifyFC<void(__thiscall*)(SDK::APlayerController*, SDK::APlayerState*, SDK::FString*, SDK::FName, float)>()(This, This->PlayerState, &Message, SDK::FName{}, 0.0f);
 			//OFFSET::VFTable<void(__thiscall*)(SDK::AGameMode*, SDK::AActor*, SDK::FString*, SDK::FName)>(CurrentGameMode)[0x114](GetTypedOuter<SDK::AGameMode>(CurrentGameMode), This, &Message, SDK::FName{});
-		}
+		}*/
 	}
 	
 	

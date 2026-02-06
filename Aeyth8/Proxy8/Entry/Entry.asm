@@ -65,31 +65,6 @@ ProxyEntrypoint PROC
 	mov rax, [rax + ImageBase]
 	mov GBA, rax
 
- ; Grabs some random address from NTDLL in the stack
-	mov rax, [rsp + ntstack]
-	push rbx
-
- ; Bitwise align it to 0x1000
-	and rax, overflow
-
- ; Finds the base of NTDLL
-
-BaseLoop:
-	cmp word ptr [rax], 5A4Dh
-	jne NextPage
-	mov ebx, dword ptr [rax + 3Ch]
-	add rbx, rax
-	cmp dword ptr [rbx], 4550h
-	je EndLoop
-
-NextPage:
-	sub rax, 1000h
-	jmp BaseLoop
-
-EndLoop:
-	mov NTDLL, rax
-	pop rbx
-
 	jmp CPPENTRY
 ProxyEntrypoint ENDP
 

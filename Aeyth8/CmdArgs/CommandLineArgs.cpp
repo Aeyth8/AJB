@@ -30,6 +30,7 @@ namespace CMLA
 	CommandLineParameter<wchar_t> Username(L"Username", L"Aeyth8");
 	CommandLineParameter<wchar_t> Debug(L"debug");
 	CommandLineParameter<wchar_t> HardcodedNPCNum(L"npc", L"20");
+	CommandLineParameter<wchar_t> InjectDLL(L"inject");
 
 	// -- Global array for automated parsing, not generally needed for manual usage.
 	CArray<CommandLineParameter<wchar_t>*> GlobalCommandLineArgs = CommandLineParameter<wchar_t>::GCommands();

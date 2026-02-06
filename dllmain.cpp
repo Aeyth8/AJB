@@ -79,7 +79,7 @@ int __stdcall DllMain(HMODULE hModule, DWORD ulReasonForCall, LPVOID lpReserved)
 		PreInit();
 
 #ifdef PROXY
-		if (Proxy::Attach(hModule))
+		if (!CMLA::InjectDLL.GetAsBool()) if (Proxy::Attach(hModule))
 #endif
 			ConstructThread(Init);
 	}
