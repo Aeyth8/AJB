@@ -828,7 +828,7 @@ bool AJB::FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGamepl
 void AJB::OnToggleFullMapVisibility(SDK::UObject* Object)
 {
 	static bool bToggled{false};
-	static SDK::UWB_FullMap_C* MapCache{nullptr};
+	/*static*/ SDK::UWB_FullMap_C* MapCache{nullptr};
 
 	bToggled = !bToggled;
 
@@ -840,7 +840,8 @@ void AJB::OnToggleFullMapVisibility(SDK::UObject* Object)
 		HUD->PlayerOwner->bShowMouseCursor = bToggled;
 
 		// SDK::UWB_LandmarkableMap_C* MapCache = HUD->BP_AJBCompass->TargetWidget->CachedLastMapWidget; // Doesn't work because it's null IDK which one I should use
-		if (!MapCache) MapCache = GetLastOf<SDK::UWB_FullMap_C>(false);
+		//if (!MapCache) MapCache = GetLastOf<SDK::UWB_FullMap_C>(false);
+		HUD->FindAJBWidgetOfClass(SDK::UWB_FullMap_C::StaticClass(), (SDK::UAJBUserWidget**)&MapCache);
 		if (MapCache)
 		{
 			if (bToggled)
