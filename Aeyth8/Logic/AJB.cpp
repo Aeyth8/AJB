@@ -19,8 +19,10 @@
 #include "../../Dumper-7/SDK/FlowState_structs.hpp"
 #include "../../Dumper-7/SDK/BP_PPV_VSFilter_classes.hpp"
 
-#include "../../Dumper-7/CustomSDK/WBP_OptionsMenu_classes.hpp" // Custom SDK header (NOT GAME NATIVE)
-#include "../../Dumper-7/CustomSDK/BP_GlobalPatcher_classes.hpp"
+#include "../../Dumper-7/CustomSDK/WBP_OptionsMenu_classes.hpp"				// Custom SDK header (NOT GAME NATIVE)
+#include "../../Dumper-7/CustomSDK/BP_GlobalPatcher_classes.hpp"			// Custom SDK header (NOT GAME NATIVE)
+#include "../../Dumper-7/CustomSDK/LemonHelper_classes.hpp"					// Custom SDK header (NOT GAME NATIVE)
+#include "../../Dumper-7/CustomSDK/WBP_CallbackTimerHandler_classes.hpp"	// Custom SDK header (NOT GAME NATIVE)
 
 #include <intrin.h>
 #include "../../Dumper-7/SDK/WB_Credit_classes.hpp"
@@ -56,10 +58,11 @@ SDK::UAJBSettings*					AJB::AJBSettings{nullptr};
 
 SDK::AAJBCreadit_C*					AJB::CreaditPointer{nullptr};
 
-SDK::FName*							AJB::GameFlowState{nullptr};
-
 __int32*							AJB::PlayerPoints{nullptr};
 bool*								AJB::bDebugInputMode{nullptr};
+
+SDK::ALemonHelper_C*				AJB::MOD_LemonHelper{nullptr};
+bool								AJB::bIsLemonPossessioned{false};
 
 // -- MOD --
 
@@ -68,6 +71,9 @@ SDK::UWBP_OptionsMenu_C*			AJB::MOD_OptionsMenu{nullptr};
 
 SDK::UClass*						AJB::MOD_GlobalPatcherClass{nullptr};
 SDK::UBP_GlobalPatcher_C*			AJB::MOD_GlobalPatcher{nullptr};
+
+SDK::UClass*						AJB::MOD_CallbackTimerClass{nullptr};
+SDK::UWBP_CallbackTimerHandler_C*	AJB::MOD_CallbackTimer{nullptr};
 
 const wchar_t*						AJB::DLLCommitVersion{L"[v0.4.5]"};
 UC::FString*						AJB::StrDLLCommitVersion{nullptr};
@@ -158,6 +164,9 @@ std::vector<Hooks::HookStructure> StandaloneHooks =
 	//{OFF::PrepareMapChange, UFunctions::PrepareMapChange},
 	{OFF::ALevelScriptActorConstructor, ALevelScriptActor},
 	{OFF::ClientTeamMessageImplementation, UFunctions::ClientTeamMessageImplementation},
+	//{OFF::PostLogin, UFunctions::PostLogin},
+	//{OFF::BeginPlay, UFunctions::BeginPlay},
+	{OFF::HandleStartingNewPlayer, UFunctions::HandleStartingNewPlayer},
 	//{OFF::GetNationalMatchSchedule, GetNationalMatchSchedule},
 	/*{OFF::AddToWorld, AddToWorld},
 	{OFF::IsTimeLimitedExceeded, IsTimeLimitExceeded},*/
@@ -268,6 +277,30 @@ SDK::UObject* NewObjectFromBlueprint(SDK::UObject* WorldContextObject, SDK::UCla
 {
 	LogA("NewObjectFromBlueprint", std::format("[WorldContextObject]: {} | [InClass]: {} ", WorldContextObject->GetFullName(), InClass->GetFullName()));
 	return ObjBlueprint.VerifyFC<SDK::UObject*(__fastcall*)(SDK::UObject*, SDK::UClass*)>()(WorldContextObject, InClass);
+}
+
+A8CL::OFFSET GetBaseMaterial("UMaterialInterface::GetBaseMaterial", 0x109B860);
+SDK::UMaterial* HGetBaseMaterial(void* This)
+{
+	return SDK::UObject::FindObject<SDK::UMaterial>("Material M_LemonPossession.M_LemonPossession");
+
+	return GetBaseMaterial.VerifyFC<SDK::UMaterial * (__thiscall*)(void*)>()(This);
+}
+
+A8CL::OFFSET GetMaterialInterface("FMaterialResource::GetMaterialInterface", 0x14D2C50);
+SDK::UMaterialInterface* GetMaterial(void* This)
+{
+	static SDK::UMaterial* LemonEssence{nullptr};
+	if (GWorld.GetPointer())
+	{
+		if (!LemonEssence) LemonEssence = SDK::UObject::FindObject<SDK::UMaterial>("Material M_LemonPossession.M_LemonPossession");
+		else
+		{
+			return LemonEssence;
+		}
+	}
+	
+	return GetMaterialInterface.VerifyFC<SDK::UMaterialInterface * (__fastcall*)(void*)>()(This);
 }
 
 static void* GConfigCache{nullptr};
@@ -474,6 +507,11 @@ void AJB::Init_Hooks()
 			Hooks::CreateAndEnableHook(PostEventByName, PostEventByNameHook);
 		}
 		
+		if (CMLA::LemonPossession.GetAsBool())
+		{
+			AJB::bIsLemonPossessioned = true;
+		}
+		//Hooks::CreateAndEnableHook(GetBaseMaterial, HGetBaseMaterial);
 
 		/* If I remember correctly none of these hooks did anything.
 		Hooks::CreateAndEnableHook(OpenCommand, GetOpenCommand);
@@ -492,6 +530,9 @@ void AJB::Init_Hooks()
 void AJB::Init_Engine()
 {
 	while (!GEngine) Sleep(25);
+
+	byte* LogVerbosity = reinterpret_cast<byte*>(PB(0x300D3C8));
+	*LogVerbosity = 6u;
 
 	AJB::CoreUObject = SDK::UObject::FindClass("Class CoreUObject.Object");
 
@@ -513,11 +554,11 @@ void AJB::Init_Engine()
 		LogA("GConfigCache", "Called");
 	}
 
-	if (!IsNull(AJB::MapSettings = SDK::UGameMapsSettings::GetDefaultObj()))
+	if ((AJB::MapSettings = SDK::UGameMapsSettings::GetDefaultObj()) != nullptr)
 	{
-		AJB::MapSettings->GameDefaultMap.AssetPathName = FString2FName(CMLA::GameDefaultMap.GetArgumentAsString());
-		AJB::MapSettings->TransitionMap.AssetPathName = FString2FName(CMLA::TransitionMap.GetArgumentAsString());
-		AJB::MapSettings->GlobalDefaultGameMode.AssetPathName = FString2FName(CMLA::GlobalDefaultGameMode.GetArgumentAsString());
+		FName::NAME_FindOrAdd(&MapSettings->GameDefaultMap.AssetPathName, CMLA::GameDefaultMap.GetArgumentAsString());
+		FName::NAME_FindOrAdd(&MapSettings->TransitionMap.AssetPathName, CMLA::TransitionMap.GetArgumentAsString());
+		FName::NAME_FindOrAdd(&MapSettings->GlobalDefaultGameMode.AssetPathName, CMLA::GlobalDefaultGameMode.GetArgumentAsString());
 	}
 
 	if (!IsNull(AJB::Version = SDK::UAJBVersion::GetDefaultObj()))
@@ -745,8 +786,11 @@ void AJB::CopyString(UC::FString* StringToModify, UC::FString* StringToCopy)
 
 bool AJB::FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag)
 {
-	// The mouse will not lock into the viewport on its own (making KBM compability unplayable unless you enjoy constantly holding down middle click to move your camera)  
-	constexpr const static wchar_t* MouseLockFlowstates[]
+	LogA("UFlowStateUtil", std::format("New FlowState: {}", NextStateTag.TagName.ToString()));
+	
+
+	// The mouse will not lock into the viewport on its own (making KBM compability unplayable unless you enjoy constantly holding down middle click to move your camera)
+	constexpr const static wchar_t* SDT_MouseLockFlowstates[]
 	{
 		L"InGame.Gameplay",
 		L"InGame.Victory",
@@ -756,58 +800,30 @@ bool AJB::FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGamepl
 		L"InGame.VictoryShot.Finish"
 	};
 
-	constexpr const wchar_t* CharacterSelect{L"SimpleMatch.SelectCharacter"};
+	constexpr uint32 SDT_Size = sizeof(SDT_MouseLockFlowstates) / sizeof(SDT_MouseLockFlowstates[0]);
 
-	using TCredit = SDK::UWidget* SDK::UWB_Credit_C::*;
-	constexpr static SDK::UWidget* SDK::UWB_Credit_C::* CreditGarbage[] = {(TCredit)&SDK::UWB_Credit_C::PPNumberRoot, (TCredit)&SDK::UWB_Credit_C::PPStopped, (TCredit)&SDK::UWB_Credit_C::PPNumber, (TCredit)&SDK::UWB_Credit_C::PPBuyWindow, (TCredit)&SDK::UWB_Credit_C::Button_PPBuy, (TCredit)&SDK::UWB_Credit_C::WB_TimeLimitCountDown};
-	constexpr const static BYTE TCreditSize = sizeof(CreditGarbage) / sizeof(CreditGarbage[0]);
+	static SDK::FName MouseLockFlowstates[SDT_Size]{0};
 
-	LogA("UFlowStateUtil", std::format("New FlowState: {}", NextStateTag.TagName.ToString()));
-	AJB::GameFlowState = &NextStateTag.TagName;
-
-	SDK::FString TempString = AJB::GetBlueprintClass<SDK::UKismetStringLibrary>()->Conv_NameToString(*AJB::GameFlowState).CStr();
-	wchar_t* FlowstateLocal = TempString.CStr();
-
-	/*for (SDK::UWB_TimeLimitCountDown_C* POS : Pointers::FindObjects<SDK::UWB_TimeLimitCountDown_C>())
+	static bool bOne{0};
+	if (!bOne)
 	{
-		//if (!ObjectHasFlag(POS, EObjectFlags::Transient)) continue;
-		LogA("POS", POS->Visibility == SDK::ESlateVisibility::Visible ? "Visible" : "Not Visible");
-	}
+		bOne = 1;
 
-	// Nukes the hideous and worthless PP/Credit counter that display at all times at the top right corner of the screen.
-	SDK::UWB_Credit_C* Garbage = Pointers::GetLastOf<SDK::UWB_Credit_C>(0);
-	if (Garbage)
-	{
-		//for (SDK::UWB_Credit_C* Garbage : Pointers::FindObjects<SDK::UWB_Credit_C>())
-		for (BYTE i{0}; i < TCreditSize; ++i)
+		uint32 i{0};
+		while (i < SDT_Size)
 		{
-			SDK::UWidget* Trash{nullptr};
-
-			if ((Trash = Garbage->*CreditGarbage[i]) == nullptr) continue;
-
-			if (Trash->GetParent() != nullptr)
-			{
-				Trash->RemoveFromParent();
-			}
-			
-			Trash->SetVisibility(SDK::ESlateVisibility::Hidden);
-			Trash->Flags = static_cast<SDK::EObjectFlags>(static_cast<int32>(Trash->Flags) | static_cast<int32>(UFunctions::EInternalObjectFlags::PendingKill));
-			*Garbage.*CreditGarbage[i] = nullptr;
+			MouseLockFlowstates[i] = FName::NAME_FindOrAdd(SDT_MouseLockFlowstates[i]);
+			++i;
 		}
-	}*/
-
-	/*if (wcscmp(CharacterSelect, FlowstateLocal) == 0)
-	{
-		return OFF::ChangeState.VerifyFC<bool(__fastcall*)(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag)>()(StateHandler, NextStateTag);
-	}*/
+	}
 
 	if (SDK::APlayerController* PC = Player(); PC != nullptr)
 	{
-		for (const wchar_t* Flowstate : MouseLockFlowstates)
+		for (SDK::FName& Flowstate : MouseLockFlowstates)
 		{
-			if (wcscmp(Flowstate, FlowstateLocal) == 0)
+			if (NextStateTag.TagName == Flowstate)
 			{
-				AJB::GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->SetInputMode_GameOnly(PC);
+				OFF::SetInputGameOnly.Call<decltype(&SDK::UWidgetBlueprintLibrary::SetInputMode_GameOnly)>()(PC);
 				PC->bShowMouseCursor = false;
 				break;
 			}
@@ -872,4 +888,30 @@ void* FMemory::Realloc(void* Original, unsigned long long Count, unsigned int Al
 void FMemory::Free(void* Original)
 {
 	OFF::FFree.VerifyFC<Decl::Free>()(Original);
+}
+
+// -- FName
+
+SDK::FName A8CL::FName::NAME_FindOrAdd(SDK::FName* Obj, const char* StringName, EFindName FindNameRule)
+{
+	return *OFF::FNameA.VerifyFC<SDK::FName*(__fastcall*)(SDK::FName*, const char*, EFindName)>()(Obj, StringName, FindNameRule);
+}
+
+SDK::FName A8CL::FName::NAME_FindOrAdd(const char* StringName, EFindName FindNameRule)
+{
+	SDK::FName Return{};
+	OFF::FNameA.VerifyFC<SDK::FName*(__fastcall*)(SDK::FName*, const char*, EFindName)>()(&Return, StringName, FindNameRule);
+	return Return;
+}
+
+SDK::FName A8CL::FName::NAME_FindOrAdd(SDK::FName* Obj, const wchar_t* StringName, EFindName FindNameRule)
+{
+	return *OFF::FNameW.VerifyFC<SDK::FName*(__fastcall*)(SDK::FName*, const wchar_t*, EFindName)>()(Obj, StringName, FindNameRule);
+}
+
+SDK::FName A8CL::FName::NAME_FindOrAdd(const wchar_t* StringName, EFindName FindNameRule)
+{
+	SDK::FName Return{};
+	OFF::FNameW.VerifyFC<SDK::FName*(__fastcall*)(SDK::FName*, const wchar_t*, EFindName)>()(&Return, StringName, FindNameRule);
+	return Return;
 }

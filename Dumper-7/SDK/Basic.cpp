@@ -23,12 +23,12 @@ uintptr_t InSDKUtils::GetImageBase()
 
 class UClass* BasicFilesImpleUtils::FindClassByName(const std::string& Name)
 {
-	return UObject::FindClassFast(Name);
+	return UObject::FindClassFast(Name.c_str());
 }
 
 class UClass* BasicFilesImpleUtils::FindClassByFullName(const std::string& Name)
 {
-	return UObject::FindClass(Name);
+	return UObject::FindClass(Name.c_str());
 }
 
 std::string BasicFilesImpleUtils::GetObjectName(class UClass* Class)

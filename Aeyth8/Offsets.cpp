@@ -14,7 +14,9 @@ namespace OFF
 	OFFSET FMalloc("FMemory::Malloc", 0x5C75B0);
 	OFFSET FRealloc("FMemory::Realloc", 0x5C9790);
 	OFFSET FFree("FMemory::Free", 0x5BC5E0);
-	
+	OFFSET FNameW("FName::FName wchar_t", 0x681ED0);
+	OFFSET FNameA("FName::FName char", 0x681E50);
+
 	OFFSET ProcessEvent("UObject::ProcessEvent", 0x823B30);
 	OFFSET Invoke("UFunction::Invoke", 0x70DBF0);
 	OFFSET AppPreExit("FEngineLoop::AppPreExit", 0x1E3380);
@@ -22,6 +24,10 @@ namespace OFF
 	OFFSET PreLogin("AGameModeBase::PreLogin", 0x13D7710);
 	OFFSET AJBPreLogin("AJBPreLogin", 0x04A4060);						// Used in the AJB GameMode(s)
 	OFFSET Login("AGameModeBase::Login", 0x13D2A20);
+	OFFSET PostLogin("AGameModeBase::PostLogin", 0x13D6A70);
+	OFFSET BeginPlay("UWorld::BeginPlay", 0x17BAEC0);
+	OFFSET HandleStartingNewPlayer("AGameModeBase::HandleStartingNewPlayer", 0x182C450);
+
 	OFFSET InitListen("UIpNetDriver::InitListen", 0x3FBE40);
 
 	OFFSET UConsole("UConsole::ConsoleCommand", 0x1796230);	

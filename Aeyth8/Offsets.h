@@ -20,6 +20,8 @@ namespace A8CL
 		extern OFFSET FMalloc;
 		extern OFFSET FRealloc;
 		extern OFFSET FFree;
+		extern OFFSET FNameW;
+		extern OFFSET FNameA;
 
 		extern OFFSET ProcessEvent;
 		extern OFFSET Invoke;
@@ -28,6 +30,10 @@ namespace A8CL
 		extern OFFSET PreLogin;
 		extern OFFSET AJBPreLogin;
 		extern OFFSET Login;
+		extern OFFSET PostLogin;
+		extern OFFSET BeginPlay;
+		extern OFFSET HandleStartingNewPlayer;
+
 		extern OFFSET InitListen;
 
 		extern OFFSET UConsole;	

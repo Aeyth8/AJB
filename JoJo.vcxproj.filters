@@ -108,6 +108,12 @@
     <Filter Include="Aeyth8\Proxy8\Entry">
       <UniqueIdentifier>{b11c1da5-c2ab-480f-9641-fcccbe624661}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SDK\Custom\LemonHelper">
+      <UniqueIdentifier>{f5c7485d-9c21-4acf-9939-5bbb51241c28}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Custom\Global\Timer">
+      <UniqueIdentifier>{133a4aa5-bc08-4763-8728-24448bf92202}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -323,6 +329,27 @@
     <ClCompile Include="Dumper-7\SDK\BP_SimpleStartLocationSelectGameMode_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
+    <ClCompile Include="Dumper-7\CustomSDK\LemonHelper_functions.cpp">
+      <Filter>SDK\Custom\LemonHelper</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\MediaAssets_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\CustomSDK\BP_CallbackTimer_functions.cpp">
+      <Filter>SDK\Custom\Global\Timer</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\CustomSDK\WBP_CallbackTimerHandler_functions.cpp">
+      <Filter>SDK\Custom\Global\Timer</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\BP_AJBUIMapManager_functions.cpp">
+      <Filter>SDK\CPP\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\BP_AJBInGameCharacter_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\WB_TournamentMode_Main_functions.cpp">
+      <Filter>SDK\CPP\Widgets</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Aeyth8\Logger.hpp">
@@ -468,6 +495,24 @@
     </ClInclude>
     <ClInclude Include="Aeyth8\Tools\UnrealExternWrapper.h">
       <Filter>Aeyth8\Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Dumper-7\CustomSDK\LemonHelper_classes.hpp">
+      <Filter>SDK\Custom\LemonHelper</Filter>
+    </ClInclude>
+    <ClInclude Include="Dumper-7\CustomSDK\LemonHelper_parameters.hpp">
+      <Filter>SDK\Custom\LemonHelper</Filter>
+    </ClInclude>
+    <ClInclude Include="Dumper-7\CustomSDK\BP_CallbackTimer_parameters.hpp">
+      <Filter>SDK\Custom\Global\Timer</Filter>
+    </ClInclude>
+    <ClInclude Include="Dumper-7\CustomSDK\BP_CallbackTimer_classes.hpp">
+      <Filter>SDK\Custom\Global\Timer</Filter>
+    </ClInclude>
+    <ClInclude Include="Dumper-7\CustomSDK\WBP_CallbackTimerHandler_classes.hpp">
+      <Filter>SDK\Custom\Global\Timer</Filter>
+    </ClInclude>
+    <ClInclude Include="Dumper-7\CustomSDK\WBP_CallbackTimerHandler_parameters.hpp">
+      <Filter>SDK\Custom\Global\Timer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

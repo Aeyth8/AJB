@@ -66,6 +66,8 @@ namespace SDK
 	class UAJBWindowWidget;
 	class UWB_ModeSelect_C;
 
+	class UMediaPlayer;
+
 	struct FMatchingPlayerInfo;
 
 	// All game specific subclasses of UBlueprintFunctionLibrary
@@ -120,7 +122,9 @@ namespace SDK
 	// Mod accessible only
 	class UWBP_OptionsMenu_C;
 	class UBP_GlobalPatcher_C;
+	class UWBP_CallbackTimerHandler_C;
 	class AGM_AJBUserInterface_C;
+	class ALemonHelper_C;
 	
 }
 
@@ -186,40 +190,43 @@ namespace AJB
 
 	extern SDK::AAJBCreadit_C* CreaditPointer;
 
-	extern SDK::FName* GameFlowState;
-
 	extern __int32* PlayerPoints;
-	extern bool* bDebugInputMode;
+	extern bool* bDebugInputMode;	
 
 	/* -- MOD --
 		
 	Not native in any form, only exists within the PC Port mod as custom blueprints.
 	UClasses must be loaded using StaticLoadClass and passed into StaticConstructObject_Internal to create the object. */
 
-	extern SDK::UClass* MOD_OptionsMenuClass;			// Options menu class, must be loaded to create an object.
-	extern SDK::UClass* MOD_GlobalPatcherClass;			// Global patcher class, must be loaded to create an object.
+	extern SDK::UClass* MOD_OptionsMenuClass;					// Options menu class, must be loaded to create an object.
+	extern SDK::UClass* MOD_GlobalPatcherClass;					// Global patcher class, must be loaded to create an object.
+	extern SDK::UClass* MOD_CallbackTimerClass;					// Callback timer class, must be loaded to create an object.
 
-	extern SDK::UWBP_OptionsMenu_C* MOD_OptionsMenu;	// Options menu, a self maintained Widget Blueprint that uses its own internal ticking system, communicates with this DLL internally by executing console commands that are parsed with a hook to (APlayerController::ConsoleCommand).
-	extern SDK::UBP_GlobalPatcher_C* MOD_GlobalPatcher;	// Global object used as a translation layer between my DLL logic and Unreal Engine blueprints.
+	extern SDK::UWBP_OptionsMenu_C* MOD_OptionsMenu;			// Options menu, a self maintained Widget Blueprint that uses its own internal ticking system, communicates with this DLL internally by executing console commands that are parsed with a hook to (APlayerController::ConsoleCommand).
+	extern SDK::UBP_GlobalPatcher_C* MOD_GlobalPatcher;			// Global object used as a translation layer between my DLL logic and Unreal Engine blueprints.
+	extern SDK::UWBP_CallbackTimerHandler_C* MOD_CallbackTimer;	// Global persistent widget object used to create inter-gamethread timers.
 
-	extern const wchar_t* DLLCommitVersion;				// Global hardcoded string used for commit versioning.
-	extern UC::FString* StrDLLCommitVersion;			// FString Singleton for UI usage, not guaranteed to be a valid pointer.
+	extern const wchar_t* DLLCommitVersion;						// Global hardcoded string used for commit versioning.
+	extern UC::FString* StrDLLCommitVersion;					// FString Singleton for UI usage, not guaranteed to be a valid pointer.
+
+	extern SDK::ALemonHelper_C* MOD_LemonHelper;				// Only exists as a singleton during in lemon possession mode.
+	extern bool bIsLemonPossessioned;							// Oh that's nice, I work as LP | LP? as in, Loss Prevention? | lemon possession
 
 	/* -- Windows External --
 	
 	Used to identify the game's process and window, allowing for live modification.
 	Currently it's only used to change the process icon and name, which is mainly for polish. */
 
-	extern HMODULE PCPortLib;							// The PC Port library | 'This' DLL | The dynamic global base address of it.
-	extern HWND PCPortWindow;							// The game's process window, containing the process name, title, icon, etc.
+	extern HMODULE PCPortLib;									// The PC Port library | 'This' DLL | The dynamic global base address of it.
+	extern HWND PCPortWindow;									// The game's process window, containing the process name, title, icon, etc.
 
 	// ===========================================
 	// ##			  INITIALIZATION			## 
 	// ===========================================
 
-	void Init_Hooks();									// Called before entry, modifies the game's runtime instance before it even starts up, applying bytepatches and hooks.
-	void Init_Engine();									// Called after entry, waits for the core game engine to initialize, and sets all pre-world variables.
-	void Init_Vars();									// Called after game world is initialized, retrieves and sets any applicable pointer variables.
+	void Init_Hooks();											// Called before entry, modifies the game's runtime instance before it even starts up, applying bytepatches and hooks.
+	void Init_Engine();											// Called after entry, waits for the core game engine to initialize, and sets all pre-world variables.
+	void Init_Vars();											// Called after game world is initialized, retrieves and sets any applicable pointer variables.
 
 	// ===========================================
 	// **			POINTER FUNCTIONS			**
@@ -402,7 +409,25 @@ struct FMemory
 	static void* Realloc(void* Original, unsigned long long Count, unsigned int Alignment = DEFAULT_ALIGNMENT);
 	static void Free(void* Original);
 };
+struct FName
+{
+	enum EFindName
+	{
+		FNAME_Find,	// Find a name, returns 0 if it doesn't exist.
+		FNAME_Add,	// Find a name or add it if it doesn't exist.
 
+		/** Finds a name and replaces it. Adds it if missing. This is only used by UHT and is generally not safe for threading.
+			* All this really is used for is correcting the case of names. In MT conditions you might get a half-changed name.
+			*/
+		FNAME_Replace_Not_Safe_For_Threading,
+	};
+
+	inline static SDK::FName NAME_FindOrAdd(SDK::FName* Obj, const char* StringName, EFindName FindNameRule = FNAME_Add);
+	static SDK::FName NAME_FindOrAdd(const char* StringName, EFindName FindNameRule = FNAME_Add);
+
+	inline static SDK::FName NAME_FindOrAdd(SDK::FName* Obj, const wchar_t* StringName, EFindName FindNameRule = FNAME_Add);
+	static SDK::FName NAME_FindOrAdd(const wchar_t* StringName, EFindName FindNameRule = FNAME_Add);
+};
 
 
 

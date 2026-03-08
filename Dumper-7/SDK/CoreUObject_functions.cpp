@@ -20,8 +20,11 @@ namespace SDK
 // Predefined Function
 // Finds a UObject in the global object array by name, optionally with ECastFlags to reduce heavy string comparison
 
-class UObject* UObject::FindObjectFastImpl(const std::string& Name, EClassCastFlags RequiredType)
+class UObject* UObject::FindObjectFastImpl(const char* Name, EClassCastFlags RequiredType)
 {
+	SDK::FName TempName{};
+	reinterpret_cast<SDK::FName*(__fastcall*)(SDK::FName*, const char*, int)>(InSDKUtils::GetImageBase() + 0x681E50)(&TempName, Name, 0);
+
 	for (int i = 0; i < GObjects->Num(); ++i)
 	{
 		UObject* Object = GObjects->GetByIndex(i);
@@ -29,7 +32,7 @@ class UObject* UObject::FindObjectFastImpl(const std::string& Name, EClassCastFl
 		if (!Object)
 			continue;
 		
-		if (Object->HasTypeFlag(RequiredType) && Object->GetName() == Name)
+		if (Object->HasTypeFlag(RequiredType) && Object->Name == TempName)
 			return Object;
 	}
 
@@ -40,7 +43,7 @@ class UObject* UObject::FindObjectFastImpl(const std::string& Name, EClassCastFl
 // Predefined Function
 // Finds a UObject in the global object array by full-name, optionally with ECastFlags to reduce heavy string comparison
 
-class UObject* UObject::FindObjectImpl(const std::string& FullName, EClassCastFlags RequiredType)
+class UObject* UObject::FindObjectImpl(const char* FullName, EClassCastFlags RequiredType)
 {
 	for (int i = 0; i < GObjects->Num(); ++i)
 	{
@@ -68,11 +71,11 @@ std::string UObject::GetFullName() const
 
 		for (UObject* NextOuter = Outer; NextOuter; NextOuter = NextOuter->Outer)
 		{
-			Temp = NextOuter->GetName() + "." + Temp;
+			Temp = NextOuter->GetName() + '.' + Temp;
 		}
 
 		std::string Name = Class->GetName();
-		Name += " ";
+		Name += ' ';
 		Name += Temp;
 		Name += GetName();
 

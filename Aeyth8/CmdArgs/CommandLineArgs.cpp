@@ -31,6 +31,7 @@ namespace CMLA
 	CommandLineParameter<wchar_t> Debug(L"debug");
 	CommandLineParameter<wchar_t> HardcodedNPCNum(L"npc", L"20");
 	CommandLineParameter<wchar_t> InjectDLL(L"inject");
+	CommandLineParameter<wchar_t> LemonPossession(L"LemonPossession");
 
 	// -- Global array for automated parsing, not generally needed for manual usage.
 	CArray<CommandLineParameter<wchar_t>*> GlobalCommandLineArgs = CommandLineParameter<wchar_t>::GCommands();

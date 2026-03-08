@@ -29,8 +29,10 @@ public:
 	class UObject*                                Outer;                                             // 0x0020(0x0008)(NOT AUTO-GENERATED PROPERTY)
 
 public:
-	static class UObject* FindObjectFastImpl(const std::string& Name, EClassCastFlags RequiredType = EClassCastFlags::None);
-	static class UObject* FindObjectImpl(const std::string& FullName, EClassCastFlags RequiredType = EClassCastFlags::None);
+	//static class UObject* FindObjectFastImpl(const std::string& Name, EClassCastFlags RequiredType = EClassCastFlags::None);
+	//static class UObject* FindObjectImpl(const std::string& FullName, EClassCastFlags RequiredType = EClassCastFlags::None);
+	static class UObject* FindObjectFastImpl(const char* Name, EClassCastFlags RequiredType = EClassCastFlags::None);
+	static class UObject* FindObjectImpl(const char* FullName, EClassCastFlags RequiredType = EClassCastFlags::None);
 
 	std::string GetFullName() const;
 	std::string GetName() const;
@@ -42,22 +44,22 @@ public:
 	void ExecuteUbergraph(int32 EntryPoint);
 
 public:
-	static class UClass* FindClass(const std::string& ClassFullName)
+	static class UClass* FindClass(const char* ClassFullName)
 	{
 		return FindObject<class UClass>(ClassFullName, EClassCastFlags::Class);
 	}
-	static class UClass* FindClassFast(const std::string& ClassName)
+	static class UClass* FindClassFast(const char* ClassName)
 	{
 		return FindObjectFast<class UClass>(ClassName, EClassCastFlags::Class);
 	}
 	
 	template<typename UEType = UObject>
-	static UEType* FindObject(const std::string& Name, EClassCastFlags RequiredType = EClassCastFlags::None)
+	static UEType* FindObject(const char* Name, EClassCastFlags RequiredType = EClassCastFlags::None)
 	{
 		return static_cast<UEType*>(FindObjectImpl(Name, RequiredType));
 	}
 	template<typename UEType = UObject>
-	static UEType* FindObjectFast(const std::string& Name, EClassCastFlags RequiredType = EClassCastFlags::None)
+	static UEType* FindObjectFast(const char* Name, EClassCastFlags RequiredType = EClassCastFlags::None)
 	{
 		return static_cast<UEType*>(FindObjectFastImpl(Name, RequiredType));
 	}
