@@ -503,4 +503,9 @@
       <Filter>Aeyth8\Proxy8\Entry</Filter>
     </MASM>
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="Version\AJB.ico">
+      <Filter>Version</Filter>
+    </Image>
+  </ItemGroup>
 </Project>

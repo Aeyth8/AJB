@@ -5,6 +5,9 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
+    <Filter Include="Version">
+      <UniqueIdentifier>{0a35bebe-c838-4033-a9e4-1a17a79a18f9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -12,15 +15,21 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="resource.h" />
     <ClInclude Include="CStrLib.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Version</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="AJBLauncher.rc" />
+    <Image Include="AJB.ico">
+      <Filter>Version</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="E:\JoJo\PC Port Prod\Bootstrapper\AJB.ico" />
+    <ResourceCompile Include="AJBLauncher.rc">
+      <Filter>Version</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

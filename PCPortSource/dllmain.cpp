@@ -29,7 +29,7 @@ static long __stdcall VEH_Filter(PEXCEPTION_POINTERS Error)
 {
 	LogA("VEH", std::format("Error: {} | Error Address: {} | Caller Address: {} ", HexToString(Error->ExceptionRecord->ExceptionCode), Error->ExceptionRecord->ExceptionAddress, HexToString((ull)_ReturnAddress())));
 	
-	return 0;
+	return 0;//
 }
 
 // Called immediately before WinMainCRTStartup (entry), runs in-thread of entry to execute code before anything else begins.

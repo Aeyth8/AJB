@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JoJo", "JoJo.vcxproj", "{68C3D0CD-4F62-4156-88E0-72E3A5A0A9B7}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AJB PC Port", "PCPortSource\JoJo.vcxproj", "{68C3D0CD-4F62-4156-88E0-72E3A5A0A9B7}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AJB Launcher", "Launcher\AJBLauncher.vcxproj", "{A932EE86-667D-4954-8413-30D7057926A2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,12 +17,16 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{68C3D0CD-4F62-4156-88E0-72E3A5A0A9B7}.Injectable|x64.ActiveCfg = Injectable|x64
 		{68C3D0CD-4F62-4156-88E0-72E3A5A0A9B7}.Injectable|x64.Build.0 = Injectable|x64
-		{68C3D0CD-4F62-4156-88E0-72E3A5A0A9B7}.Injectable|x86.ActiveCfg = Injectable|Win32
-		{68C3D0CD-4F62-4156-88E0-72E3A5A0A9B7}.Injectable|x86.Build.0 = Injectable|Win32
+		{68C3D0CD-4F62-4156-88E0-72E3A5A0A9B7}.Injectable|x86.ActiveCfg = Injectable|x64
 		{68C3D0CD-4F62-4156-88E0-72E3A5A0A9B7}.Proxy|x64.ActiveCfg = Proxy|x64
 		{68C3D0CD-4F62-4156-88E0-72E3A5A0A9B7}.Proxy|x64.Build.0 = Proxy|x64
-		{68C3D0CD-4F62-4156-88E0-72E3A5A0A9B7}.Proxy|x86.ActiveCfg = Proxy|Win32
-		{68C3D0CD-4F62-4156-88E0-72E3A5A0A9B7}.Proxy|x86.Build.0 = Proxy|Win32
+		{68C3D0CD-4F62-4156-88E0-72E3A5A0A9B7}.Proxy|x86.ActiveCfg = Proxy|x64
+		{A932EE86-667D-4954-8413-30D7057926A2}.Injectable|x64.ActiveCfg = Release|x64
+		{A932EE86-667D-4954-8413-30D7057926A2}.Injectable|x64.Build.0 = Release|x64
+		{A932EE86-667D-4954-8413-30D7057926A2}.Injectable|x86.ActiveCfg = Debug|x64
+		{A932EE86-667D-4954-8413-30D7057926A2}.Proxy|x64.ActiveCfg = Release|x64
+		{A932EE86-667D-4954-8413-30D7057926A2}.Proxy|x64.Build.0 = Release|x64
+		{A932EE86-667D-4954-8413-30D7057926A2}.Proxy|x86.ActiveCfg = Debug|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
