@@ -362,6 +362,7 @@ namespace AJB
 	void CopyString(UC::FString* StringToModify, UC::FString* StringToCopy);
 	bool IsServer();
 	bool IsInSession();
+	bool IsOfflineMode();
 
 	// ===========================================
 	// **		EXTERNAL HOOK FUNCTIONS			**

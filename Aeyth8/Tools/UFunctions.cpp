@@ -3,7 +3,6 @@
 #include "../Global.hpp"
 #include "../Hooks/Hooks.hpp"
 #include "../Offsets.h"
-#include "../UConsole/Core/ConsoleCommands.h"
 #include "../Logic/AJB.h"
 
 #include "../../Dumper-7/SDK/BP_AJBWwiseManager_classes.hpp"
@@ -168,7 +167,6 @@ using namespace Global;
 #include "../../Dumper-7/CustomSDK/WBP_TLVersionInfo_classes.hpp"			// Custom SDK header (NOT GAME NATIVE)
 #include "../../Dumper-7/CustomSDK/LemonHelper_classes.hpp"					// Custom SDK header (NOT GAME NATIVE)
 
-#include "../../Dumper-7/CustomSDK/BP_CallbackTimer_classes.hpp"			// Custom SDK header (NOT GAME NATIVE)
 #include "../../Dumper-7/CustomSDK/WBP_CallbackTimerHandler_classes.hpp"	// Custom SDK header (NOT GAME NATIVE)
 
 
@@ -195,7 +193,7 @@ using namespace Global;
 
 static bool* TOGGLEDEBUGBADGAMEDESIGN{nullptr};
 
-FActorSpawnParameters BlankParmesean{};
+#include "../../Dumper-7/SDK/Engine_parameters.hpp"
 
 void LemonPossession()
 {
@@ -206,10 +204,16 @@ void LemonPossession()
 		LemonHelper->PlayGrayscaleLemonPossession();
 	}*/
 
+	// UImage::SetBrushFromMaterial 0x10C1D10
+	// UBorder::SetBrushFromMaterial 0x10C1C10
+	// UPrimitiveComponent::execSetMaterial 0x18D70A0
+
 	static bool bOne{0};
 	if (!bOne)
 	{
 		bOne = true;
+
+		//static SDK::ALemonHelper_C* LemonHelper = (SDK::ALemonHelper_C*)Call<UFunctions::Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(SDK::ALemonHelper_C::StaticClass(), GEngine, FName::NAME_FindOrAdd(L"/Game/Aeyth8/Media/LemonPossession/LemonHelper.LemonHelper_C"), 0, UFunctions::EInternalObjectFlags::None, 0, 0, 0, 0);
 		SDK::ALemonHelper_C* LemonHelper = Pointers::SpawnActor<SDK::ALemonHelper_C>();
 		if (LemonHelper)
 		{
@@ -219,25 +223,47 @@ void LemonPossession()
 		if (AJB::MOD_CallbackTimer) AJB::MOD_CallbackTimer->CacheMaterial(SDK::UObject::FindObject<SDK::UMaterial>("Material M_LemonPossession.M_LemonPossession"));
 	}
 
-	SDK::UMaterial* LemonEssence = AJB::MOD_CallbackTimer->MaterialCacher->GetDynamicMaterial()->GetBaseMaterial();
+	__assume(AJB::MOD_CallbackTimer != nullptr); //SHUTUP
+	SDK::UMaterial* LemonEssence = static_cast<SDK::UMaterial*>(AJB::MOD_CallbackTimer->MaterialCacher->Background.ResourceObject);
 	if (LemonEssence)
 	{
-		for (SDK::UImage* Image : Pointers::FindObjects<SDK::UImage>(false))
+		SDK::UClass* ImageClass = SDK::UImage::StaticClass();
+		SDK::UClass* BorderClass = SDK::UBorder::StaticClass();
+		SDK::UClass* PrimitiveClass = SDK::UPrimitiveComponent::StaticClass();
+
+		SDK::UObject* CurrentObject{nullptr};
+		for (int i{0}; i < SDK::UObject::GObjects->Num(); ++i)
 		{
-			Image->SetBrushFromMaterial(LemonEssence);
-		}
-		for (SDK::UBorder* Image : Pointers::FindObjects<SDK::UBorder>(false))
-		{
-			Image->SetBrushFromMaterial(LemonEssence);
-		}
-		for (SDK::UPrimitiveComponent* Image : Pointers::FindObjects<SDK::UPrimitiveComponent>(false))
-		{
-			const int Num = Image->GetNumMaterials();
-			for (int i{0}; i < Num; ++i)
-			{
-				Image->SetMaterial(i, LemonEssence);
+			CurrentObject = SDK::UObject::GObjects->GetByIndex(i);
+
+			if (!CurrentObject) continue;
+
+			if (CurrentObject->IsA(ImageClass))
+			{				
+				static uint64 ImageSetBrushFromMaterial(PB(0x10C1D10));
+
+				SDK::UImage* Image = static_cast<SDK::UImage*>(CurrentObject);
+				Call<void(__fastcall*)(SDK::UImage*, SDK::UMaterialInterface*)>(ImageSetBrushFromMaterial)(Image, LemonEssence);
 			}
-				
+			else if (CurrentObject->IsA(BorderClass))
+			{
+				static uint64 BorderSetBrushFromMaterial(PB(0x10C1C10));
+
+				SDK::UBorder* Border = static_cast<SDK::UBorder*>(CurrentObject);
+				Call<void(__fastcall*)(SDK::UBorder*, SDK::UMaterialInterface*)>(BorderSetBrushFromMaterial)(Border, LemonEssence);
+			}
+			else if (CurrentObject->IsA(PrimitiveClass))
+			{
+				//static uint64 execPrimitiveSetMaterial(PB(0x18D70A0));
+
+				SDK::UPrimitiveComponent* Primitive = static_cast<SDK::UPrimitiveComponent*>(CurrentObject);
+				for (int i{0}; i < Primitive->GetNumMaterials(); ++i)
+				{
+					Primitive->SetMaterial(i, LemonEssence);
+
+					//Call<void(__fastcall*)(SDK::UPrimitiveComponent*, SDK::Params::PrimitiveComponent_SetMaterial*)>(execPrimitiveSetMaterial)(Primitive, &Parms);
+				}
+			}
 		}
 	}
 }
@@ -326,7 +352,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			SDK::UWBP_CallbackTimerHandler_C* Timer = AJB::MOD_CallbackTimer;
 
 			uint64 RecoveredAddress = (static_cast<uint64>(Timer->pUpperArray[Index]) << 32) | static_cast<uint32>(Timer->pLowerArray[Index]);
-			LogA("Recovered Address", HexToString(RecoveredAddress));
+			//LogA("Recovered Address", HexToString(RecoveredAddress));
 
 			reinterpret_cast<void(*)()>(RecoveredAddress)();
 
@@ -854,23 +880,6 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	}
 	else if (StrCommand == "timer")
 	{
-		/*if (AJB::MOD_CallbackTimerClass)
-		{
-			SDK::ABP_CallbackTimer_C* Timer = (SDK::ABP_CallbackTimer_C*)Pointers::SpawnActorInternal(GWorld, AJB::MOD_CallbackTimerClass, SDK::FVector{}, SDK::FRotator{}, BlankParmesean);
-
-			if (Timer)
-			{
-				uint64 Function = (uint64)LemonPossession;
-
-				uint32 Lower = static_cast<uint32>(Function & 0xFFFFFFFF);
-				uint32 Upper = static_cast<uint32>((Function >> 32) & 0xFFFFFFFF);
-
-				LogA("Original Pointer", HexToString(Function));
-				LogA("Timer", Timer->GetFullName());
-				Timer->SetCallbackTimer(10.0f, Upper, Lower);
-
-			}
-		}*/
 
 		if (AJB::MOD_CallbackTimerClass && AJB::MOD_CallbackTimer)
 		{
@@ -884,18 +893,15 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			AJB::MOD_CallbackTimer->SetCallbackTimer(5.0f, Upper, Lower);
 		}
 	}
-	else if (StrCommand == "playerlist")
+	else if (StrCommand == "ajbdebug")
 	{
 		SDK::ABP_AJBInGameHUD_C* HUD = reinterpret_cast<SDK::ABP_AJBInGameHUD_C*>(Pointers::Player()->MyHUD);
-		
 		if (HUD)
 		{
-			HUD->bIsDebugHUD;
-			HUD->OnShowDebugMenu();
-			if (HUD->CachedTournamentWidget)
-			{
-				HUD->CachedTournamentWidget->ShowPlayerList();
-			}
+			static bool bToggle{false};
+			bToggle = !bToggle;
+	
+			HUD->bIsDebugHUD = bToggle;			
 		}
 	}
 	/*else if (StrCommand == "sync")
@@ -1198,26 +1204,6 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 		else if (CurrentGameMode->IsA(SDK::ABP_AJBSimpleMatchGameMode_C::StaticClass()) && AJB::MOD_GlobalPatcher)
 		{
 			struct RetainerBoxSubclass : SDK::UWB_ModeSelectTextBase_C { SDK::URetainerBox* RetainerBox; };
-			/*enum ETextBlockTypeIndex : int32
-			{
-
-				TRAINING	= 0,
-				PVE			= 1,
-				TUTORIAL	= 2,
-				SHOP		= 3, // Because designing a new UI is so exhausting I will temporarily redirect this button to work for hosting multiplayer
-				ENDGAME		= 4
-			};
-
-			ETextBlockTypeIndex TBTIndex{0};
-
-			static SDK::TSubclassOf<SDK::UWB_ModeSelectTextBase_C> Classes[4] =
-			{
-				SDK::UWB_ModeSelect_Txt_Training_C::StaticClass(),
-				SDK::UWB_ModeSelect_Txt_PvE_C::StaticClass(),
-				SDK::UWB_ModeSelect_Txt_Tutorial_C::StaticClass(),
-				SDK::UWB_ModeSelect_Txt_Shop_C::StaticClass(),
-				//SDK::UWB_ModeSelect_Button_EndGame_C::StaticClass(),
-			};*/
 
 			struct TClassType
 			{
@@ -1342,19 +1328,9 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 	}
 	
 	
-	/*
-	AJB::TAutoConsoleVariable<float>& CVarMaxFPS = reinterpret_cast<AJB::TAutoConsoleVariable<float>&>(PB(0x32557F0));
-	float MaxFPS{ 1170.0f };
-	MaxFPS = CVarMaxFPS.Ref->GetReferenceFromThread(1);
-
-	LogA("MaxFPS", std::to_string(MaxFPS));
-	*/
 
 	return OFF::Login.VerifyFC<Decl::Login>()(This, NewPlayer, InRemoteRole, Portal, Options, UniqueId, ErrorMessage);
 }
-
-#include "../../Dumper-7/SDK/MediaAssets_classes.hpp"
-#include "../../Dumper-7/CustomSDK/BP_CallbackTimer_classes.hpp"
 
 FActorSpawnParameters LemonParm{};
 
@@ -1385,90 +1361,8 @@ void UFunctions::HandleStartingNewPlayer(SDK::AGameModeBase* This, SDK::APlayerC
 {
 	LogA("HandleStartingNewPlayer", std::format("[AGameModeBase]: {} | [Player]: {}", This->GetFullName(), Player->GetFullName()));
 
-	
-
 	if (AJB::bIsLemonPossessioned)
 	{
-		/*static bool bOne{0};
-		if (!bOne)
-		{
-			AJB::MOD_LemonHelper = (SDK::ALemonHelper_C*)Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(SDK::ALemonHelper_C::StaticClass(), GEngine, Pointers::FString2FName(L"/Game/Aeyth8/Media/LemonPossession/LemonHelper.LemonHelper_C"), 0, EInternalObjectFlags::RootSet, 0, 0, 0, 0);
-			if (AJB::MOD_LemonHelper)
-			{
-				LogA("LemonHelper", AJB::MOD_LemonHelper->GetFullName());
-				bOne = true;
-
-				AJB::MOD_LemonHelper->LemonPlayer = (SDK::UMediaPlayer*)Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(SDK::UMediaPlayer::StaticClass(), AJB::MOD_LemonHelper->LemonPlayer, Pointers::FString2FName(L"/Game/Aeyth8/Media/LemonPossession/LemonPlayer.LemonPlayer_C"), 0, EInternalObjectFlags::RootSet, 0, 0, 0, 0);
-				if (LemonPlayer)
-				{
-					LemonHelper->LemonPlayer = LemonPlayer;
-
-					LogA("LemonPlayer", LemonPlayer->GetFullName());					
-				}
-			}			
-		}*/
-
-		/*static SDK::UClass* LemonHelperClass{nullptr};
-
-		LemonHelperClass = StaticLoadClass(SDK::AActor::StaticClass(), GEngine, L"/Game/Aeyth8/Media/LemonPossession/LemonHelper.LemonHelper_C", 0, 0, 0);
-
-		LemonParm.SpawnCollisionHandlingOverride = SDK::ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		AJB::MOD_LemonHelper = Pointers::SpawnActor<SDK::ALemonHelper_C>(GWorld, LemonHelperClass, SDK::FVector{}, SDK::FRotator{}, LemonParm);
-
-		//SDK::ALemonHelper_C* LemonHelper = Pointers::SpawnActor<SDK::ALemonHelper_C>();
-		if (AJB::MOD_LemonHelper)
-		{
-			AJB::MOD_LemonHelper->PlayGrayscaleLemonPossession();
-		
-			SDK::UMaterial* LemonEssence = SDK::UObject::FindObject<SDK::UMaterial>("Material M_LemonPossession.M_LemonPossession");
-			if (LemonEssence)
-			{
-				for (SDK::UImage* Image : Pointers::FindObjects<SDK::UImage>(false))
-				{
-					Image->SetBrushFromMaterial(LemonEssence);
-				}
-				for (SDK::UBorder* Image : Pointers::FindObjects<SDK::UBorder>(false))
-				{
-					Image->SetBrushFromMaterial(LemonEssence);
-				}
-				for (SDK::UPrimitiveComponent* Image : Pointers::FindObjects<SDK::UPrimitiveComponent>(false))
-				{
-					const int Num = Image->GetNumMaterials();
-					for (int i{0}; i < Num; ++i)
-					{
-						Image->SetMaterial(i, LemonEssence);
-					}
-				
-				}
-			}
-		}*/
-
-		/*if (AJB::MOD_CallbackTimerClass)
-		{
-			// WE ARE NOT TEARING THE WORLD DOWN YOU MORON WE ALREADY SURPASSED THIS.
-			// Nevermind I'm just going to guess that GWorld might not be updating fast enough which is the spawn fails in the first place.
-			//BytePatcher::ReplaceByte(PB(0x14938C7), 0xEB);
-
-			SDK::ABP_CallbackTimer_C* Timer = (SDK::ABP_CallbackTimer_C*)Pointers::SpawnActorInternal(GetTypedOuter<SDK::UWorld>(Player), AJB::MOD_CallbackTimerClass, SDK::FVector{}, SDK::FRotator{}, BlankParmesean);
-			//static SDK::ABP_CallbackTimer_C* Timer = (SDK::ABP_CallbackTimer_C*)Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(AJB::MOD_CallbackTimerClass, GEngine, FName::NAME_FindOrAdd(L"/Game/Aeyth8/Blueprints/Global/BP_CallbackTimer.BP_CallbackTimer_C"), 0, EInternalObjectFlags::RootSet, 0, 0, 0, 0);
-
-			// Revert the force patch so that I don't accidentally break anything else.
-			//BytePatcher::ReplaceByte(PB(0x14938C7), 0x74);
-
-			if (Timer)
-			{
-				uint64 Function = (uint64)LemonPossession;
-
-				uint32 Lower = static_cast<uint32>(Function & 0xFFFFFFFF);
-				uint32 Upper = static_cast<uint32>((Function >> 32) & 0xFFFFFFFF);
-
-				LogA("Original Pointer", HexToString(Function));
-				LogA("Timer", Timer->GetFullName());
-				Timer->SetCallbackTimer(2.0f, Upper, Lower);
-
-			}
-		}*/
-
 		if (AJB::MOD_CallbackTimerClass && AJB::MOD_CallbackTimer)
 		{
 			uint64 Function = (uint64)LemonPossession;
@@ -1792,30 +1686,6 @@ void UFunctions::Invoke(SDK::UFunction* This, SDK::UObject* Obj, void* FFrame_St
 			//LogA(OFF::Invoke.GetName(), std::format("[UFunction]: {} | [ComparisonIndex]: {} | [UObject]: {} | [ComparisonIndex]: {}", This->GetFullName(), This->Name.ComparisonIndex, Obj->GetFullName(), Obj->Name.ComparisonIndex));
 		}
 	}
-
-	/*if (AJB::MOD_CallbackTimerClass)
-	{
-		if (Obj->IsA(AJB::MOD_CallbackTimerClass))
-		{
-			//LogA(OFF::Invoke.GetName(), std::format("[UFunction]: {} | [ComparisonIndex]: {} | [UObject]: {} | [ComparisonIndex]: {}", This->GetFullName(), This->Name.ComparisonIndex, Obj->GetFullName(), Obj->Name.ComparisonIndex));
-			static SDK::FName CompareName = FName::NAME_FindOrAdd(L"ExecuteUbergraph_BP_CallbackTimer");
-			if (This->Name == CompareName)
-			{
-				SDK::ABP_CallbackTimer_C* Timer = reinterpret_cast<SDK::ABP_CallbackTimer_C*>(Obj);
-
-				uint64 RecoveredAddress = (static_cast<uint64>(Timer->pCallbackUpper) << 32) | static_cast<uint32>(Timer->pCallbackLower);
-				LogA("Recovered Address", HexToString(RecoveredAddress));
-
-				reinterpret_cast<void(*)()>(RecoveredAddress)();
-				//SDK::Params::BP_CallbackTimer_C_ExecuteUbergraph_BP_CallbackTimer* Parms = reinterpret_cast<SDK::Params::BP_CallbackTimer_C_ExecuteUbergraph_BP_CallbackTimer*>(Result);
-				//LogA("Lower", std::to_string(*(reinterpret_cast<int32*>(Result) + 0x4)));
-				//LogA("Lower", std::to_string(Parms->K2Node_CustomEvent_pCallbackUpper));
-				//void* Function = reinterpret_cast<void(*)()>(reinterpret_cast<SDK::Params::BP_CallbackTimer_C_ExecuteUbergraph_BP_CallbackTimer*>(Result)->K2Node_CustomEvent_CallbackPointer);
-				
-				//reinterpret_cast<void(*)()>(Function)();
-			}
-		}
-	}*/
 
 	OFF::Invoke.VerifyFC<Decl::Invoke>()(This, Obj, FFrame_Stack, Result);
 }

@@ -75,7 +75,7 @@ SDK::UBP_GlobalPatcher_C*			AJB::MOD_GlobalPatcher{nullptr};
 SDK::UClass*						AJB::MOD_CallbackTimerClass{nullptr};
 SDK::UWBP_CallbackTimerHandler_C*	AJB::MOD_CallbackTimer{nullptr};
 
-const wchar_t*						AJB::DLLCommitVersion{L"[v0.4.5]"};
+const wchar_t*						AJB::DLLCommitVersion{L"[v0.4.9]"};
 UC::FString*						AJB::StrDLLCommitVersion{nullptr};
 
 // -- Windows External --
@@ -180,7 +180,7 @@ A8CL::OFFSET PostEvent("UAkComponent::PostAkEvent", 0x291390);
 A8CL::OFFSET LoadBankByName("UAkGameplayStatics::LoadBankByName", 0x286850);
 A8CL::OFFSET IsTenpoHost("AAJBOutGameProxy::IsTenpoHost", 0x507210);
 A8CL::OFFSET IsAJBOfflineMode("UAJBUtilityFunctionLibrary::IsAJBOfflineMode", 0x49DE20);
-A8CL::OFFSET IsOfflineMode("UAJBNetworkObserver::IsOfflineMode", 0x4ED5D0);
+A8CL::OFFSET oIsOfflineMode("UAJBNetworkObserver::IsOfflineMode", 0x4ED5D0);
 
 void __fastcall GetNationalMatchSchedule(SDK::UAJBGameInstance* This, bool* OutCanPlaySoloMode, bool* OutCanPlayPairMode, SDK::FAJBMatchSchedule* OutMatchSchedule, SDK::FAJBMatchScheduleDateTime* OutSoloScheduleDateTime, SDK::FAJBMatchScheduleDateTime* OutPairScheduleDateTime)
 {
@@ -345,6 +345,27 @@ SDK::UMaterialInterface* GetMaterial(void* This)
 	}
 	
 	return GetMaterialInterface.VerifyFC<SDK::UMaterialInterface * (__fastcall*)(void*)>()(This);
+}
+
+A8CL::OFFSET oGetDefaultMaterial("UMaterial::GetDefaultMaterial", 0x14ABA70);
+SDK::UMaterial* GetDefaultMaterial(void* This)
+{
+	/*static SDK::UMaterial* Lemon{nullptr};
+	if (!Lemon)
+	{
+		SDK::ALemonHelper_C* LemonHelper = Pointers::SpawnActor<SDK::ALemonHelper_C>();
+		if (LemonHelper)
+		{
+			LemonHelper->PlayGrayscaleLemonPossession();
+			Lemon = SDK::UObject::FindObject<SDK::UMaterial>("Material M_LemonPossession.M_LemonPossession");
+		}		
+	}
+	if (Lemon)
+	{
+		return Lemon;
+	}*/
+
+	return oGetDefaultMaterial.VerifyFC<SDK::UMaterial*(__fastcall*)(void*)>()(This);
 }
 
 static void* GConfigCache{nullptr};
@@ -548,8 +569,10 @@ void AJB::Init_Hooks()
 		Hooks::CreateAndEnableHook(OFF::TryGetMatchingPlayerInfo, TryGetMatchingPlayerInfoByPlayerIDPureFunction);
 
 		Hooks::CreateAndEnableHook(IsTenpoHost, AJB::IsServer);
-		Hooks::CreateAndEnableHook(IsAJBOfflineMode, AJB::IsInSession);
-		Hooks::CreateAndEnableHook(IsOfflineMode, AJB::IsInSession);
+		Hooks::CreateAndEnableHook(IsAJBOfflineMode, IsOfflineMode);
+		Hooks::CreateAndEnableHook(oIsOfflineMode, IsOfflineMode);
+
+		//Hooks::CreateAndEnableHook(oGetDefaultMaterial, GetDefaultMaterial);
 
 		//Hooks::CreateAndEnableHook(ExecCharacterNo, execSetCharNo);
 		if (CMLA::Debug.GetAsBool())
@@ -857,6 +880,11 @@ bool A8CL::AJB::IsInSession()
 {
 	SDK::UWorld* CurrentWorld = GWorld;
 	return CurrentWorld && CurrentWorld->NetDriver;
+}
+
+bool A8CL::AJB::IsOfflineMode()
+{
+	return !IsInSession();
 }
 
 

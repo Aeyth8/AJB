@@ -59,9 +59,9 @@ ProxyEntrypoint PROC
  ; Grabs the PEB starting address
 	mov rax, pebindex:[bitnum]
 	mov PEB, rax
-	mov HOST, rcx 
 
- ; Grabs the base address for the "host" DLL, the program executing this code
+	; Grabs the base address for the "host" DLL, the program executing this code
+	mov HOST, rcx 
 	mov rax, [rax + ImageBase]
 	mov GBA, rax
 

@@ -87,9 +87,6 @@
     <Filter Include="SDK\Custom\TitleScreen\GameMode">
       <UniqueIdentifier>{48ff2dfe-bdf0-4b1a-8d6b-17d7b4054ebc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Aeyth8\Logic\Localization">
-      <UniqueIdentifier>{bf4723b1-2be1-43df-ad6d-a8fd935e8577}</UniqueIdentifier>
-    </Filter>
     <Filter Include="SDK\Custom\Global">
       <UniqueIdentifier>{d8403bb9-7a1a-42e5-894c-a4c9f34310e2}</UniqueIdentifier>
     </Filter>
@@ -101,9 +98,6 @@
     </Filter>
     <Filter Include="SDK\Custom\TitleScreen\Versioning">
       <UniqueIdentifier>{57b49975-37ef-468d-988d-ad45ec96a05b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Aeyth8\Logic\Multiplayer">
-      <UniqueIdentifier>{6bdb2a78-842e-4233-ac93-743d9f2a721b}</UniqueIdentifier>
     </Filter>
     <Filter Include="Aeyth8\Proxy8\Entry">
       <UniqueIdentifier>{b11c1da5-c2ab-480f-9641-fcccbe624661}</UniqueIdentifier>
@@ -233,9 +227,6 @@
     <ClCompile Include="Dumper-7\SDK\BP_PPV_VSFilter_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
-    <ClCompile Include="Aeyth8\UConsole\Core\ConsoleCommands.cpp">
-      <Filter>Aeyth8\UConsole\Core</Filter>
-    </ClCompile>
     <ClCompile Include="Dumper-7\SDK\BP_AJBOutGameHUD_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
@@ -275,9 +266,6 @@
     <ClCompile Include="Dumper-7\CustomSDK\WBP_OptionsMenu_functions.cpp">
       <Filter>SDK\Custom\OptionsMenu</Filter>
     </ClCompile>
-    <ClCompile Include="Dumper-7\CustomSDK\GM_AJBTitleScreen_functions.cpp">
-      <Filter>SDK\Custom\TitleScreen\GameMode</Filter>
-    </ClCompile>
     <ClCompile Include="Dumper-7\CustomSDK\BP_GlobalPatcher_functions.cpp">
       <Filter>SDK\Custom\Global</Filter>
     </ClCompile>
@@ -314,9 +302,6 @@
     <ClCompile Include="Dumper-7\CustomSDK\GM_AJBUserInterface_functions.cpp">
       <Filter>SDK\Custom\TitleScreen\GameMode</Filter>
     </ClCompile>
-    <ClCompile Include="Aeyth8\Logic\Multiplayer\LAN.cpp">
-      <Filter>Aeyth8\Logic\Multiplayer</Filter>
-    </ClCompile>
     <ClCompile Include="Aeyth8\Proxy8\Entry\ProxyEntry.cpp">
       <Filter>Aeyth8\Proxy8\Entry</Filter>
     </ClCompile>
@@ -334,9 +319,6 @@
     </ClCompile>
     <ClCompile Include="Dumper-7\SDK\MediaAssets_functions.cpp">
       <Filter>SDK\CPP</Filter>
-    </ClCompile>
-    <ClCompile Include="Dumper-7\CustomSDK\BP_CallbackTimer_functions.cpp">
-      <Filter>SDK\Custom\Global\Timer</Filter>
     </ClCompile>
     <ClCompile Include="Dumper-7\CustomSDK\WBP_CallbackTimerHandler_functions.cpp">
       <Filter>SDK\Custom\Global\Timer</Filter>
@@ -433,9 +415,6 @@
     <ClInclude Include="Aeyth8\A8CL\Strings\CStrings.h">
       <Filter>Aeyth8\A8CL\Strings</Filter>
     </ClInclude>
-    <ClInclude Include="Aeyth8\UConsole\Core\ConsoleCommands.h">
-      <Filter>Aeyth8\UConsole\Core</Filter>
-    </ClInclude>
     <ClInclude Include="Aeyth8\A8CL\CTypes\CArray.h">
       <Filter>Aeyth8\A8CL</Filter>
     </ClInclude>
@@ -456,12 +435,6 @@
     </ClInclude>
     <ClInclude Include="Dumper-7\CustomSDK\WBP_OptionsMenu_classes.hpp">
       <Filter>SDK\Custom\OptionsMenu</Filter>
-    </ClInclude>
-    <ClInclude Include="Dumper-7\CustomSDK\GM_AJBTitleScreen_classes.hpp">
-      <Filter>SDK\Custom\TitleScreen\GameMode</Filter>
-    </ClInclude>
-    <ClInclude Include="Dumper-7\CustomSDK\GM_AJBTitleScreen_parameters.hpp">
-      <Filter>SDK\Custom\TitleScreen\GameMode</Filter>
     </ClInclude>
     <ClInclude Include="Dumper-7\CustomSDK\BP_GlobalPatcher_classes.hpp">
       <Filter>SDK\Custom\Global</Filter>
@@ -487,9 +460,6 @@
     <ClInclude Include="Dumper-7\CustomSDK\BPAC_LoadTags_classes.hpp">
       <Filter>SDK\Custom\Global</Filter>
     </ClInclude>
-    <ClInclude Include="Aeyth8\Logic\Multiplayer\LAN.h">
-      <Filter>Aeyth8\Logic\Multiplayer</Filter>
-    </ClInclude>
     <ClInclude Include="Aeyth8\Proxy8\Entry\ProxyEntry.hpp">
       <Filter>Aeyth8\Proxy8\Entry</Filter>
     </ClInclude>
@@ -502,17 +472,17 @@
     <ClInclude Include="Dumper-7\CustomSDK\LemonHelper_parameters.hpp">
       <Filter>SDK\Custom\LemonHelper</Filter>
     </ClInclude>
-    <ClInclude Include="Dumper-7\CustomSDK\BP_CallbackTimer_parameters.hpp">
-      <Filter>SDK\Custom\Global\Timer</Filter>
-    </ClInclude>
-    <ClInclude Include="Dumper-7\CustomSDK\BP_CallbackTimer_classes.hpp">
-      <Filter>SDK\Custom\Global\Timer</Filter>
-    </ClInclude>
     <ClInclude Include="Dumper-7\CustomSDK\WBP_CallbackTimerHandler_classes.hpp">
       <Filter>SDK\Custom\Global\Timer</Filter>
     </ClInclude>
     <ClInclude Include="Dumper-7\CustomSDK\WBP_CallbackTimerHandler_parameters.hpp">
       <Filter>SDK\Custom\Global\Timer</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\UConsole\ExecInternalConfig.h">
+      <Filter>Aeyth8\UConsole</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\UConsole\Core\UConsole.h">
+      <Filter>Aeyth8\UConsole\Core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
