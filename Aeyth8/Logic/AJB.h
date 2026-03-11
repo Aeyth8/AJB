@@ -309,11 +309,7 @@ namespace AJB
 	struct alignas(0x8) TAutoConsoleVariable : FAutoConsoleObject
 	{
 		TAutoConsoleVariableData<T>* Ref;
-	};	
-
-	// ===========================================
-	// **			 HELPER FUNCTIONS			**
-	// ===========================================
+	};
 
 	struct FGuid
 	{
@@ -350,6 +346,10 @@ namespace AJB
 
 	};
 
+	// ===========================================
+	// **			 HELPER FUNCTIONS			**
+	// ===========================================
+
 	const char* PlayerInfoParser(SDK::FMatchingPlayerInfo& Info);
 
 	ESelectedCharacter GetSelectedCharacter();
@@ -360,6 +360,8 @@ namespace AJB
 	bool SetSelectedCharacter(const ESelectedCharacter CharacterIndex);
 
 	void CopyString(UC::FString* StringToModify, UC::FString* StringToCopy);
+	bool IsServer();
+	bool IsInSession();
 
 	// ===========================================
 	// **		EXTERNAL HOOK FUNCTIONS			**

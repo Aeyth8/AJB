@@ -79,6 +79,7 @@ namespace OFF
 
 	OFFSET ChangeState("UFlowStateUtil::ChangeState", 0x21CF10);
 	OFFSET TryGetMatchingMyPairInfo("UAJBGameInstance::TryGetMatchingMyPairInfo", 0x486FC0);
+	OFFSET TryGetMatchingPlayerInfo("UAJBGameInstance::TryGetMatchingPlayerInfoByPlayerIDPureFunction", 0x486A70);
 	OFFSET GetUsername("GetUsername", 0x694650);
 	OFFSET GetNationalMatchSchedule("UAJBGameInstance::GetNationalMatchSchedule", 0x47E410);
 

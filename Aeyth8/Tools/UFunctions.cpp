@@ -272,6 +272,14 @@ void UFunctions::UConsole(SDK::UConsole* This, SDK::FString& Command)
 	{
 		LogA("Current PlayMode", std::to_string((uint8)AJB::Instance->PlayMode));
 	}
+	else if (StrCommand == "matchingplayers")
+	{
+		
+		for (int i{0}; i < AJB::Instance->MatchingPlayers.Num(); ++i)
+		{
+			LogA("MatchingPlayers", std::format("[Player]: {} | [FMatchingPlayerInfo]: {}", AJB::Instance->MatchingPlayers[i].First.ToString(), AJB::PlayerInfoParser(AJB::Instance->MatchingPlayers[i].Second)));
+		}
+	}
 	/*else if (StrCommand == "time")
 	{
 		Pointers::Player<SDK::ABP_AJBOutGamePlayerController_C>()->OutGameProxy->CharacterSelectTimeoutTimer.Handle = 999;
@@ -1306,10 +1314,10 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 
 			//static_cast<SDK::ABP_AJBSimpleMatchGameMode_C*>(CurrentGameMode);
 		}
-		else if (CurrentGameMode->IsA(SDK::ABP_SimpleStartLocationSelectGameMode_C::StaticClass()))
+		/*else if (CurrentGameMode->IsA(SDK::ABP_SimpleStartLocationSelectGameMode_C::StaticClass()))
 		{
 			static_cast<SDK::ABP_SimpleStartLocationSelectGameMode_C*>(CurrentGameMode)->SpawnOnlineBeacon();
-		}
+		}*/
 		/*else if (CurrentGameMode->IsA(SDK::ABP_AJBBattleGameMode_C::StaticClass()))
 		{
 			SDK::ABP_AJBBattleGameMode_C* BattleMode = static_cast<SDK::ABP_AJBBattleGameMode_C*>(CurrentGameMode);
@@ -1353,6 +1361,20 @@ FActorSpawnParameters LemonParm{};
 void UFunctions::PostLogin(SDK::AGameModeBase* This, SDK::APlayerController* Player)
 {
 	LogA("PostLogin", std::format("[AGameModeBase]: {} | [Player]: {}", This->GetFullName(), Player->GetFullName()));
+
+	/*	This actually reflects on both the server and client but it needs some adjusting and needs to run ONLY when it's the server.
+	
+	if (Player->IsA(SDK::AAJBPlayerControllerBase::StaticClass()))
+	{
+		const int PlayerCount = This->GameState->PlayerArray.Num();
+
+		std::wstring Id = L"AJB-Player-";
+		Id += std::to_wstring(PlayerCount);
+		
+		SDK::FString NewUniqueId{Id.c_str()};
+
+		AJB::CopyString(&static_cast<SDK::AAJBPlayerControllerBase*>(Player)->GameServerUniqueID, &NewUniqueId);
+	}*/
 
 	OFF::PostLogin.VerifyFC<Decl::PostLogin>()(This, Player);
 
@@ -1476,11 +1498,27 @@ void UFunctions::AppPreExit()
 	OFF::AppPreExit.VerifyFC<Decl::AppPreExit>()();
 }
 
-__int64* UFunctions::SpawnActor(SDK::UWorld* This, SDK::UClass* Class, const SDK::FVector& Location, const SDK::FRotator& Rotation, FActorSpawnParameters& SpawnParameters)
+__int64* UFunctions::SpawnActor(SDK::UWorld* This, SDK::UClass* Class, const SDK::FVector* Location, const SDK::FRotator* Rotation, FActorSpawnParameters& SpawnParameters)
 {
+	constexpr const char* SDT_SpawnCollision[6] = { "Undefined", "AlwaysSpawn", "AdjustIfPossibleButAlwaysSpawn", "AdjustIfPossibleButDontSpawnIfColliding", "DontSpawnIfColliding", "ESpawnActorCollisionHandlingMethod_MAX" };
+	const SDK::UKismetStringLibrary* Kismet = AJB::GetBlueprintClass<SDK::UKismetStringLibrary>();
 
+	std::string SpawnParms = std::format("[Name]: {} | [Template]: {} | [Owner]: {} | [Instigator]: {} | [OverrideLevel]: {} | [SpawnCollisionHandlingOverride]: {}",
+		SpawnParameters.Name.ToString(),
+		SpawnParameters.Template ? SpawnParameters.Template->GetFullName() : "NULL",
+		SpawnParameters.Owner ? SpawnParameters.Owner->GetFullName() : "NULL",
+		SpawnParameters.Instigator ? SpawnParameters.Instigator->GetFullName() : "NULL",
+		SpawnParameters.OverrideLevel ? SpawnParameters.OverrideLevel->GetFullName() : "NULL",
+		SDT_SpawnCollision[SpawnParameters.SpawnCollisionHandlingOverride]);
 
+	LogA("SpawnActor", std::format("[World]: {} | [Class]: {} | [Location]: {} | [Rotation]: {} | [SpawnParameters]: {} ",
+		This ? This->GetFullName() : "NULL", 
+		Class ? Class->GetFullName() : "NULL",
+		Kismet && Location ? Kismet->Conv_VectorToString(*Location).ToString() : "NULL",
+		Kismet && Rotation ? Kismet->Conv_RotatorToString(*Rotation).ToString() : "NULL",
+		SpawnParms));
 
+	return OFF::SpawnActor.VerifyFC<Decl::SpawnActor>()(This, Class, Location, Rotation, SpawnParameters);
 }
 
 void UFunctions::ProcessEvent(SDK::UObject* This, SDK::UFunction* Function, LPVOID Parms)

@@ -1327,7 +1327,7 @@ enum class EMeshBufferAccess : uint8
 
 // Enum Engine.ESpawnActorCollisionHandlingMethod
 // NumValues: 0x0006
-enum class ESpawnActorCollisionHandlingMethod : uint8
+enum ESpawnActorCollisionHandlingMethod : uint8
 {
 	Undefined                                = 0,
 	AlwaysSpawn                              = 1,

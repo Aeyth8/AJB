@@ -73,6 +73,7 @@ namespace A8CL
 
 		extern OFFSET ChangeState;
 		extern OFFSET TryGetMatchingMyPairInfo;
+		extern OFFSET TryGetMatchingPlayerInfo;
 		extern OFFSET GetUsername;
 		extern OFFSET GetNationalMatchSchedule;
 	}

@@ -178,6 +178,9 @@ A8CL::OFFSET OpenCommand("AAJBOutGameProxy::GetOpenCommand", 0x506DD0);
 A8CL::OFFSET PostEventByName("UAkComponent::PostAkEventByName", 0x291650);
 A8CL::OFFSET PostEvent("UAkComponent::PostAkEvent", 0x291390);
 A8CL::OFFSET LoadBankByName("UAkGameplayStatics::LoadBankByName", 0x286850);
+A8CL::OFFSET IsTenpoHost("AAJBOutGameProxy::IsTenpoHost", 0x507210);
+A8CL::OFFSET IsAJBOfflineMode("UAJBUtilityFunctionLibrary::IsAJBOfflineMode", 0x49DE20);
+A8CL::OFFSET IsOfflineMode("UAJBNetworkObserver::IsOfflineMode", 0x4ED5D0);
 
 void __fastcall GetNationalMatchSchedule(SDK::UAJBGameInstance* This, bool* OutCanPlaySoloMode, bool* OutCanPlayPairMode, SDK::FAJBMatchSchedule* OutMatchSchedule, SDK::FAJBMatchScheduleDateTime* OutSoloScheduleDateTime, SDK::FAJBMatchScheduleDateTime* OutPairScheduleDateTime)
 {
@@ -201,6 +204,47 @@ void TryGetMatchingMyPairInfo(SDK::UAJBGameInstance* This, bool* bIsValid, bool*
 	AJB::GetBlueprintClass<SDK::UAJBPlayerInfoUtility>()->SetBotFMatchingPlayerInfo(Out, Lemon);
 	Call<UFunctions::Decl::CopyString>(OFF::CopyString.PlusBase())(&Out->PlayerName, &Lemon);
 	return OFF::TryGetMatchingMyPairInfo.VerifyFC<void(__thiscall*)(SDK::UAJBGameInstance*, bool*,bool*, SDK::FMatchingPlayerInfo*)>()(This, bIsValid, bIsRoomHost, Out);
+}
+
+bool TryGetMatchingPlayerInfoByPlayerIDPureFunction(SDK::UAJBGameInstance* This, int32 PlayerID, SDK::FMatchingPlayerInfo* Out)
+{
+	// Valid indexes start at 1 for some reason.
+	//if (PlayerID < 0) return false; 
+
+	if (AJB::IsServer && PlayerID > 0) // NOTE: Might not have to be the server since the client keeps calling this and it appears to be working anyways when it does
+	{
+		//bool Result = OFF::TryGetMatchingPlayerInfo.VerifyFC<bool(__thiscall*)(SDK::UAJBGameInstance*, int32, SDK::FMatchingPlayerInfo*)>()(This, PlayerID, Out);
+
+		// Copying from the GameInstance WHICH HAS THE ACTUAL INFORMATION because this function is AN IDIOT.
+		//memcpy(Out, &AJB::Instance->MatchingPlayers[PlayerID].Second, sizeof(SDK::FMatchingPlayerInfo));
+
+
+
+		//Out = &AJB::Instance->MatchingPlayers[PlayerID].Second;
+
+		/*for (int i{ 0 }; i < AJB::Instance->MatchingPlayers.Num(); ++i)
+		{
+			LogA("INHOOK - MatchingPlayers", std::format("[Player]: {} | [FMatchingPlayerInfo]: {}", AJB::Instance->MatchingPlayers[i].First.ToString(), AJB::PlayerInfoParser(AJB::Instance->MatchingPlayers[i].Second)));
+		}*/
+
+		byte IndexedId{static_cast<byte>(PlayerID) - 1u};
+		
+		if (AJB::Instance->MatchingPlayers.IsValidIndex(IndexedId))
+		{
+			SDK::FMatchingPlayerInfo const* Info = &AJB::Instance->MatchingPlayers[IndexedId].Second;
+
+			AJB::CopyString(&Out->PlayerName, &AJB::Instance->MatchingPlayers[IndexedId].First);
+			Out->CharactorID = Info->CharactorID;
+			Out->CustomData.charaSkinId = Info->CustomData.charaSkinId;
+
+		}
+
+		LogA(OFF::TryGetMatchingPlayerInfo.GetName(), std::format("[PlayerID]: {} | [OUT FMatchingPlayerInfo]: {}", PlayerID, Out ? AJB::PlayerInfoParser(*Out) : "NULLPTR"));
+		
+		return true;
+	}
+
+	return OFF::TryGetMatchingPlayerInfo.VerifyFC<bool(__thiscall*)(SDK::UAJBGameInstance*, int32, SDK::FMatchingPlayerInfo*)>()(This, PlayerID, Out);
 }
 
 #include "../../Dumper-7/SDK/AJBCreadit_classes.hpp"
@@ -488,6 +532,10 @@ void AJB::Init_Hooks()
 		{
 			Hooks::CreateAndEnableHook(OFF::Invoke, UFunctions::Invoke);
 		}*/
+		if (CMLA::HookAndLogSpawnActor.GetAsBool())
+		{
+			Hooks::CreateAndEnableHook(OFF::SpawnActor, UFunctions::SpawnActor);
+		}
 		if (CMLA::HookAndLogLoader.GetAsBool())
 		{
 			Hooks::CreateAndEnableHook(OFF::StaticLoadClass, UFunctions::StaticLoadClass);
@@ -496,6 +544,12 @@ void AJB::Init_Hooks()
 
 		Hooks::CreateAndEnableHook(NetID, GetNetID);
 		Hooks::CreateAndEnableHook(CharacterNo, SetCharNo);
+
+		Hooks::CreateAndEnableHook(OFF::TryGetMatchingPlayerInfo, TryGetMatchingPlayerInfoByPlayerIDPureFunction);
+
+		Hooks::CreateAndEnableHook(IsTenpoHost, AJB::IsServer);
+		Hooks::CreateAndEnableHook(IsAJBOfflineMode, AJB::IsInSession);
+		Hooks::CreateAndEnableHook(IsOfflineMode, AJB::IsInSession);
 
 		//Hooks::CreateAndEnableHook(ExecCharacterNo, execSetCharNo);
 		if (CMLA::Debug.GetAsBool())
@@ -647,6 +701,7 @@ void AJB::Init_Vars()
 		//AJBSettings->bAvailableAllStages = true;		I'm pretty sure everything is available and enabling this only allows you to open the PvE map on BR which puts you in an infinite loading screen. 
 		AJBSettings->bEnableSkinCustomDebug = true;
 		AJBSettings->bUseDebugClosedArcadeTimeSchedule = true;
+		LogA("AJBSettings AutoPlayTestMode", std::to_string(AJBSettings->AutoPlayTestMode));
 	}
 
 	SDK::UAJBArcadeTimeManager* TimeManager{nullptr};
@@ -783,6 +838,28 @@ void AJB::CopyString(UC::FString* StringToModify, UC::FString* StringToCopy)
 {
 	Call<UFunctions::Decl::CopyString>(OFF::CopyString.PlusBase())(StringToModify, StringToCopy);
 }
+
+#include "../Tools/UnrealExternWrapper.h"
+
+bool AJB::IsServer()
+{
+	SDK::UWorld* CurrentWorld = GWorld;
+	if (CurrentWorld && CurrentWorld->NetDriver)
+	{
+		// Only clients have a valid ServerConnection pointer.
+		return CurrentWorld->NetDriver->ServerConnection == nullptr && GetNetMode(CurrentWorld->NetDriver) == Enums::ENetMode::NM_ListenServer;
+	}
+
+	return false;
+}
+
+bool A8CL::AJB::IsInSession()
+{
+	SDK::UWorld* CurrentWorld = GWorld;
+	return CurrentWorld && CurrentWorld->NetDriver;
+}
+
+
 
 bool AJB::FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag)
 {

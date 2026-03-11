@@ -161,7 +161,7 @@ public:
 
 		typedef void(__thiscall* AppPreExit)();
 
-		typedef __int64*(__fastcall* SpawnActor)(SDK::UWorld* This, SDK::UClass* Class, const SDK::FVector& Location, const SDK::FRotator& Rotation, FActorSpawnParameters& SpawnParameters);
+		typedef __int64*(__fastcall* SpawnActor)(SDK::UWorld* This, SDK::UClass* Class, const SDK::FVector* Location, const SDK::FRotator* Rotation, FActorSpawnParameters& SpawnParameters);
 
 		typedef void(__thiscall* ProcessEvent)(SDK::UObject* This, SDK::UFunction* Function, LPVOID Parms);
 
@@ -224,7 +224,7 @@ public:
 
 	static void AppPreExit();
 
-	static __int64* SpawnActor(SDK::UWorld* This, SDK::UClass* Class, const SDK::FVector& Location, const SDK::FRotator& Rotation, FActorSpawnParameters& SpawnParameters);
+	static __int64* SpawnActor(SDK::UWorld* This, SDK::UClass* Class, const SDK::FVector* Location, const SDK::FRotator* Rotation, FActorSpawnParameters& SpawnParameters);
 
 	static void ProcessEvent(SDK::UObject* This, SDK::UFunction* Function, LPVOID Parms);
 
