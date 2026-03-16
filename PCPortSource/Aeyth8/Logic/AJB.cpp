@@ -75,7 +75,7 @@ SDK::UBP_GlobalPatcher_C*			AJB::MOD_GlobalPatcher{nullptr};
 SDK::UClass*						AJB::MOD_CallbackTimerClass{nullptr};
 SDK::UWBP_CallbackTimerHandler_C*	AJB::MOD_CallbackTimer{nullptr};
 
-const wchar_t*						AJB::DLLCommitVersion{L"[v0.4.9]"};
+const wchar_t*						AJB::DLLCommitVersion{L"[v0.5.0]"};
 UC::FString*						AJB::StrDLLCommitVersion{nullptr};
 
 // -- Windows External --

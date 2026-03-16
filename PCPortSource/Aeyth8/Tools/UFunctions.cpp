@@ -220,8 +220,10 @@ void LemonPossession()
 			LemonHelper->PlayGrayscaleLemonPossession();
 		}
 
-		if (AJB::MOD_CallbackTimer) AJB::MOD_CallbackTimer->CacheMaterial(SDK::UObject::FindObject<SDK::UMaterial>("Material M_LemonPossession.M_LemonPossession"));
+		if (AJB::MOD_CallbackTimer) AJB::MOD_CallbackTimer->CacheMaterial(SDK::UObject::FindObject<SDK::UMaterial>("Material AM_LemonPossession.AM_LemonPossession"));
 	}
+
+	static SDK::UMaterial* MLemon = SDK::UObject::FindObject<SDK::UMaterial>("Material M_LemonPossession.M_LemonPossession");
 
 	__assume(AJB::MOD_CallbackTimer != nullptr); //SHUTUP
 	SDK::UMaterial* LemonEssence = static_cast<SDK::UMaterial*>(AJB::MOD_CallbackTimer->MaterialCacher->Background.ResourceObject);
@@ -230,6 +232,7 @@ void LemonPossession()
 		SDK::UClass* ImageClass = SDK::UImage::StaticClass();
 		SDK::UClass* BorderClass = SDK::UBorder::StaticClass();
 		SDK::UClass* PrimitiveClass = SDK::UPrimitiveComponent::StaticClass();
+		SDK::UClass* MaterialClass = SDK::UMaterial::StaticClass();
 
 		SDK::UObject* CurrentObject{nullptr};
 		for (int i{0}; i < SDK::UObject::GObjects->Num(); ++i)
@@ -237,6 +240,29 @@ void LemonPossession()
 			CurrentObject = SDK::UObject::GObjects->GetByIndex(i);
 
 			if (!CurrentObject) continue;
+
+			if (CurrentObject->IsA(ImageClass) || CurrentObject->IsA(BorderClass) || CurrentObject->IsA(PrimitiveClass))
+			{
+				if (CurrentObject->IsA(ImageClass))
+				{	
+					SDK::UImage* Image = static_cast<SDK::UImage*>(CurrentObject);
+					SDK::UMaterial* Mat = static_cast<SDK::UMaterial*>(Image->Brush.ResourceObject); if (Mat && Mat->IsA(MaterialClass)) { if (Mat->MaterialDomain == SDK::EMaterialDomain::MD_UI) LemonEssence = MLemon; else LemonEssence = static_cast<SDK::UMaterial*>(AJB::MOD_CallbackTimer->MaterialCacher->Background.ResourceObject); }
+				}
+				else if (CurrentObject->IsA(BorderClass))
+				{
+					SDK::UBorder* Border = static_cast<SDK::UBorder*>(CurrentObject);
+					SDK::UMaterial* Mat = static_cast<SDK::UMaterial*>(Border->Background.ResourceObject); if (Mat && Mat->IsA(MaterialClass)) { if (Mat->MaterialDomain == SDK::EMaterialDomain::MD_UI) LemonEssence = MLemon; else LemonEssence = static_cast<SDK::UMaterial*>(AJB::MOD_CallbackTimer->MaterialCacher->Background.ResourceObject); }
+				}
+				else if (CurrentObject->IsA(PrimitiveClass))
+				{
+					SDK::UPrimitiveComponent* Primitive = static_cast<SDK::UPrimitiveComponent*>(CurrentObject);
+					for (int i{0}; i < Primitive->GetNumMaterials(); ++i)
+					{
+						SDK::UMaterialInterface* Mat = Primitive->GetMaterial(i);
+						if (Mat) { if (SDK::UMaterial* Base = Mat->GetBaseMaterial()) { if (Base->MaterialDomain == SDK::EMaterialDomain::MD_UI) { LemonEssence = MLemon; } else LemonEssence = static_cast<SDK::UMaterial*>(AJB::MOD_CallbackTimer->MaterialCacher->Background.ResourceObject); }  }
+					}
+				}
+			}
 
 			if (CurrentObject->IsA(ImageClass))
 			{				
@@ -1191,6 +1217,8 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 		{
 			LogA("Login", "All mod object singletons have been successfully spawned.");
 			ONE = 1;
+
+			AJB::MOD_CallbackTimer->CacheMaterial(SDK::UObject::FindObject<SDK::UMaterial>("Material AM_LemonPossession.AM_LemonPossession"));
 		}
 		else LogA("WARNING!", "MOD OBJECTS FAILED TO FULLY SPAWN!");
 	}
@@ -1203,6 +1231,8 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 		}
 		else if (CurrentGameMode->IsA(SDK::ABP_AJBSimpleMatchGameMode_C::StaticClass()) && AJB::MOD_GlobalPatcher)
 		{
+			// UWB_ModeSelect_C
+
 			struct RetainerBoxSubclass : SDK::UWB_ModeSelectTextBase_C { SDK::URetainerBox* RetainerBox; };
 
 			struct TClassType
@@ -1219,6 +1249,8 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 				{SDK::UWB_ModeSelect_Txt_Tutorial_C::StaticClass(), L"TUTORIAL",		   1},
 				{SDK::UWB_ModeSelect_Txt_Shop_C::StaticClass(),		L"MULTIPLAYER",		   3}
 			};
+
+			static SDK::FString Blank{L" "};
 
 			std::vector<RetainerBoxSubclass*> GlobalTextBlocks = Pointers::FindObjects<RetainerBoxSubclass>(false);
 			for (int GlobalIndex{0}; GlobalIndex < GlobalTextBlocks.size(); ++GlobalIndex)
@@ -1267,6 +1299,7 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 
 							for (int i{0}; i < Count; ++i)
 							{
+								//SDK::UWidget* Widget = reinterpret_cast<SDK::UWidget*>(Box->Slots[i]);
 								SDK::UWidget* Widget = Box->GetChildAt(i);
 								if (Widget->IsA(SDK::UTextBlock::StaticClass()))
 								{
@@ -1287,8 +1320,7 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 										}*/
 									}
 									else
-									{
-										static SDK::FString Blank{L" "};
+									{										
 										AJB::MOD_GlobalPatcher->SetWidgetText(static_cast<SDK::UTextBlock*>(Widget), Blank);
 									}
 								}
@@ -1298,6 +1330,35 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 				}
 			}
 
+			SDK::UWB_ModeSelect_Button_EndGame_C* Button = Pointers::GetLastOf<SDK::UWB_ModeSelect_Button_EndGame_C>(false);
+			if (Button)
+			{
+				SDK::UWidget* Child = Button->RetainerBox_1->GetContent();
+				if (Child && Child->IsA(SDK::UHorizontalBox::StaticClass()))
+				{
+					SDK::UHorizontalBox* Box = static_cast<SDK::UHorizontalBox*>(Child);
+
+					const int Count = Box->GetChildrenCount();
+					for (int i{0}; i < Count; ++i)
+					{
+						//SDK::UWidget* Widget = reinterpret_cast<SDK::UWidget*>(Box->Slots[i]);
+						SDK::UWidget* Widget = Box->GetChildAt(i);
+						if (Widget->IsA(SDK::UTextBlock::StaticClass()))
+						{
+							if (i == 1)
+							{
+								constexpr const wchar_t* TranslationString = L"Exit To Titlescreen";
+
+								AJB::MOD_GlobalPatcher->SetWidgetText(static_cast<SDK::UTextBlock*>(Widget), TranslationString);
+							}
+							else 
+							{
+								AJB::MOD_GlobalPatcher->SetWidgetText(static_cast<SDK::UTextBlock*>(Widget), Blank);
+							}
+						}
+					}
+				}
+			}
 			//static_cast<SDK::ABP_AJBSimpleMatchGameMode_C*>(CurrentGameMode);
 		}
 		/*else if (CurrentGameMode->IsA(SDK::ABP_SimpleStartLocationSelectGameMode_C::StaticClass()))
