@@ -76,6 +76,7 @@ namespace A8CL
 		extern OFFSET TryGetMatchingPlayerInfo;
 		extern OFFSET GetUsername;
 		extern OFFSET GetNationalMatchSchedule;
+		extern OFFSET AJBWindowWidget;
 	}
 
 

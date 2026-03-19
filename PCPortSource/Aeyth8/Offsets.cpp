@@ -82,6 +82,7 @@ namespace OFF
 	OFFSET TryGetMatchingPlayerInfo("UAJBGameInstance::TryGetMatchingPlayerInfoByPlayerIDPureFunction", 0x486A70);
 	OFFSET GetUsername("GetUsername", 0x694650);
 	OFFSET GetNationalMatchSchedule("UAJBGameInstance::GetNationalMatchSchedule", 0x47E410);
+	OFFSET AJBWindowWidget("UAJBWindowWidget::UAJBWindowWidget", 0x534690);
 
 	/*
 	

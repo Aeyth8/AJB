@@ -189,6 +189,7 @@ using namespace Global;
 #include "../../Dumper-7/SDK/BP_AJBBattleGameState_classes.hpp"
 #include "../../Dumper-7/SDK/BP_SimpleStartLocationSelectGameMode_classes.hpp"
 #include "../../Dumper-7/SDK/WB_TournamentMode_Main_classes.hpp"
+#include "../../Dumper-7/SDK/WB_ModeSelect_classes.hpp"
 
 
 static bool* TOGGLEDEBUGBADGAMEDESIGN{nullptr};
@@ -930,11 +931,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			HUD->bIsDebugHUD = bToggle;			
 		}
 	}
-	/*else if (StrCommand == "sync")
-	{
-		AJB::Instance->BattleSettings.AILevel = 3;
-		AJB::Instance->BattleSettings.DamageAreaType = 10;
-	}*/
+
 	//LogA("ConsoleCommand", std::format("[Owning PlayerController]: {} | [Command]: {}", This->GetFullName(), StrCommand));
 
 	return OFF::ConsoleCommand.VerifyFC<Decl::ConsoleCommand>()(This, Result, Command, bWriteToLog);
@@ -1223,17 +1220,23 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 		else LogA("WARNING!", "MOD OBJECTS FAILED TO FULLY SPAWN!");
 	}
 
-	if (CurrentGameMode)		
-	{		
+	if (CurrentGameMode)
+	{
 		if (CurrentGameMode->IsA(SDK::AGM_AJBUserInterface_C::StaticClass()))
 		{
 			if (AJB::StrDLLCommitVersion) static_cast<SDK::AGM_AJBUserInterface_C*>(CurrentGameMode)->SetGlobalGameModeScopeVersioningInfo(AJB::StrDLLCommitVersion);
 		}
 		else if (CurrentGameMode->IsA(SDK::ABP_AJBSimpleMatchGameMode_C::StaticClass()) && AJB::MOD_GlobalPatcher)
 		{
-			// UWB_ModeSelect_C
+			
+		}
+	}
 
-			struct RetainerBoxSubclass : SDK::UWB_ModeSelectTextBase_C { SDK::URetainerBox* RetainerBox; };
+	/*
+			Main 0x02D0, UWB_GameModeView_C 0x02D8 + 0x0210 or 0x0218 to get AJBTextBlock_Row1 or AJBTextBlock_Row2
+			*/
+
+			/*struct RetainerBoxSubclass : SDK::UWB_ModeSelectTextBase_C { SDK::URetainerBox* RetainerBox; };
 
 			struct TClassType
 			{
@@ -1285,7 +1288,7 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 						SDK::UWB_ModeSelectButtonBase_C* ActualButton = GetTypedOuter<SDK::UWB_ModeSelectButtonBase_C>(CurrentObject->RetainerBox->GetContent());
 						if (ActualButton) ActualButton->RemoveFromViewport();
 						continue;
-					}*/
+					}* /
 
 					SDK::URetainerBox* CurrentRetainer = CurrentObject->RetainerBox;
 					if (CurrentRetainer)
@@ -1307,7 +1310,7 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 									{
 										SDK::FString NewChar{ClassTypes[ClassTypeIndex].TranslationString};
 										AJB::MOD_GlobalPatcher->SetWidgetText(static_cast<SDK::UTextBlock*>(Widget), NewChar);
-										/*if (i == 3)	Doesn't currently work and I don't have enough time to not only fix this but also bind it.
+										/ *if (i == 3)	Doesn't currently work and I don't have enough time to not only fix this but also bind it.
 										{
 											SDK::UWB_ModeSelectButtonBase_C* ActualButton = GetTypedOuter<SDK::UWB_ModeSelectButtonBase_C>(Widget);
 											if (ActualButton)
@@ -1317,10 +1320,10 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 												ActualButton->NeedPP = 0;
 												LogA("Outer", ActualButton->GetFullName());
 											}
-										}*/
+										}* /
 									}
 									else
-									{										
+									{
 										AJB::MOD_GlobalPatcher->SetWidgetText(static_cast<SDK::UTextBlock*>(Widget), Blank);
 									}
 								}
@@ -1351,16 +1354,16 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 
 								AJB::MOD_GlobalPatcher->SetWidgetText(static_cast<SDK::UTextBlock*>(Widget), TranslationString);
 							}
-							else 
+							else
 							{
 								AJB::MOD_GlobalPatcher->SetWidgetText(static_cast<SDK::UTextBlock*>(Widget), Blank);
 							}
 						}
 					}
 				}
-			}
+			}*/
 			//static_cast<SDK::ABP_AJBSimpleMatchGameMode_C*>(CurrentGameMode);
-		}
+		
 		/*else if (CurrentGameMode->IsA(SDK::ABP_SimpleStartLocationSelectGameMode_C::StaticClass()))
 		{
 			static_cast<SDK::ABP_SimpleStartLocationSelectGameMode_C*>(CurrentGameMode)->SpawnOnlineBeacon();
@@ -1386,9 +1389,6 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 			//OFF::ClientTeamMessage.VerifyFC<void(__thiscall*)(SDK::APlayerController*, SDK::APlayerState*, SDK::FString*, SDK::FName, float)>()(This, This->PlayerState, &Message, SDK::FName{}, 0.0f);
 			//OFFSET::VFTable<void(__thiscall*)(SDK::AGameMode*, SDK::AActor*, SDK::FString*, SDK::FName)>(CurrentGameMode)[0x114](GetTypedOuter<SDK::AGameMode>(CurrentGameMode), This, &Message, SDK::FName{});
 		}*/
-	}
-	
-	
 
 	return OFF::Login.VerifyFC<Decl::Login>()(This, NewPlayer, InRemoteRole, Portal, Options, UniqueId, ErrorMessage);
 }

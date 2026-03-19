@@ -368,6 +368,112 @@ SDK::UMaterial* GetDefaultMaterial(void* This)
 	return oGetDefaultMaterial.VerifyFC<SDK::UMaterial*(__fastcall*)(void*)>()(This);
 }
 
+#include "../../Dumper-7/SDK/WB_ModeSelect_classes.hpp"
+#include "../../Dumper-7/SDK/WB_ModeSelectTextBase_classes.hpp"
+#include "../../Dumper-7/SDK/WB_ModeSelect_Button_EndGame_classes.hpp"
+
+extern SDK::UWB_ModeSelect_C* SpongeBob{nullptr};
+
+void TranslateSimpleMatch()
+{
+	LogA("TranslateSimpleMatch", "START");
+	
+	struct RetainerBoxSubclass : SDK::UWB_ModeSelectTextBase_C { SDK::URetainerBox* RetainerBox; };
+
+	struct WidgetSubclassIndexer
+	{
+		static RetainerBoxSubclass* GetRetainerBox(uint64 MainModeSelectWidget, uint32 OffsetToClass, uint32 OffsetToRetainerBox)
+		{
+			uint64 Subclass = reinterpret_cast<uint64>(*reinterpret_cast<uint64**>(MainModeSelectWidget + OffsetToClass));
+			LogA("LETS CUT IT OPEN AND SEE WHATS INSIDE!", reinterpret_cast<SDK::UObject*>(Subclass)->GetFullName());
+
+			uint64 RetainerBox = reinterpret_cast<uint64>(*reinterpret_cast<uint64**>(Subclass + OffsetToRetainerBox));
+			LogA("A TOMATO?! WHAT THE FU-", reinterpret_cast<SDK::UObject*>(RetainerBox)->GetFullName());
+
+			return reinterpret_cast<RetainerBoxSubclass*>(RetainerBox);
+		}
+	};
+
+	struct ModeSelectWidget
+	{
+		uint32			OffsetToClass;
+		uint32			OffsetToRetainerBox;
+		const wchar_t*  TranslationString;
+		int				BestPlacementIndex;
+	};
+
+	constexpr const ModeSelectWidget WidgetsToTranslate[] =
+	{		
+		{0x02E8, 0x0370, L"ONLINE",					0},			// WB_ModeSelect_Button_PAIR		// WB_ModeSelect_Txt_PAIR
+		{0x0300, 0x0398, L"GAMBLING",				2},			// WB_ModeSelect_Button_Reward		// WB_ModeSelect_Txt_Reward
+		{0x02F0, 0x0378, L"MORE GAMBLING",			1},			// WB_ModeSelect_Button_PremiumDraw // WB_ModeSelect_Txt_PremiumDraw_C_0
+		{0x02F8, 0x0330, L"DEALER'S CHALLENGE",		4},			// WB_ModeSelect_Button_PvE			// WB_ModeSelect_Txt_PvE_C_1		
+		{0x0310, 0x0368, L"STORE BATTLE",			1},			// WB_ModeSelect_Button_Shop		// WB_ModeSelect_Txt_Shop
+		{0x0318, 0x0370, L"ONLINE",					0},			// WB_ModeSelect_Button_SOLO		// WB_ModeSelect_Txt_SOLO
+		{0x0320, 0x0330, L"TRAINING",				1},			// WB_ModeSelect_Button_Training	// WB_ModeSelect_Txt_Training
+		{0x0328, 0x0358, L"TUTORIAL",				1},			// WB_ModeSelect_Button_Tutorial	// WB_ModeSelect_Txt_Tutorial		
+	};
+
+	static SDK::FString Blank{L" "};
+
+	// {0x02E0, 0x0320, L"Exit To Titlescreen",	1},			// WB_ModeSelect_Button_EndGame		// RetainerBox_1
+	// {0x02F8, 0x0328, L"Fight waves of bots in Farm.",	0},			// WB_ModeSelect_Button_PvE			// RetainerBox_0
+
+	for (const ModeSelectWidget& WidgetTT : WidgetsToTranslate)
+	{
+		RetainerBoxSubclass* RetainerBoxWrapper = WidgetSubclassIndexer::GetRetainerBox((uint64)SpongeBob, WidgetTT.OffsetToClass, WidgetTT.OffsetToRetainerBox);
+		if (RetainerBoxWrapper)
+		{
+			SDK::URetainerBox* CurrentRetainer = RetainerBoxWrapper->RetainerBox;
+			if (CurrentRetainer)
+			{
+				SDK::UHorizontalBox* Box = static_cast<SDK::UHorizontalBox*>(CurrentRetainer->Slots[0]->Content);
+				const int Count = Box->Slots.Num();
+
+				for (int i{0}; i < Count; ++i)
+				{
+					if (!Box->Slots[i] || !Box->Slots[i]->Content) continue;
+
+					SDK::UTextBlock* Widget = static_cast<SDK::UTextBlock*>(Box->Slots[i]->Content);
+
+					AJB::MOD_GlobalPatcher->SetWidgetText(Widget, i == WidgetTT.BestPlacementIndex ? WidgetTT.TranslationString : Blank);
+				}
+				
+			}
+		}
+	}
+}
+
+SDK::UAJBWindowWidget* AJBWindowWidget(SDK::UAJBWindowWidget* This)
+{
+	SDK::UAJBWindowWidget* Result = OFF::AJBWindowWidget.VerifyFC<SDK::UAJBWindowWidget*(__fastcall*)(SDK::UAJBWindowWidget*)>()(This);
+	if (Result->IsA(SDK::UWB_ModeSelect_C::StaticClass()) && !Result->IsDefaultObject() && !(Result->Flags & SDK::EObjectFlags::ArchetypeObject))
+	{
+		LogA("ModeSelect", Result->GetFullName());
+
+		SpongeBob = (SDK::UWB_ModeSelect_C*)This;
+		// I didn't remember at the time, but now I'm pretty sure the reason I used FindObjects is because I would have to include all of these stupid headers for each widget, so instead of doing that I'm just gonna grab the numbers.
+		// using BT = SDK::UWB_ModeSelect_C;
+		// static SDK::UWB_ModeSelectButtonBase_C SDK::UWB_ModeSelect_C::* WidgetsToTranslate[] = {&BT::WB_ModeSelect_Button_Training, &BT::WB_ModeSelect_Button_PvE};
+
+		if (AJB::MOD_CallbackTimerClass && AJB::MOD_CallbackTimer)
+		{
+			uint64 Function = (uint64)TranslateSimpleMatch;
+
+			uint32 Lower = static_cast<uint32>(Function & 0xFFFFFFFF);
+			uint32 Upper = static_cast<uint32>((Function >> 32) & 0xFFFFFFFF);
+
+			/*LogA("Original Pointer", HexToString(Function));
+			LogA("Timer", AJB::MOD_CallbackTimer->GetFullName());*/
+			AJB::MOD_CallbackTimer->SetCallbackTimer(0.0f, Upper, Lower);
+		}
+
+		
+	}
+
+	return Result;
+}
+
 static void* GConfigCache{nullptr};
 static constexpr const wchar_t* StaticKey{L"SoftwareCursors"};
 static const SDK::FString StaticValue{L"SoftwareCursors=((Default, /Game/Aeyth8/Blueprints/WBP_Cursor.WBP_Cursor_C))"};
@@ -571,6 +677,8 @@ void AJB::Init_Hooks()
 		Hooks::CreateAndEnableHook(IsTenpoHost, AJB::IsServer);
 		Hooks::CreateAndEnableHook(IsAJBOfflineMode, IsOfflineMode);
 		Hooks::CreateAndEnableHook(oIsOfflineMode, IsOfflineMode);
+
+		Hooks::CreateAndEnableHook(OFF::AJBWindowWidget, AJBWindowWidget);
 
 		//Hooks::CreateAndEnableHook(oGetDefaultMaterial, GetDefaultMaterial);
 
