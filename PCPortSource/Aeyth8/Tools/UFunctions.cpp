@@ -361,6 +361,22 @@ void UFunctions::UConsole(SDK::UConsole* This, SDK::FString& Command)
 	OFF::UConsole.VerifyFC<Decl::UConsole>()(This, Command);
 }
 
+void UFunctions::OutputText(SDK::UConsole* This, SDK::FString* Text)
+{
+	if (ConsoleOutput::bShouldOutput)
+	{		
+		ConsoleOutput::bShouldOutput = false;
+		SDK::FString Output{ConsoleOutput::TextCache.c_str()};
+		AJB::CopyString(Text, &Output);
+
+		LogA(OFF::OutputText.GetName(), Text->ToString());
+	}
+	
+	OFF::OutputText.VerifyFC<Decl::OutputText>()(This, Text);
+}
+
+#include <sstream>
+
 SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FString* Result, SDK::FString* Command, bool bWriteToLog)
 {
 	std::string StrCommand = Command->ToString();
@@ -369,7 +385,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	using SetInputModeGameAndUI = decltype(&SDK::UWidgetBlueprintLibrary::SetInputMode_GameAndUIEx);
 	using SetInputModeGameOnly = decltype(&SDK::UWidgetBlueprintLibrary::SetInputMode_GameOnly);
 
-	if (StrCommand.find("AJBExecInternal Callback") != std::string::npos)
+	if (StrCommand.find("AJBExecInternal Callback") == 0)
 	{
 		int Index = std::stoi(StrCommand.substr(25));
 		//LogA("Index", std::to_string(Index));
@@ -384,55 +400,39 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			reinterpret_cast<void(*)()>(RecoveredAddress)();
 
 			AJB::MOD_CallbackTimer->RemoveFromArrays(Index);
+
+			std::wostringstream Stream;
+			Stream << std::hex << std::uppercase << RecoveredAddress;
+			ConsoleOutput::Text(L"Callback " + Stream.str());
+		}		
+	}
+	else if (StrCommand.find("AJBExecInternalSwapCharacter") == 0)
+	{
+		SDK::ABP_AJBInGamePlayerController_C* Player = Pointers::Player<SDK::ABP_AJBInGamePlayerController_C>();
+
+		if (Player) 
+		{
+			int NewChar = std::stoi(StrCommand.substr(29));
+			if (NewChar)
+			{
+				Player->ROS_DebugCharaChange(NewChar);
+				ConsoleOutput::Text(L"Changing character to " + std::to_wstring(NewChar));
+			}
+		}
+		else
+		{
+			ConsoleOutput::Text(L"Unable to swap characters.");
 		}
 	}
-	else if (StrCommand == "AJBExecInternal PlayBG Sound.BGM.Play.BGM01.Attract") // Hardcoding this until I finish my console command parser (but this is a bad practice)
+	else if (StrCommand.find("AJBExecInternal PlayBG") == 0) // Hardcoding this until I finish my console command parser (but this is a bad practice)
 	{
 		SDK::ABP_AJBWwiseManager_C* Manager = Pointers::SpawnActor<SDK::ABP_AJBWwiseManager_C>();
 		
-		Manager->PostWwiseBGMEvent(SDK::FGameplayTag{Pointers::FString2FName(L"Sound.BGM.Play.BGM01.Attract")}, true);
+		Manager->PostWwiseBGMEvent(SDK::FGameplayTag{FName::NAME_FindOrAdd(StrCommand.substr(23).c_str())}, true);
+		ConsoleOutput::Text(L"Playing soundtrack " + Command->ToWString().substr(23));
 		return OFF::ConsoleCommand.VerifyFC<Decl::ConsoleCommand>()(This, Result, Command, false);
-	}
-	else if (StrCommand == "AJBExecInternal PlayBG Sound.BGM.Play.BGM02.Menu1")
-	{
-		SDK::ABP_AJBWwiseManager_C* Manager = Pointers::SpawnActor<SDK::ABP_AJBWwiseManager_C>();
-		
-		Manager->PostWwiseBGMEvent(SDK::FGameplayTag{Pointers::FString2FName(L"Sound.BGM.Play.BGM02.Menu1")}, true);
-		return OFF::ConsoleCommand.VerifyFC<Decl::ConsoleCommand>()(This, Result, Command, false);
-	}
-	else if (StrCommand == "mute")
-	{
-		SDK::ABP_AJBWwiseManager_C* Manager = Pointers::SpawnActor<SDK::ABP_AJBWwiseManager_C>();
-		
-		Manager->StopWwiseBGMEvent();
-		return OFF::ConsoleCommand.VerifyFC<Decl::ConsoleCommand>()(This, Result, Command, false);
-	}
-	else if (StrCommand == "UISelect")
-	{
-		/*SDK::ABP_AJBWwiseManager_C* Manager = Pointers::SpawnActor<SDK::ABP_AJBWwiseManager_C>();
-
-		Manager->PostWwiseBGMEvent(SDK::FGameplayTag{Pointers::FString2FName(L"Sound.UI.Common.Confirm")}, true);*/
-
-		SDK::UAkComponent* Component = Pointers::GetLastOf<SDK::UAkComponent>(false);
-		if (Component)
-		{
-			Component->PostAkEventByName(L"Sound.UI.Common.Confirm");
-		}
-
-		return OFF::ConsoleCommand.VerifyFC<Decl::ConsoleCommand>()(This, Result, Command, false);
-	}
-	else if (StrCommand.find("AJBExecInternal Kill") != std::string::npos)
-	{
-		SDK::ABP_AJBInGamePlayerController_C* Player = AJB::GetPlayer();
-		Call<Decl::ActorDestroy>(OFF::ActorDestroy.PlusBase())(Player->Character, 1, 1);
-		Call<Decl::ActorDestroy>(OFF::ActorDestroy.PlusBase())(Player, 1, 1);
-		
-		/*if (Player->IsA(SDK::AAJBInGamePlayerController::StaticClass()))
-		{
-			static_cast<SDK::AAJBInGamePlayerController*>(Player)->OnDebugSuicide();
-		}*/
-	}
-	else if (StrCommand.find("AJBExecInternalHost") != std::string::npos)
+	}	
+	else if (StrCommand.find("AJBExecInternalHost") == 0)
 	{
 		int PARM_Area{0};
 		int PARM_NPCCount{0};
@@ -497,39 +497,36 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		AJB::Instance->bIsLocalSessionMode = true;
 		AJB::Instance->CreateSession();
 	}
-	else if (StrCommand.find("AJBExecInternalChar") != std::string::npos)
+	else if (StrCommand.find("AJBExecInternalChar") == 0)
 	{
 		int NewChar = std::stoi(StrCommand.substr(20));
-
-		// Stupid game won't allow you to change characters if it's in "shop" mode.
-		SDK::EPlayMode CachedPlayMode = AJB::Instance->PlayMode;
-		if (CachedPlayMode != SDK::EPlayMode::None)
-		{
-			AJB::Instance->PlayMode = SDK::EPlayMode::None;
-		}
-
-		bool bLocalCache = AJB::Instance->bIsLocalSessionMode;
-		AJB::Instance->bIsLocalSessionMode = false;
-
 		AJB::SetSelectedCharacter((AJB::ESelectedCharacter)NewChar);
-
-		AJB::Instance->bIsLocalSessionMode = bLocalCache;
-		AJB::Instance->PlayMode = CachedPlayMode;
 	}
-	else if (StrCommand.find("AJBExecInternalMode") != std::string::npos)
+	else if (StrCommand.find("AJBExecInternalMode") == 0)
 	{
 		uint8 NewPlayMode = std::stoi(StrCommand.substr(20));
 
-		if (NewPlayMode == 3)
+		switch (NewPlayMode)
 		{
+		case 3:
+		case 4:
+		case 7:
+		case 8:
 			AJB::Instance->bIsLocalSessionMode = true;
-		}
-		else
-		{
+			break;
+
+		default:
 			AJB::Instance->bIsLocalSessionMode = false;
 		}
-		
+
 		AJB::Instance->PlayMode = (SDK::EPlayMode)NewPlayMode;
+	}
+	else if (StrCommand == "mute")
+	{
+		SDK::ABP_AJBWwiseManager_C* Manager = Pointers::SpawnActor<SDK::ABP_AJBWwiseManager_C>();
+		
+		Manager->StopWwiseBGMEvent();
+		ConsoleOutput::Text(L"SHUTUP! SHUTUP CHUMLEE");
 	}
 	else if (StrCommand == "hidemouse")
 	{
@@ -552,11 +549,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	{
 		SDK::FAJBBattleSettings& Settings = AJB::Instance->BattleSettings;
 		LogA("Battle Settings", std::format("[AI Level]: {} | [Damage Area Type]: {} | [SessionLevel]: {} | [StageTypeID]: {} | [AreaTypeId]: {}", Settings.AILevel, Settings.DamageAreaType, AJB::Instance->SessionLevel.ToString(), AJB::Instance->StageTypeID, AJB::Instance->AreaTypeID));
-	}
-	else if (StrCommand == "colon")
-	{
-		AJB::Instance->SessionLevel = Pointers::FString2FName(L"AJBStage04_P");
-	}
+	}	
 	else if (StrCommand == "filter")
 	{
 		SDK::ABP_PPV_VSFilter_C* Filter = AJB::GetPostProcessFilter(AJB::GetPlayer<SDK::ABP_AJBInGamePlayerController_C>());
@@ -574,44 +567,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		{
 			Filter->NextFilter();
 		}
-	}
-	else if (StrCommand == "hud")
-	{
-
-		//for (SDK::UWB_Credit_C* Credit : Pointers::FindObjects<SDK::UWB_Credit_C>(false))
-		//{
-		//	Credit->WB_TimeLimitCountDown->SetVisibility(SDK::ESlateVisibility::Hidden);
-		//	/*Credit->WB_TimeLimitCountDown->SetTextNum(1000, 1000);
-		//	Credit->WB_TimeLimitCountDown->PreviousTimerNum = 1000;
-		//	Credit->WB_TimeLimitCountDown->TimerNum = 1000;*/
-		//}
-		
-		bool Success{false};
-		SDK::ABP_AJBOutGameHUD_C* HUD{nullptr};
-
-		AJB::GetBlueprintClass<SDK::UBPF_AJBOutGameHUD_C>()->GetAJBOutGameHUD_BP(0, GWorld, &Success, &HUD);
-		if (HUD)
-		{
-			//HUD->ExecuteUbergraph_BP_AJBOutGameHUD(946);
-			//HUD->OnLoaded_123AFB8B4187277BB012C9A7F9DCB63B(HUD->DebugMenuOutGameClassPtr.Get());
-			for (SDK::UClass*& Widget : HUD->CreateWidgets)
-			{
-				LogA("Widget", Widget->GetFullName());
-			}
-			//HUD->ShowCharacterSelect();
-			//HUD->ShowCharacterSelect();
-			HUD->UpdateTimeCountDown(999, 999);
-			HUD->TakeOverElapsedTime_ModeSelect = 9999;
-			HUD->TakeOverRemainTime_PvE = 9999;
-			HUD->TakeOverRemainTime_ShopStandby = 9999;
- 		}
-
-		for (SDK::UWB_TimeLimitCountDown_C* HUDs : Pointers::FindObjects<SDK::UWB_TimeLimitCountDown_C>(0))
-		{
-			//if (HUDs->Flags & (SDK::EObjectFlags::ArchetypeObject | SDK::EObjectFlags::ClassDefaultObject)) continue;
-			LogA("Time", HUDs->GetFullName());
-		}
-	}
+	}	
 	else if (StrCommand == "char")
 	{
 		static bool bToggle{false};
@@ -928,8 +884,40 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			static bool bToggle{false};
 			bToggle = !bToggle;
 	
-			HUD->bIsDebugHUD = bToggle;			
+			HUD->bIsDebugHUD = bToggle;
 		}
+	}
+	else if (StrCommand == "camera")
+	{
+		SDK::ABP_AJBInGameCharacter_C* Character = static_cast<SDK::ABP_AJBInGameCharacter_C*>(Pointers::Player()->Character);
+		if (Character)
+		{
+			struct FST_CameraParam
+			{
+				SDK::FVector	SpringArmOffset;
+				float			TargetArmLength;
+				float			InterpSpeed;
+				float			FOV;
+			};
+
+			FST_CameraParam NewParms{SDK::FVector(0.0f, 0.0f, 50.0f), 300.0f, 10.0f, 90.0f};
+
+			Character->DesiredCameraParam = *(SDK::FST_CameraParam*)&NewParms;
+		}
+	}
+	else if (StrCommand == "fly")
+	{
+		static bool bToggle{0};
+		bToggle = !bToggle;
+
+		SDK::ABP_AJBInGamePlayerController_C* Player = reinterpret_cast<SDK::ABP_AJBInGamePlayerController_C*>(Pointers::Player());
+		if (Player)
+		{
+			Player->ROS_DebugEnableAirJump(bToggle);
+		}
+
+		bToggle ? ConsoleOutput::Text(L"Flying activated") : ConsoleOutput::Text(L"Flying deactivated.");
+		//LogA("PairId", static_cast<SDK::AAJBInGameCharacterBase*>(Pointers::Player()->Character)->PairID.ToString());
 	}
 
 	//LogA("ConsoleCommand", std::format("[Owning PlayerController]: {} | [Command]: {}", This->GetFullName(), StrCommand));
@@ -1232,138 +1220,7 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 		}
 	}
 
-	/*
-			Main 0x02D0, UWB_GameModeView_C 0x02D8 + 0x0210 or 0x0218 to get AJBTextBlock_Row1 or AJBTextBlock_Row2
-			*/
-
-			/*struct RetainerBoxSubclass : SDK::UWB_ModeSelectTextBase_C { SDK::URetainerBox* RetainerBox; };
-
-			struct TClassType
-			{
-				SDK::UClass*	Class;
-				const wchar_t*	TranslationString;
-				int				BestPlacementIndex;
-			};
-
-			static TClassType ClassTypes[4] =
-			{
-				{SDK::UWB_ModeSelect_Txt_Training_C::StaticClass(), L"TRAINING",		   1},
-				{SDK::UWB_ModeSelect_Txt_PvE_C::StaticClass(),		L"DEALER'S CHALLENGE", 4},
-				{SDK::UWB_ModeSelect_Txt_Tutorial_C::StaticClass(), L"TUTORIAL",		   1},
-				{SDK::UWB_ModeSelect_Txt_Shop_C::StaticClass(),		L"MULTIPLAYER",		   3}
-			};
-
-			static SDK::FString Blank{L" "};
-
-			std::vector<RetainerBoxSubclass*> GlobalTextBlocks = Pointers::FindObjects<RetainerBoxSubclass>(false);
-			for (int GlobalIndex{0}; GlobalIndex < GlobalTextBlocks.size(); ++GlobalIndex)
-			{
-				RetainerBoxSubclass* CurrentObject = GlobalTextBlocks[GlobalIndex];
-				SDK::UClass* CurrentClass = GlobalTextBlocks[GlobalIndex]->Class;
-
-				if (CurrentObject && CurrentClass)
-				{
-					if (CurrentObject->Flags & SDK::EObjectFlags::ArchetypeObject)
-					{
-						continue;
-					}
-
-					int ClassTypeIndex{0};
-					bool bClassMatches{false};
-
-					for (TClassType& ClassType : ClassTypes)
-					{
-						if (CurrentClass == ClassType.Class)
-						{
-							//LogA("SUCCESS", std::format("[CurrentObject]: {} | [CurrentClass]: {} | [IsArchetype]: {} [Flags]: {}", CurrentObject->GetFullName(), CurrentClass->GetFullName(), CurrentObject->Flags& SDK::EObjectFlags::ArchetypeObject ? "True" : "False", std::to_string((uint32)CurrentObject->Flags)));
-							bClassMatches = true;
-							break;
-						}
-
-						ClassTypeIndex++;
-					}
-
-					/*if (!bClassMatches) Apparently this condition is never met.
-					{
-						SDK::UWB_ModeSelectButtonBase_C* ActualButton = GetTypedOuter<SDK::UWB_ModeSelectButtonBase_C>(CurrentObject->RetainerBox->GetContent());
-						if (ActualButton) ActualButton->RemoveFromViewport();
-						continue;
-					}* /
-
-					SDK::URetainerBox* CurrentRetainer = CurrentObject->RetainerBox;
-					if (CurrentRetainer)
-					{
-						//LogA(std::to_string(GlobalIndex), GlobalTextBlocks[GlobalIndex]->GetFullName());
-						SDK::UWidget* Child = CurrentRetainer->GetContent();
-						if (Child && Child->IsA(SDK::UHorizontalBox::StaticClass()))
-						{
-							SDK::UHorizontalBox* Box = static_cast<SDK::UHorizontalBox*>(Child);
-							const int Count = Box->GetChildrenCount();
-
-							for (int i{0}; i < Count; ++i)
-							{
-								//SDK::UWidget* Widget = reinterpret_cast<SDK::UWidget*>(Box->Slots[i]);
-								SDK::UWidget* Widget = Box->GetChildAt(i);
-								if (Widget->IsA(SDK::UTextBlock::StaticClass()))
-								{
-									if (i == ClassTypes[ClassTypeIndex].BestPlacementIndex)
-									{
-										SDK::FString NewChar{ClassTypes[ClassTypeIndex].TranslationString};
-										AJB::MOD_GlobalPatcher->SetWidgetText(static_cast<SDK::UTextBlock*>(Widget), NewChar);
-										/ *if (i == 3)	Doesn't currently work and I don't have enough time to not only fix this but also bind it.
-										{
-											SDK::UWB_ModeSelectButtonBase_C* ActualButton = GetTypedOuter<SDK::UWB_ModeSelectButtonBase_C>(Widget);
-											if (ActualButton)
-											{
-												ActualButton->bIsEnabled = true;
-												ActualButton->bEnableSelect = true;
-												ActualButton->NeedPP = 0;
-												LogA("Outer", ActualButton->GetFullName());
-											}
-										}* /
-									}
-									else
-									{
-										AJB::MOD_GlobalPatcher->SetWidgetText(static_cast<SDK::UTextBlock*>(Widget), Blank);
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-
-			SDK::UWB_ModeSelect_Button_EndGame_C* Button = Pointers::GetLastOf<SDK::UWB_ModeSelect_Button_EndGame_C>(false);
-			if (Button)
-			{
-				SDK::UWidget* Child = Button->RetainerBox_1->GetContent();
-				if (Child && Child->IsA(SDK::UHorizontalBox::StaticClass()))
-				{
-					SDK::UHorizontalBox* Box = static_cast<SDK::UHorizontalBox*>(Child);
-
-					const int Count = Box->GetChildrenCount();
-					for (int i{0}; i < Count; ++i)
-					{
-						//SDK::UWidget* Widget = reinterpret_cast<SDK::UWidget*>(Box->Slots[i]);
-						SDK::UWidget* Widget = Box->GetChildAt(i);
-						if (Widget->IsA(SDK::UTextBlock::StaticClass()))
-						{
-							if (i == 1)
-							{
-								constexpr const wchar_t* TranslationString = L"Exit To Titlescreen";
-
-								AJB::MOD_GlobalPatcher->SetWidgetText(static_cast<SDK::UTextBlock*>(Widget), TranslationString);
-							}
-							else
-							{
-								AJB::MOD_GlobalPatcher->SetWidgetText(static_cast<SDK::UTextBlock*>(Widget), Blank);
-							}
-						}
-					}
-				}
-			}*/
-			//static_cast<SDK::ABP_AJBSimpleMatchGameMode_C*>(CurrentGameMode);
-		
+	
 		/*else if (CurrentGameMode->IsA(SDK::ABP_SimpleStartLocationSelectGameMode_C::StaticClass()))
 		{
 			static_cast<SDK::ABP_SimpleStartLocationSelectGameMode_C*>(CurrentGameMode)->SpawnOnlineBeacon();
@@ -1426,14 +1283,7 @@ void UFunctions::HandleStartingNewPlayer(SDK::AGameModeBase* This, SDK::APlayerC
 	{
 		if (AJB::MOD_CallbackTimerClass && AJB::MOD_CallbackTimer)
 		{
-			uint64 Function = (uint64)LemonPossession;
-
-			uint32 Lower = static_cast<uint32>(Function & 0xFFFFFFFF);
-			uint32 Upper = static_cast<uint32>((Function >> 32) & 0xFFFFFFFF);
-
-			/*LogA("Original Pointer", HexToString(Function));
-			LogA("Timer", AJB::MOD_CallbackTimer->GetFullName());*/
-			AJB::MOD_CallbackTimer->SetCallbackTimer(0.7f, Upper, Lower);
+			AJB::CreateCallbackTimer(LemonPossession, 0.7f);
 		}
 	}
 

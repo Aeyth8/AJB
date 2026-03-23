@@ -22,6 +22,8 @@ namespace A8CL
 		extern OFFSET FFree;
 		extern OFFSET FNameW;
 		extern OFFSET FNameA;
+		//extern OFFSET Logf;
+		extern OFFSET OutputText;
 
 		extern OFFSET ProcessEvent;
 		extern OFFSET Invoke;
@@ -71,12 +73,17 @@ namespace A8CL
 
 		// Native Game Functions
 
+		extern OFFSET PostEventAtLocation;
 		extern OFFSET ChangeState;
 		extern OFFSET TryGetMatchingMyPairInfo;
 		extern OFFSET TryGetMatchingPlayerInfo;
 		extern OFFSET GetUsername;
 		extern OFFSET GetNationalMatchSchedule;
 		extern OFFSET AJBWindowWidget;
+
+		extern OFFSET IsTenpoHost;
+		extern OFFSET IsAJBOfflineMode;
+		extern OFFSET IsOfflineMode;
 	}
 
 

@@ -31,7 +31,15 @@ namespace SDK
 	class AGameMode;
 	class APlayerController;
 	class ACharacter;
+	class AActor;
 	class APawn;
+	class ALevelScriptActor;
+
+	class FName;
+	struct FGameplayTag;
+	struct FVector;
+	struct FRotator;
+
 
 	class UAJBGameInstance;
 	class UBP_AJBGameInstance_C; // Final class of UAJBGameInstance
@@ -113,11 +121,12 @@ namespace SDK
 	class UBPF_AJBOutGamePlayerController_C;
 	class ABP_PPV_VSFilter_C;
 
-	class FName;
-	struct FFlowStateHandler;
-	struct FGameplayTag;
 	
+	struct FFlowStateHandler;	
+	class UAkAudioEvent;	
 	class AAJBCreadit_C;
+	class UWB_ModeSelect_C;
+	class UAJBWindowWidget;
 	
 	// Mod accessible only
 	class UWBP_OptionsMenu_C;
@@ -151,7 +160,7 @@ namespace AJB
 		AVDOL = 23,
 		KAKYOIN = 2,
 		HOL_HORSE = 10,
-		GUIDO = 4,
+		MISTA = 4,
 		NARANCIA = 13,
 		KOICHI = 5,
 		ROHAN = 6,
@@ -189,6 +198,7 @@ namespace AJB
 	extern SDK::UAJBSettings* AJBSettings;
 
 	extern SDK::AAJBCreadit_C* CreaditPointer;
+	extern SDK::UWB_ModeSelect_C* SimpleMatchHUD;		// Only accessible when in AJBSimpleMatch_P, the constructor is hooked and this value gets updated to transient objects only.
 
 	extern __int32* PlayerPoints;
 	extern bool* bDebugInputMode;	
@@ -364,12 +374,28 @@ namespace AJB
 	bool IsInSession();
 	bool IsOfflineMode();
 
+	// The callback function MUST have no parameters and return void.
+	// The system relies solely on inter-gamethread communication with a persistent blueprint object that sets the timer and executes a console command indicating the callback.
+	// We access the blueprint object from the DLL, inside the object is two int32s which contain the split address of this callback function which is executed in the hook for APlayerController::ConsoleCommand.
+	// You don't have to worry about any of that stuff since this wrapper simply requires the callback function.
+	void CreateCallbackTimer(void* FunctionCallback, float fTimer);
+
+	// Called externally by a callback timer, should not be manually called!
+	void TranslateSimpleMatch();
+
 	// ===========================================
 	// **		EXTERNAL HOOK FUNCTIONS			**
 	// ===========================================
-	bool FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag);
-	void OnToggleFullMapVisibility(SDK::UObject* Object);
-	//void CreaditKys(SDK::UObject* Object);
+
+	bool __fastcall FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag);
+	void __fastcall OnToggleFullMapVisibility(SDK::UObject* Object);
+	int __fastcall PostEventAtLocation(SDK::UAkAudioEvent* AkEvent, SDK::FVector& Location, SDK::FRotator& Orientation, UC::FString* EventName, SDK::UObject* WorldContextObject);
+
+	// Constructor Hooks
+	SDK::UAJBWindowWidget* __fastcall AJBWindowWidget(SDK::UAJBWindowWidget* This);
+	SDK::ALevelScriptActor* __fastcall ALevelScriptActor(SDK::AActor* This, void* ObjectInitializer);
+	
+
 
 }
 

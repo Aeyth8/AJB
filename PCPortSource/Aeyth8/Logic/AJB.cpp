@@ -8,6 +8,8 @@
 #include "../Tools/UFunctions.hpp"
 #include "../Tools/BytePatcher.h"
 
+#include "../Tools/UnrealExternWrapper.h"
+
 #include "../CmdArgs/CommandLineArgs.h"
 
 #include "../../Dumper-7/SDK/BP_AJBGameInstance_classes.hpp"
@@ -18,6 +20,7 @@
 #include "../../Dumper-7/SDK/FlowState_classes.hpp"
 #include "../../Dumper-7/SDK/FlowState_structs.hpp"
 #include "../../Dumper-7/SDK/BP_PPV_VSFilter_classes.hpp"
+#include "../../Dumper-7/SDK/BPF_AJBGameInstance_classes.hpp"
 
 #include "../../Dumper-7/CustomSDK/WBP_OptionsMenu_classes.hpp"				// Custom SDK header (NOT GAME NATIVE)
 #include "../../Dumper-7/CustomSDK/BP_GlobalPatcher_classes.hpp"			// Custom SDK header (NOT GAME NATIVE)
@@ -31,6 +34,17 @@
 
 #include "../../Dumper-7/SDK/AkAudio_classes.hpp"
 #include "../../Dumper-7/SDK/BP_SimpleStartLocationSelectGameMode_classes.hpp"
+
+// Needed for ALevelScriptActor hook
+#include "../../Dumper-7/SDK/AJBCreadit_classes.hpp"
+
+// Needed for the FlowstateUtil hook
+#include "../../Dumper-7/SDK/BP_AJBInGameHUD_classes.hpp"
+#include "../../Dumper-7/SDK/WB_FullMap_classes.hpp"
+
+// Needed for AJBSimpleMatch_P translation
+#include "../../Dumper-7/SDK/WB_ModeSelect_classes.hpp"
+#include "../../Dumper-7/SDK/WB_ModeSelectTextBase_classes.hpp"
 
 /*
 
@@ -57,6 +71,7 @@ SDK::UAJBVersion*					AJB::Version{nullptr};
 SDK::UAJBSettings*					AJB::AJBSettings{nullptr};
 
 SDK::AAJBCreadit_C*					AJB::CreaditPointer{nullptr};
+SDK::UWB_ModeSelect_C*				AJB::SimpleMatchHUD{nullptr};
 
 __int32*							AJB::PlayerPoints{nullptr};
 bool*								AJB::bDebugInputMode{nullptr};
@@ -75,7 +90,7 @@ SDK::UBP_GlobalPatcher_C*			AJB::MOD_GlobalPatcher{nullptr};
 SDK::UClass*						AJB::MOD_CallbackTimerClass{nullptr};
 SDK::UWBP_CallbackTimerHandler_C*	AJB::MOD_CallbackTimer{nullptr};
 
-const wchar_t*						AJB::DLLCommitVersion{L"[v0.5.0]"};
+const wchar_t*						AJB::DLLCommitVersion{L"[v0.5.1]"};
 UC::FString*						AJB::StrDLLCommitVersion{nullptr};
 
 // -- Windows External --
@@ -90,87 +105,49 @@ constexpr BYTE MOV{0xB0}; // 8 bit to AL register
 constexpr BYTE RETN{0xC3};
 constexpr BYTE NOP{0x90};
 
-
-
-
-/*static bool bPendingBlacklistedLevel{false};
-static FGuidWrapper CurrentPendingBlacklistedLevel{0};
-
-static bool IsTimeLimitExceeded(const wchar_t* CurrentTask, double StartTime, SDK::ULevel* Level, double TimeLimit)
-{
-	if (bPendingBlacklistedLevel && FGuidWrapper::IsEqual(Level->LevelBuildDataId, CurrentPendingBlacklistedLevel.Get()))
-	{
-		LogA(OFF::IsTimeLimitedExceeded.GetName(), "Removing blacklisted level..");
-
-		bPendingBlacklistedLevel = false;
-		return true;
-	}
-
-	return OFF::IsTimeLimitedExceeded.VerifyFC<bool(__fastcall*)(const wchar_t*, double, SDK::ULevel*, double)>()(CurrentTask, StartTime, Level, TimeLimit);
-}
-
-void AddToWorld(SDK::UWorld* This, SDK::ULevel* Level, SDK::FTransform& LevelTransform, bool bConsiderTimeLimit)
-{
-	LogA(OFF::AddToWorld.GetName(), Level ? std::format("[Level]: {} | [bConsiderTimeLimit]: {} | [LevelBuildDataId]: {} / A: {} B: {} C: {} D: {}", Level->GetFullName(), bConsiderTimeLimit, AJB::GetBlueprintClass<SDK::UKismetGuidLibrary>()->Conv_GuidToString(Level->LevelBuildDataId).ToString(), Level->LevelBuildDataId.A, Level->LevelBuildDataId.B, Level->LevelBuildDataId.C, Level->LevelBuildDataId.D) : "nullptr");
-
-	constexpr static SDK::FGuid BlacklistedLevels[]
-	{
-		{538744768, 1336608493, -556329026, -468622330}, // 201C97C04FAB06EDDED717BEE4116406 // [AJBCreadit] Worthless level that displays the credit counter.
-	};
-
-	int LevelIndex{0};
-
-	
-
-	for (const SDK::FGuid& GUID : BlacklistedLevels)
-	{
-		__assume(Level != nullptr); // SHUTUP
-		if (FGuidWrapper::IsEqual(BlacklistedLevels[LevelIndex], Level->LevelBuildDataId))
-		{
-			LogA(OFF::AddToWorld.GetName(), "World is blacklisted! Killing time limit..");
-
-			bPendingBlacklistedLevel = true;
-			CurrentPendingBlacklistedLevel.Assign(Level->LevelBuildDataId);
-
-			return;
-		}
-
-		LevelIndex++;
-	}
-
-	
-	return OFF::AddToWorld.VerifyFC<void(__thiscall*)(SDK::UWorld*, SDK::ULevel*, SDK::FTransform&, bool)>()(This, Level, LevelTransform, bConsiderTimeLimit);
-}*/
-
-SDK::ALevelScriptActor* __fastcall ALevelScriptActor(SDK::AActor* This, void* ObjectInitializer);
 void __fastcall GetNationalMatchSchedule(SDK::UAJBGameInstance*, bool*, bool*, SDK::FAJBMatchSchedule*, SDK::FAJBMatchScheduleDateTime*, SDK::FAJBMatchScheduleDateTime*);
 
 std::vector<Hooks::HookStructure> StandaloneHooks =
 {
-	{OFF::UConsole, UFunctions::UConsole},
-	{OFF::ConsoleCommand, UFunctions::ConsoleCommand},
-	{OFF::Browse, UFunctions::Browse},
-	{OFF::Login, UFunctions::Login},
-	{OFF::PreLogin, UFunctions::PreLogin},
-	{OFF::AJBPreLogin, UFunctions::PreLogin},
-	{OFF::InitListen, UFunctions::InitListen},
-	{OFF::AppPreExit, UFunctions::AppPreExit},
-	{OFF::IsNonPakFileNameAllowed, UFunctions::IsNonPakFilenameAllowed},
-	{OFF::FindFileInPakFiles, UFunctions::FindFileInPakFiles},
-	{OFF::ChangeState, AJB::FlowUtilChangeState},
-	//{OFF::ProcessMulticastDelegate, UFunctions::ProcessMulticastDelegate}, // unsure if I'm keeping this
-	{OFF::BroadcastDelegate, UFunctions::BroadcastDelegate},
-	{OFF::Invoke, UFunctions::Invoke},
-	//{OFF::PrepareMapChange, UFunctions::PrepareMapChange},
-	{OFF::ALevelScriptActorConstructor, ALevelScriptActor},
-	{OFF::ClientTeamMessageImplementation, UFunctions::ClientTeamMessageImplementation},
-	//{OFF::PostLogin, UFunctions::PostLogin},
-	//{OFF::BeginPlay, UFunctions::BeginPlay},
-	{OFF::HandleStartingNewPlayer, UFunctions::HandleStartingNewPlayer},
-	//{OFF::GetNationalMatchSchedule, GetNationalMatchSchedule},
-	/*{OFF::AddToWorld, AddToWorld},
-	{OFF::IsTimeLimitedExceeded, IsTimeLimitExceeded},*/
-	/*{OFF::RequestLevel, UFunctions::RequestLevel}, Temporarily disabled since it inevitably crashes and if it doesn't it will stall forever */
+	{OFF::UConsole,							UFunctions::UConsole},
+	{OFF::ConsoleCommand,					UFunctions::ConsoleCommand},
+	{OFF::OutputText,						UFunctions::OutputText},
+	{OFF::Browse,							UFunctions::Browse},
+	{OFF::Login,							UFunctions::Login},
+	{OFF::PreLogin,							UFunctions::PreLogin},
+	{OFF::AJBPreLogin,						UFunctions::PreLogin},
+	{OFF::InitListen,						UFunctions::InitListen},
+	{OFF::AppPreExit,						UFunctions::AppPreExit},
+	{OFF::IsNonPakFileNameAllowed,			UFunctions::IsNonPakFilenameAllowed},
+	{OFF::FindFileInPakFiles,				UFunctions::FindFileInPakFiles},
+
+	{OFF::ClientTeamMessageImplementation,	UFunctions::ClientTeamMessageImplementation},
+	//{OFF::ProcessMulticastDelegate,		UFunctions::ProcessMulticastDelegate}, // unsure if I'm keeping this
+	//{OFF::BroadcastDelegate,				UFunctions::BroadcastDelegate},
+	{OFF::Invoke,							UFunctions::Invoke},
+	{OFF::HandleStartingNewPlayer,			UFunctions::HandleStartingNewPlayer},
+
+	//{OFF::PrepareMapChange,				UFunctions::PrepareMapChange},
+	//{OFF::PostLogin,						UFunctions::PostLogin},
+	//{OFF::BeginPlay,						UFunctions::BeginPlay},
+	//{OFF::RequestLevel,					UFunctions::RequestLevel}, Temporarily disabled since it inevitably crashes and if it doesn't it will stall forever
+	
+
+	// Core gameplay hooks
+
+	{OFF::ALevelScriptActorConstructor,		AJB::ALevelScriptActor},
+	{OFF::AJBWindowWidget,					AJB::AJBWindowWidget},
+	//{OFF::PostEventAtLocation,				AJB::PostEventAtLocation}, // RANDOMLY CRASHES INGAME NEEDS FIXED FOR NULLPTR DEREFERENCE
+	{OFF::ChangeState,						AJB::FlowUtilChangeState},
+	
+	// Server logic hooks
+
+	/*{OFF::IsTenpoHost,						AJB::IsServer},
+	{OFF::IsAJBOfflineMode,					AJB::IsOfflineMode},
+	{OFF::IsOfflineMode,					AJB::IsOfflineMode},*/
+	
+
+	
 };
 
 A8CL::OFFSET NetID("UAJBNetworkObserver::GetNetID", 0x4ECC80);
@@ -178,9 +155,6 @@ A8CL::OFFSET OpenCommand("AAJBOutGameProxy::GetOpenCommand", 0x506DD0);
 A8CL::OFFSET PostEventByName("UAkComponent::PostAkEventByName", 0x291650);
 A8CL::OFFSET PostEvent("UAkComponent::PostAkEvent", 0x291390);
 A8CL::OFFSET LoadBankByName("UAkGameplayStatics::LoadBankByName", 0x286850);
-A8CL::OFFSET IsTenpoHost("AAJBOutGameProxy::IsTenpoHost", 0x507210);
-A8CL::OFFSET IsAJBOfflineMode("UAJBUtilityFunctionLibrary::IsAJBOfflineMode", 0x49DE20);
-A8CL::OFFSET oIsOfflineMode("UAJBNetworkObserver::IsOfflineMode", 0x4ED5D0);
 
 void __fastcall GetNationalMatchSchedule(SDK::UAJBGameInstance* This, bool* OutCanPlaySoloMode, bool* OutCanPlayPairMode, SDK::FAJBMatchSchedule* OutMatchSchedule, SDK::FAJBMatchScheduleDateTime* OutSoloScheduleDateTime, SDK::FAJBMatchScheduleDateTime* OutPairScheduleDateTime)
 {
@@ -200,9 +174,11 @@ void FormatterHook(void* This, bool bInRebuildText, bool bInRebuildAsSource, SDK
 void TryGetMatchingMyPairInfo(SDK::UAJBGameInstance* This, bool* bIsValid, bool* bIsRoomHost, SDK::FMatchingPlayerInfo* Out)
 {
 	LogA(OFF::TryGetMatchingMyPairInfo.GetName(), std::format("[This]: {} [bIsValid]: {} [bIsRoomHost]: {} [Info]: {}", This->GetFullName(), *bIsValid, *bIsRoomHost, AJB::PlayerInfoParser(*Out)));
-	SDK::FString Lemon{L"Lemon Possession"};
-	AJB::GetBlueprintClass<SDK::UAJBPlayerInfoUtility>()->SetBotFMatchingPlayerInfo(Out, Lemon);
-	Call<UFunctions::Decl::CopyString>(OFF::CopyString.PlusBase())(&Out->PlayerName, &Lemon);
+	//SDK::FString Lemon{L"Lemon Possession"};
+	//AJB::GetBlueprintClass<SDK::UAJBPlayerInfoUtility>()->SetBotFMatchingPlayerInfo(Out, Lemon);
+	//Call<UFunctions::Decl::CopyString>(OFF::CopyString.PlusBase())(&Out->PlayerName, &Lemon);
+	//memcpy(Out, &AJB::Instance->MatchingPlayers[0].Second, sizeof(SDK::FMatchingPlayerInfo));
+	AJB::CopyString(&Out->PlayerName, &AJB::Instance->MatchingPlayers[0].Second.PlayerName);
 	return OFF::TryGetMatchingMyPairInfo.VerifyFC<void(__thiscall*)(SDK::UAJBGameInstance*, bool*,bool*, SDK::FMatchingPlayerInfo*)>()(This, bIsValid, bIsRoomHost, Out);
 }
 
@@ -245,16 +221,6 @@ bool TryGetMatchingPlayerInfoByPlayerIDPureFunction(SDK::UAJBGameInstance* This,
 	}
 
 	return OFF::TryGetMatchingPlayerInfo.VerifyFC<bool(__thiscall*)(SDK::UAJBGameInstance*, int32, SDK::FMatchingPlayerInfo*)>()(This, PlayerID, Out);
-}
-
-#include "../../Dumper-7/SDK/AJBCreadit_classes.hpp"
-
-SDK::ALevelScriptActor* __fastcall ALevelScriptActor(SDK::AActor* This, void* ObjectInitializer)
-{
-	if (This->IsA(SDK::AAJBCreadit_C::StaticClass())) {
-		AJB::CreaditPointer = static_cast<SDK::AAJBCreadit_C*>(This);
-	}
-	return OFF::ALevelScriptActorConstructor.VerifyFC<SDK::ALevelScriptActor* (__fastcall*)(SDK::AActor*, void*)>()(This, ObjectInitializer);
 }
 
 const wchar_t* GetUsername()
@@ -368,111 +334,7 @@ SDK::UMaterial* GetDefaultMaterial(void* This)
 	return oGetDefaultMaterial.VerifyFC<SDK::UMaterial*(__fastcall*)(void*)>()(This);
 }
 
-#include "../../Dumper-7/SDK/WB_ModeSelect_classes.hpp"
-#include "../../Dumper-7/SDK/WB_ModeSelectTextBase_classes.hpp"
-#include "../../Dumper-7/SDK/WB_ModeSelect_Button_EndGame_classes.hpp"
 
-extern SDK::UWB_ModeSelect_C* SpongeBob{nullptr};
-
-void TranslateSimpleMatch()
-{
-	LogA("TranslateSimpleMatch", "START");
-	
-	struct RetainerBoxSubclass : SDK::UWB_ModeSelectTextBase_C { SDK::URetainerBox* RetainerBox; };
-
-	struct WidgetSubclassIndexer
-	{
-		static RetainerBoxSubclass* GetRetainerBox(uint64 MainModeSelectWidget, uint32 OffsetToClass, uint32 OffsetToRetainerBox)
-		{
-			uint64 Subclass = reinterpret_cast<uint64>(*reinterpret_cast<uint64**>(MainModeSelectWidget + OffsetToClass));
-			LogA("LETS CUT IT OPEN AND SEE WHATS INSIDE!", reinterpret_cast<SDK::UObject*>(Subclass)->GetFullName());
-
-			uint64 RetainerBox = reinterpret_cast<uint64>(*reinterpret_cast<uint64**>(Subclass + OffsetToRetainerBox));
-			LogA("A TOMATO?! WHAT THE FU-", reinterpret_cast<SDK::UObject*>(RetainerBox)->GetFullName());
-
-			return reinterpret_cast<RetainerBoxSubclass*>(RetainerBox);
-		}
-	};
-
-	struct ModeSelectWidget
-	{
-		uint32			OffsetToClass;
-		uint32			OffsetToRetainerBox;
-		const wchar_t*  TranslationString;
-		int				BestPlacementIndex;
-	};
-
-	constexpr const ModeSelectWidget WidgetsToTranslate[] =
-	{		
-		{0x02E8, 0x0370, L"ONLINE",					0},			// WB_ModeSelect_Button_PAIR		// WB_ModeSelect_Txt_PAIR
-		{0x0300, 0x0398, L"GAMBLING",				2},			// WB_ModeSelect_Button_Reward		// WB_ModeSelect_Txt_Reward
-		{0x02F0, 0x0378, L"MORE GAMBLING",			1},			// WB_ModeSelect_Button_PremiumDraw // WB_ModeSelect_Txt_PremiumDraw_C_0
-		{0x02F8, 0x0330, L"DEALER'S CHALLENGE",		4},			// WB_ModeSelect_Button_PvE			// WB_ModeSelect_Txt_PvE_C_1		
-		{0x0310, 0x0368, L"STORE BATTLE",			1},			// WB_ModeSelect_Button_Shop		// WB_ModeSelect_Txt_Shop
-		{0x0318, 0x0370, L"ONLINE",					0},			// WB_ModeSelect_Button_SOLO		// WB_ModeSelect_Txt_SOLO
-		{0x0320, 0x0330, L"TRAINING",				1},			// WB_ModeSelect_Button_Training	// WB_ModeSelect_Txt_Training
-		{0x0328, 0x0358, L"TUTORIAL",				1},			// WB_ModeSelect_Button_Tutorial	// WB_ModeSelect_Txt_Tutorial		
-	};
-
-	static SDK::FString Blank{L" "};
-
-	// {0x02E0, 0x0320, L"Exit To Titlescreen",	1},			// WB_ModeSelect_Button_EndGame		// RetainerBox_1
-	// {0x02F8, 0x0328, L"Fight waves of bots in Farm.",	0},			// WB_ModeSelect_Button_PvE			// RetainerBox_0
-
-	for (const ModeSelectWidget& WidgetTT : WidgetsToTranslate)
-	{
-		RetainerBoxSubclass* RetainerBoxWrapper = WidgetSubclassIndexer::GetRetainerBox((uint64)SpongeBob, WidgetTT.OffsetToClass, WidgetTT.OffsetToRetainerBox);
-		if (RetainerBoxWrapper)
-		{
-			SDK::URetainerBox* CurrentRetainer = RetainerBoxWrapper->RetainerBox;
-			if (CurrentRetainer)
-			{
-				SDK::UHorizontalBox* Box = static_cast<SDK::UHorizontalBox*>(CurrentRetainer->Slots[0]->Content);
-				const int Count = Box->Slots.Num();
-
-				for (int i{0}; i < Count; ++i)
-				{
-					if (!Box->Slots[i] || !Box->Slots[i]->Content) continue;
-
-					SDK::UTextBlock* Widget = static_cast<SDK::UTextBlock*>(Box->Slots[i]->Content);
-
-					AJB::MOD_GlobalPatcher->SetWidgetText(Widget, i == WidgetTT.BestPlacementIndex ? WidgetTT.TranslationString : Blank);
-				}
-				
-			}
-		}
-	}
-}
-
-SDK::UAJBWindowWidget* AJBWindowWidget(SDK::UAJBWindowWidget* This)
-{
-	SDK::UAJBWindowWidget* Result = OFF::AJBWindowWidget.VerifyFC<SDK::UAJBWindowWidget*(__fastcall*)(SDK::UAJBWindowWidget*)>()(This);
-	if (Result->IsA(SDK::UWB_ModeSelect_C::StaticClass()) && !Result->IsDefaultObject() && !(Result->Flags & SDK::EObjectFlags::ArchetypeObject))
-	{
-		LogA("ModeSelect", Result->GetFullName());
-
-		SpongeBob = (SDK::UWB_ModeSelect_C*)This;
-		// I didn't remember at the time, but now I'm pretty sure the reason I used FindObjects is because I would have to include all of these stupid headers for each widget, so instead of doing that I'm just gonna grab the numbers.
-		// using BT = SDK::UWB_ModeSelect_C;
-		// static SDK::UWB_ModeSelectButtonBase_C SDK::UWB_ModeSelect_C::* WidgetsToTranslate[] = {&BT::WB_ModeSelect_Button_Training, &BT::WB_ModeSelect_Button_PvE};
-
-		if (AJB::MOD_CallbackTimerClass && AJB::MOD_CallbackTimer)
-		{
-			uint64 Function = (uint64)TranslateSimpleMatch;
-
-			uint32 Lower = static_cast<uint32>(Function & 0xFFFFFFFF);
-			uint32 Upper = static_cast<uint32>((Function >> 32) & 0xFFFFFFFF);
-
-			/*LogA("Original Pointer", HexToString(Function));
-			LogA("Timer", AJB::MOD_CallbackTimer->GetFullName());*/
-			AJB::MOD_CallbackTimer->SetCallbackTimer(0.0f, Upper, Lower);
-		}
-
-		
-	}
-
-	return Result;
-}
 
 static void* GConfigCache{nullptr};
 static constexpr const wchar_t* StaticKey{L"SoftwareCursors"};
@@ -496,16 +358,19 @@ static bool __fastcall SetString(void* This, const wchar_t* Section, const wchar
 
 		if (Count == 1)
 		{
-			/*
 			
-			Uncomment to unrestrict the GUI size, allowing for bigger screens to resize and feel more like a PC game.
+			
+			//Uncomment to unrestrict the GUI size, allowing for bigger screens to resize and feel more like a PC game.
 
-			SDK::UUserInterfaceSettings* Interface{nullptr};
+			if (CMLA::Debug.GetAsBool())
+			{
+				SDK::UUserInterfaceSettings* Interface{nullptr};
 
-			SDK::UClass* TheClass = Call<SDK::UClass * (__fastcall*)()>(PB(0x1908090))();
-			Interface = Call<SDK::UUserInterfaceSettings*(__fastcall*)(SDK::UClass*)>(OFF::CreateDefaultObject.PlusBase())(TheClass);
-			LogA("Interface", Interface->GetFullName());
-			Call<void(__fastcall*)(SDK::UObject*, SDK::UClass*, const wchar_t*, uint32, SDK::UProperty*)>(PB(0x8066C0))(Interface, TheClass, 0,0,0);*/
+				SDK::UClass* TheClass = Call<SDK::UClass * (__fastcall*)()>(PB(0x1908090))();
+				Interface = Call<SDK::UUserInterfaceSettings*(__fastcall*)(SDK::UClass*)>(OFF::CreateDefaultObject.PlusBase())(TheClass);
+				LogA("Interface", Interface->GetFullName());
+				Call<void(__fastcall*)(SDK::UObject*, SDK::UClass*, const wchar_t*, uint32, SDK::UProperty*)>(PB(0x8066C0))(Interface, TheClass, 0,0,0);
+			}
 
 			Key = StaticKey;
 			Call<UFunctions::Decl::CopyString>(OFF::CopyString.PlusBase())(&Value, const_cast<SDK::FString*>(&StaticValue));
@@ -648,8 +513,8 @@ void AJB::Init_Hooks()
 	{
 		Hooks::CreateAndEnableHooks(StandaloneHooks);
 
-		/*Hooks::CreateAndEnableHook(OFF::GetUsername, GetUsername);
-		Hooks::CreateAndEnableHook(OFF::TryGetMatchingMyPairInfo, TryGetMatchingMyPairInfo);*/
+		Hooks::CreateAndEnableHook(OFF::GetUsername, GetUsername);
+		Hooks::CreateAndEnableHook(OFF::TryGetMatchingMyPairInfo, TryGetMatchingMyPairInfo);
 
 		if (CMLA::HookAndLogProcessEvent.GetAsBool())
 		{
@@ -674,11 +539,7 @@ void AJB::Init_Hooks()
 
 		Hooks::CreateAndEnableHook(OFF::TryGetMatchingPlayerInfo, TryGetMatchingPlayerInfoByPlayerIDPureFunction);
 
-		Hooks::CreateAndEnableHook(IsTenpoHost, AJB::IsServer);
-		Hooks::CreateAndEnableHook(IsAJBOfflineMode, IsOfflineMode);
-		Hooks::CreateAndEnableHook(oIsOfflineMode, IsOfflineMode);
 
-		Hooks::CreateAndEnableHook(OFF::AJBWindowWidget, AJBWindowWidget);
 
 		//Hooks::CreateAndEnableHook(oGetDefaultMaterial, GetDefaultMaterial);
 
@@ -772,13 +633,13 @@ void AJB::Init_Engine()
 		SendMessageA(AJB::PCPortWindow, WM_SETICON, ICON_SMALL, (LPARAM)AJBLogo);
 	}
 
-	static wchar_t VersioningBuffer[30]{L'A', L'J', L'B', L' ', L'P', L'C', L' ', L'P', L'o', L'r', L't', L' ', L'V', L'2', L'8', L' '};
+	static wchar_t VersioningBuffer[30]{L"AJB PC Port V28 "};
 	lstrcatW(VersioningBuffer, AJB::DLLCommitVersion);
 	SetWindowTextW(AJB::PCPortWindow, VersioningBuffer);
 	//SetConsoleTitleW(AJB::DLLCommitVersion);
 }
 
-#include "../../Dumper-7/SDK/BPF_AJBGameInstance_classes.hpp"
+
 
 void AJB::Init_Vars()
 {
@@ -787,7 +648,7 @@ void AJB::Init_Vars()
 	System = static_cast<SDK::UAJBAMSystemObject*>(Instance->AMSystemObject);
 	PlayerPoints = (&System->PP);
 
-	/*SDK::FString ElSev{L"1170"};
+	SDK::FString ElSev{L"1170"};
 	SDK::FString Username{CMLA::Username.GetArgumentAsString()};
 	CopyString(&Instance->PlayerLoginInfo.SessionID, &ElSev);
 	CopyString(&Instance->PlayerLoginInfo.AccessCode, &ElSev);
@@ -796,7 +657,7 @@ void AJB::Init_Vars()
 	CopyString(&Instance->PlayerLoginInfo.UserDataID, &ElSev);
 	Instance->PlayerLoginInfo.MatchingPlayerInfo.PlayerIconID = 5;
 	Instance->PlayerLoginInfo.bIsBNCard = true;
-	Instance->PlayerLoginInfo.bIsGuest = false;*/
+	Instance->PlayerLoginInfo.bIsGuest = false;
 			
 	/*for (SDK::FCustomData& Data : Instance->PlayerLoginInfo.CustomData)
 	{
@@ -970,7 +831,7 @@ void AJB::CopyString(UC::FString* StringToModify, UC::FString* StringToCopy)
 	Call<UFunctions::Decl::CopyString>(OFF::CopyString.PlusBase())(StringToModify, StringToCopy);
 }
 
-#include "../Tools/UnrealExternWrapper.h"
+
 
 bool AJB::IsServer()
 {
@@ -995,13 +856,96 @@ bool A8CL::AJB::IsOfflineMode()
 	return !IsInSession();
 }
 
+void AJB::CreateCallbackTimer(void* FunctionCallback, float fTimer)
+{
+	if (AJB::MOD_CallbackTimer)
+	{
+		uint64 Function = (uint64)FunctionCallback;
 
+		uint32 Lower = static_cast<uint32>(Function & 0xFFFFFFFF);
+		uint32 Upper = static_cast<uint32>((Function >> 32) & 0xFFFFFFFF);
 
-bool AJB::FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag)
+		AJB::MOD_CallbackTimer->SetCallbackTimer(fTimer, Upper, Lower);
+	}
+}
+
+void AJB::TranslateSimpleMatch()
+{
+	//LogA("TranslateSimpleMatch", "START");
+	
+	struct RetainerBoxSubclass : SDK::UWB_ModeSelectTextBase_C { SDK::URetainerBox* RetainerBox; };
+
+	struct WidgetSubclassIndexer
+	{
+		// This may seem confusing atfirst but all this really does is prevent me from having to include every single pointless header for each widget.
+		// It simply adds the offsets to memory starting from UWB_ModeSelect_C and the offsets lead to each widget pointer and then retainer box within.
+		static RetainerBoxSubclass* GetRetainerBox(uint64 MainModeSelectWidget, uint32 OffsetToClass, uint32 OffsetToRetainerBox)
+		{
+			uint64 Subclass = reinterpret_cast<uint64>(*reinterpret_cast<uint64**>(MainModeSelectWidget + OffsetToClass));
+			uint64 RetainerBox = reinterpret_cast<uint64>(*reinterpret_cast<uint64**>(Subclass + OffsetToRetainerBox));
+
+			return reinterpret_cast<RetainerBoxSubclass*>(RetainerBox);
+		}
+	};
+
+	struct ModeSelectWidget
+	{
+		uint32			OffsetToClass;
+		uint32			OffsetToRetainerBox;
+		const wchar_t*  TranslationString;
+		byte			BestPlacementIndex;
+		bool			bSubwidget = false;
+	};
+
+	constexpr const ModeSelectWidget WidgetsToTranslate[] =
+	{		
+		{0x02E8, 0x0370, L"ONLINE",					0},			// WB_ModeSelect_Button_PAIR		// WB_ModeSelect_Txt_PAIR
+		{0x0300, 0x0398, L"GAMBLING",				2},			// WB_ModeSelect_Button_Reward		// WB_ModeSelect_Txt_Reward
+		{0x02F0, 0x0378, L"MORE GAMBLING",			1},			// WB_ModeSelect_Button_PremiumDraw // WB_ModeSelect_Txt_PremiumDraw_C_0
+		{0x02F8, 0x0330, L"DEALER'S CHALLENGE",		4},			// WB_ModeSelect_Button_PvE			// WB_ModeSelect_Txt_PvE_C_1		
+		{0x0310, 0x0368, L"STORE BATTLE",			1},			// WB_ModeSelect_Button_Shop		// WB_ModeSelect_Txt_Shop
+		{0x0318, 0x0370, L"ONLINE",					0},			// WB_ModeSelect_Button_SOLO		// WB_ModeSelect_Txt_SOLO
+		{0x0320, 0x0330, L"TRAINING",				1},			// WB_ModeSelect_Button_Training	// WB_ModeSelect_Txt_Training
+		{0x0328, 0x0358, L"TUTORIAL",				1},			// WB_ModeSelect_Button_Tutorial	// WB_ModeSelect_Txt_Tutorial
+
+		// Subwidgets // They're one less pointer away.
+
+		{0x02E0, 0x0320, L"Exit to Titlescreen",							1, true},	// WB_ModeSelect_Button_EndGame		// RetainerBox_1
+		{0x02F8, 0x0328, L"Fight waves of bots in the Everglades Farm.",	6, true},	// WB_ModeSelect_Button_PvE			// RetainerBox_0	// The only UAJBTextBlock is in index #6, everything else is a UImage or other crap.
+	};
+
+	static SDK::FString Blank{L" "};
+
+	for (const ModeSelectWidget& WidgetTT : WidgetsToTranslate)
+	{
+		RetainerBoxSubclass* RetainerBoxWrapper = WidgetSubclassIndexer::GetRetainerBox((uint64)AJB::SimpleMatchHUD, WidgetTT.OffsetToClass, WidgetTT.OffsetToRetainerBox);
+		if (RetainerBoxWrapper)
+		{
+			SDK::URetainerBox* CurrentRetainer = WidgetTT.bSubwidget ? (SDK::URetainerBox*)RetainerBoxWrapper : RetainerBoxWrapper->RetainerBox;
+			if (CurrentRetainer)
+			{
+				SDK::UHorizontalBox* Box = static_cast<SDK::UHorizontalBox*>(CurrentRetainer->Slots[0]->Content);
+				const int Count = Box->Slots.Num();
+
+				for (int i{0}; i < Count; ++i)
+				{
+					if (!Box->Slots[i] || !Box->Slots[i]->Content || !Box->Slots[i]->Content->IsA(SDK::UTextBlock::StaticClass())) continue;
+
+					///LogA("Slot", Box->Slots[i]->Content->GetFullName());
+					// LogA(Widget->GetFullName(), std::to_string(i));
+
+					SDK::UTextBlock* Widget = static_cast<SDK::UTextBlock*>(Box->Slots[i]->Content);
+					AJB::MOD_GlobalPatcher->SetWidgetText(Widget, i == WidgetTT.BestPlacementIndex ? WidgetTT.TranslationString : Blank);
+				}				
+			}
+		}
+	}
+}
+
+bool __fastcall AJB::FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag)
 {
 	LogA("UFlowStateUtil", std::format("New FlowState: {}", NextStateTag.TagName.ToString()));
 	
-
 	// The mouse will not lock into the viewport on its own (making KBM compability unplayable unless you enjoy constantly holding down middle click to move your camera)
 	constexpr const static wchar_t* SDT_MouseLockFlowstates[]
 	{
@@ -1046,15 +990,7 @@ bool AJB::FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGamepl
 	return OFF::ChangeState.VerifyFC<bool(__fastcall*)(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag)>()(StateHandler, NextStateTag);
 }
 
-
-//#include "../../Dumper-7/SDK/BP_AJBCompass_classes.hpp"
-//#include "../../Dumper-7/SDK/WB_Compass_classes.hpp"
-//#include "../../Dumper-7/SDK/WB_InGameMain_classes.hpp"
-//#include "../../Dumper-7/SDK/WB_LandmarkableMap_classes.hpp"
-#include "../../Dumper-7/SDK/BP_AJBInGameHUD_classes.hpp"
-#include "../../Dumper-7/SDK/WB_FullMap_classes.hpp"
-
-void AJB::OnToggleFullMapVisibility(SDK::UObject* Object)
+void __fastcall AJB::OnToggleFullMapVisibility(SDK::UObject* Object)
 {
 	static bool bToggled{false};
 	/*static*/ SDK::UWB_FullMap_C* MapCache{nullptr};
@@ -1084,6 +1020,62 @@ void AJB::OnToggleFullMapVisibility(SDK::UObject* Object)
 			}
 		}
 	}
+}
+
+int __fastcall AJB::PostEventAtLocation(SDK::UAkAudioEvent* AkEvent, SDK::FVector& Location, SDK::FRotator& Orientation, SDK::FString* EventName, SDK::UObject* WorldContextObject)
+{
+	//int32 Result = OFF::PostEventAtLocation.VerifyFC<int32(__fastcall*)(SDK::UAkAudioEvent*, SDK::FVector&, SDK::FRotator&, SDK::FString&, SDK::UObject*)>()(AkEvent, Location, Orientation, EventName, WorldContextObject);
+	LogA(OFF::PostEventAtLocation.GetName(),EventName ? EventName->ToString() : "NULL");
+
+	// Play_BGM03_Menu2 is the song played for the stupid "GameOver" sequence whenever you run out of time in AJBSimpleMatch_P (which I patched long ago) but also when you click to "exit" the game.
+	// Normally doing so would play the annoying and pointlessly delayed song and then eventually try to go to AJBStartUp_P.
+	// Since my browse hook already redirects it to my Titlescreen this hook will simply end the stupid delayed sequence early and immediately head back to the Titlescreen, I'M DONE WAITING.
+
+	if (wcscmp(EventName->GetDataPtr(), L"Play_BGM03_Menu2") == 0)
+	{
+		constexpr const wchar_t* Titlescreen = L"open /Game/Aeyth8/Maps/TitleScreen/AJBTitleScreen";
+		static SDK::FString ImmediateExit(Titlescreen);
+		UFunctions::UConsole(GEngine->GameViewport->ViewportConsole, ImmediateExit);
+
+		return 0;
+	}
+
+	//return Result;
+	return OFF::PostEventAtLocation.VerifyFC<int32(__fastcall*)(SDK::UAkAudioEvent*, SDK::FVector&, SDK::FRotator&, SDK::FString*, SDK::UObject*)>()(AkEvent, Location, Orientation, EventName, WorldContextObject);
+}
+
+SDK::UAJBWindowWidget* __fastcall AJB::AJBWindowWidget(SDK::UAJBWindowWidget* This)
+{
+	SDK::UAJBWindowWidget* Result = OFF::AJBWindowWidget.VerifyFC<SDK::UAJBWindowWidget*(__fastcall*)(SDK::UAJBWindowWidget*)>()(This);
+
+	if (!Result->IsDefaultObject() && !(Result->Flags & SDK::EObjectFlags::ArchetypeObject))
+	{
+		if (Result->IsA(SDK::UWB_ModeSelect_C::StaticClass()))
+		{
+			LogA("ModeSelect", Result->GetFullName());
+
+			AJB::SimpleMatchHUD = (SDK::UWB_ModeSelect_C*)This;
+
+			if (AJB::MOD_CallbackTimerClass && AJB::MOD_CallbackTimer)
+			{
+				AJB::CreateCallbackTimer(AJB::TranslateSimpleMatch, 0.0f);
+			}
+		}
+		/*else if (Result->IsA(SDK::UWB_GameOver_C::StaticClass()))
+		{
+			LogA("Stupid", "it may be stupid BUT ITS ALSO DUMB");
+		}*/		
+	}
+
+	return Result;
+}
+
+SDK::ALevelScriptActor* __fastcall AJB::ALevelScriptActor(SDK::AActor* This, void* ObjectInitializer)
+{
+	if (This->IsA(SDK::AAJBCreadit_C::StaticClass())) {
+		AJB::CreaditPointer = static_cast<SDK::AAJBCreadit_C*>(This);
+	}
+	return OFF::ALevelScriptActorConstructor.VerifyFC<SDK::ALevelScriptActor* (__fastcall*)(SDK::AActor*, void*)>()(This, ObjectInitializer);
 }
 
 // -- FMemory

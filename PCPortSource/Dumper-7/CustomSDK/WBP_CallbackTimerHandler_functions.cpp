@@ -29,7 +29,7 @@ int32 UWBP_CallbackTimerHandler_C::AddToArrays(float fWaitFor, int32 pUpper, int
 	static class UFunction* Func = nullptr;
 
 	if (Func == nullptr)
-		Func = Class->GetFunction("WBP_CallbackTimerHandler_C", "addToArrays");
+		Func = Class->GetFunction("WBP_CallbackTimerHandler_C", "AddToArrays");
 
 	Params::WBP_CallbackTimerHandler_C_addToArrays Parms{};
 
@@ -53,7 +53,7 @@ int32 UWBP_CallbackTimerHandler_C::RemoveFromArrays(int32 Index)
 	static class UFunction* Func = nullptr;
 
 	if (Func == nullptr)
-		Func = Class->GetFunction("WBP_CallbackTimerHandler_C", "removeFromArrays");
+		Func = Class->GetFunction("WBP_CallbackTimerHandler_C", "RemoveFromArrays");
 
 	Params::WBP_CallbackTimerHandler_C_removeFromArrays Parms{};
 

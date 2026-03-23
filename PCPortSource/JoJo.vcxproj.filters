@@ -137,9 +137,6 @@
     <ClCompile Include="Aeyth8\Global.cpp">
       <Filter>Aeyth8</Filter>
     </ClCompile>
-    <ClCompile Include="Aeyth8\Offsets.cpp">
-      <Filter>Aeyth8</Filter>
-    </ClCompile>
     <ClCompile Include="Dumper-7\SDK\AJB_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
@@ -331,6 +328,9 @@
     </ClCompile>
     <ClCompile Include="Dumper-7\SDK\WB_TournamentMode_Main_functions.cpp">
       <Filter>SDK\CPP\Widgets</Filter>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\Offsets.cpp">
+      <Filter>Aeyth8</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -16,6 +16,8 @@ namespace OFF
 	OFFSET FFree("FMemory::Free", 0x5BC5E0);
 	OFFSET FNameW("FName::FName wchar_t", 0x681ED0);
 	OFFSET FNameA("FName::FName char", 0x681E50);
+	//OFFSET Logf("FOutputDevice::Logf", 0x64D570);
+	OFFSET OutputText("UConsole::OutputText", 0x17A8BF0);
 
 	OFFSET ProcessEvent("UObject::ProcessEvent", 0x823B30);
 	OFFSET Invoke("UFunction::Invoke", 0x70DBF0);
@@ -77,12 +79,17 @@ namespace OFF
 
 	// Native Game Functions
 
+	OFFSET PostEventAtLocation("UAkGameplayStatics::PostEventAtLocation", 0x292F30);
 	OFFSET ChangeState("UFlowStateUtil::ChangeState", 0x21CF10);
 	OFFSET TryGetMatchingMyPairInfo("UAJBGameInstance::TryGetMatchingMyPairInfo", 0x486FC0);
 	OFFSET TryGetMatchingPlayerInfo("UAJBGameInstance::TryGetMatchingPlayerInfoByPlayerIDPureFunction", 0x486A70);
 	OFFSET GetUsername("GetUsername", 0x694650);
 	OFFSET GetNationalMatchSchedule("UAJBGameInstance::GetNationalMatchSchedule", 0x47E410);
 	OFFSET AJBWindowWidget("UAJBWindowWidget::UAJBWindowWidget", 0x534690);
+
+	OFFSET IsTenpoHost("AAJBOutGameProxy::IsTenpoHost", 0x507210);
+	OFFSET IsAJBOfflineMode("UAJBUtilityFunctionLibrary::IsAJBOfflineMode", 0x49DE20);
+	OFFSET IsOfflineMode("UAJBNetworkObserver::IsOfflineMode", 0x4ED5D0);
 
 	/*
 	

@@ -78,6 +78,12 @@ int __stdcall DllMain(HMODULE hModule, DWORD ulReasonForCall, LPVOID lpReserved)
 		Global::InitLog();
 		PreInit();
 
+		if (AJB::bIsLemonPossessioned)
+		{
+			const int Box = MessageBoxA(0, "Lemon Possession mode is enabled:\n\nAll materials will be replaced with Lemon Possession.\nFlashing lights may occur.\n\nDo you wish to proceed?", "!!! EPILEPSY WARNING !!!", MB_OKCANCEL);
+			if (Box == IDCANCEL) AJB::bIsLemonPossessioned = false;
+		}
+
 #ifdef PROXY
 		if (!CMLA::InjectDLL.GetAsBool()) if (Proxy::Attach(hModule))
 #endif

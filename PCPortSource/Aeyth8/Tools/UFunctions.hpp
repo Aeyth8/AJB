@@ -35,7 +35,7 @@ public:
 
 
 		inline static std::string FWorldContextParseCache{""};
-
+		
 	public:
 
 		const static std::string& FURLParser(SDK::FURL& URL);
@@ -143,6 +143,8 @@ public:
 	public:
 		typedef void(__thiscall* UConsole)(SDK::UConsole* This, SDK::FString& Command);
 
+		typedef void(__thiscall* OutputText)(SDK::UConsole* This, SDK::FString* Text);
+
 		typedef BrowseReturnVal(__thiscall* Browse)(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SDK::FURL URL, SDK::FString& Error);
 
 		typedef bool(__thiscall* InitListen)(SDK::UIpNetDriver*, SDK::UObject*, SDK::FURL& LocalURL, bool bReuseAddressAndPort, SDK::FString& Error);
@@ -199,6 +201,20 @@ public:
 	
 
 	static void UConsole(SDK::UConsole* This, SDK::FString& Command);
+
+	struct ConsoleOutput
+	{
+		inline static std::wstring TextCache{L""};
+		inline static bool bShouldOutput{false};
+
+		inline static void Text(const std::wstring& NewText)
+		{
+			bShouldOutput = true;
+			TextCache = NewText;
+		}
+	};
+
+	static void OutputText(SDK::UConsole* This, SDK::FString* Command);
 
 	static SDK::FString* ConsoleCommand(SDK::APlayerController* This, SDK::FString* Result, SDK::FString* Command, bool bWriteToLog);
 
