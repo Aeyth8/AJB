@@ -187,7 +187,7 @@ bool TryGetMatchingPlayerInfoByPlayerIDPureFunction(SDK::UAJBGameInstance* This,
 	// Valid indexes start at 1 for some reason.
 	//if (PlayerID < 0) return false; 
 
-	if (AJB::IsServer && PlayerID > 0) // NOTE: Might not have to be the server since the client keeps calling this and it appears to be working anyways when it does
+	if (AJB::IsServer() && PlayerID > 0) // NOTE: Might not have to be the server since the client keeps calling this and it appears to be working anyways when it does
 	{
 		//bool Result = OFF::TryGetMatchingPlayerInfo.VerifyFC<bool(__thiscall*)(SDK::UAJBGameInstance*, int32, SDK::FMatchingPlayerInfo*)>()(This, PlayerID, Out);
 
@@ -835,9 +835,11 @@ void AJB::CopyString(UC::FString* StringToModify, UC::FString* StringToCopy)
 
 bool AJB::IsServer()
 {
-	SDK::UWorld* CurrentWorld = GWorld;
+	SDK::UWorld* CurrentWorld = GWorld.GetPointer();
 	if (CurrentWorld && CurrentWorld->NetDriver)
 	{
+		LogA("GWorld", CurrentWorld->GetFullName());
+		LogA("NetDriver", CurrentWorld->NetDriver->GetFullName());
 		// Only clients have a valid ServerConnection pointer.
 		return CurrentWorld->NetDriver->ServerConnection == nullptr && GetNetMode(CurrentWorld->NetDriver) == Enums::ENetMode::NM_ListenServer;
 	}

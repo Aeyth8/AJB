@@ -112,6 +112,13 @@ namespace A8CL
 		{
 			return this->IsInitialized() ? this->GPointer : this->GetPointer();
 		}
+
+		inline Class* operator&() const
+		{
+			return this->GetPointer();
+		}
+
+
 	};
 
 	inline static GPointerWrapper<SDK::UEngine, OFF::GEngine> GEngine;

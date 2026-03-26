@@ -25,9 +25,9 @@ template <class Type> Type CallAs(const uint64 Address) { return reinterpret_cas
 
 namespace UEW
 {
-	constexpr uint64 NetDriverGetNetMode		= 0x0;
-	constexpr uint64 WorldInternalGetNetMode	= 0x0;
-	constexpr uint64 ActorInternalGetNetMode	= 0x0;
+	constexpr uint64 NetDriverGetNetMode		= 0x14F90F0;
+	constexpr uint64 WorldInternalGetNetMode	= 0x17C4820;
+	constexpr uint64 ActorInternalGetNetMode	= 0x11BA5C0;
 }
 
 namespace UC
