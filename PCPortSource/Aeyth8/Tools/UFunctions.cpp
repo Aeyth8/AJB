@@ -97,6 +97,7 @@ const std::string& UFunctions::Helpers::FWorldContextParser(SDK::FWorldContext& 
 
 void UFunctions::Helpers::ProcessEnd()
 {
+	AJB::bKeepInitialThreadAlive = false;
 	Hooks::DisableAllHooks();
 	Hooks::Uninit(); 
 	Global::CloseLog();
@@ -168,6 +169,7 @@ using namespace Global;
 #include "../../Dumper-7/CustomSDK/LemonHelper_classes.hpp"					// Custom SDK header (NOT GAME NATIVE)
 
 #include "../../Dumper-7/CustomSDK/WBP_CallbackTimerHandler_classes.hpp"	// Custom SDK header (NOT GAME NATIVE)
+#include "../../Dumper-7/CustomSDK/BP_Synchronizer_classes.hpp"				// Custom SDK header (NOT GAME NATIVE)
 
 
 #include "BytePatcher.h"
@@ -189,9 +191,9 @@ using namespace Global;
 #include "../../Dumper-7/SDK/BP_AJBBattleGameState_classes.hpp"
 #include "../../Dumper-7/SDK/BP_SimpleStartLocationSelectGameMode_classes.hpp"
 #include "../../Dumper-7/SDK/WB_TournamentMode_Main_classes.hpp"
-#include "../../Dumper-7/SDK/WB_ModeSelect_classes.hpp"
 #include "../../Dumper-7/SDK/Landscape_classes.hpp"
 #include "../../Dumper-7/SDK/BP_AJBDamageAreaLocal_classes.hpp"
+#include "../../Dumper-7/SDK/WB_DBISequencerSkipper_classes.hpp"
 
 static bool* TOGGLEDEBUGBADGAMEDESIGN{nullptr};
 
@@ -429,6 +431,21 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		ConsoleOutput::Text(L"Playing soundtrack " + Command->ToWString().substr(23));
 		return OFF::ConsoleCommand.VerifyFC<Decl::ConsoleCommand>()(This, Result, Command, false);
 	}	
+	else if (StrCommand.find("AJBExecInternal TempFix") == 0)
+	{
+		if (AJB::IsServer())
+		{
+			AJB::TryFixInfiniteLoadingScreen();
+		}
+		else if (AJB::IsOfflineMode())
+		{
+			SDK::ABP_AJBInGamePlayerController_C* Player = Pointers::Player<SDK::ABP_AJBInGamePlayerController_C>();
+			if (Player) 
+			{
+				Player->ROS_DebugCharaChange(AJB::TEMP_CachedCharacterID);
+			}
+		}
+	}
 	else if (StrCommand.find("AJBExecInternalHost") == 0)
 	{
 		int PARM_Area{0};
@@ -533,6 +550,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		}
 
 		AJB::Instance->PlayMode = (SDK::EPlayMode)NewPlayMode;
+		if (AJB::MOD_Global_Synchronizer) AJB::MOD_Global_Synchronizer->PlayMode = NewPlayMode;
 	}
 	else if (StrCommand == "AJBExecInternal Konami")
 	{
@@ -555,11 +573,31 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			
 		}
 	}
+	else if (StrCommand.find("AJBExecInternal SkipMatchmaking") == 0)
+	{
+		if (AJB::IsServer() || AJB::IsOfflineMode())
+		{
+			SDK::ABP_AJBOutGamePlayerController_C* Player = Pointers::Player<SDK::ABP_AJBOutGamePlayerController_C>();
+			if (Player)
+			{
+				// Player->OnFinishedStartPointSelectEndSequencer(); // Initiates servertravel IMMEDIATELY
+				//Player->OnFinishedSequencer(); // Does nothing
+				//Player->OnFinishedSkipSequencerWithWaitForOuter1(); // Does nothing
+				//Player->OnFinishedWaitPlayingDBIVoiceForOuter1(); // OKAY! OPEN THE- GAME (then servertravels after cutscene)
+				//Player->OnStartIntroSequnecer(); // Plays the character select screen but doesn't have the character select appear
+				Player->OnStartPointSelectSequnecer(); // OKAY! OPEN THE- GAME (also servertravels after cutscene)
+
+
+				// Idk this stupid crap appears as tiny Japanese text at the bottom of the right screen and then fades away, does absolutely nothing
+				/*Player->WB_DBISequncerSkipper = (SDK::UWB_DBISequencerSkipper_C*)AJB::GetBlueprintClass<SDK::UGameplayStatics>()->SpawnObject(SDK::UWB_DBISequencerSkipper_C::StaticClass(), GEngine->GameViewport);
+				Player->WB_DBISequncerSkipper->AddToViewport(112);*/
+			}
+
+		}
+	}
 	else if (StrCommand == "mute")
 	{
-		SDK::ABP_AJBWwiseManager_C* Manager = Pointers::GetLastOf<SDK::ABP_AJBWwiseManager_C>(false);
-
-		if (!Manager) Manager = Pointers::SpawnActor<SDK::ABP_AJBWwiseManager_C>();
+		SDK::ABP_AJBWwiseManager_C* Manager = Pointers::SpawnActor<SDK::ABP_AJBWwiseManager_C>();
 		
 		Manager->StopWwiseBGMEvent();
 		ConsoleOutput::Text(L"SHUTUP! SHUTUP CHUMLEE");
@@ -600,12 +638,18 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	}
 	else if (StrCommand == "shader")
 	{
-		SDK::ABP_PPV_VSFilter_C* Filter = AJB::GetPostProcessFilter(AJB::GetPlayer<SDK::ABP_AJBInGamePlayerController_C>());
+		
+		//SDK::ABP_PPV_VSFilter_C* Filter = AJB::GetPostProcessFilter(AJB::GetPlayer<SDK::ABP_AJBInGamePlayerController_C>()); Just randomly started crashing bruh I didn't CHANGE ANYTHING... WHAT!?!?! OH MY GOD! I CANT BELIEVE THIS! YO I CAN'T BELIEVE THIS! YO I CANNOT BELIEVE THIS!
+		SDK::APlayerController* Player = Pointers::Player();
+		SDK::ABP_PPV_VSFilter_C* Filter = AJB::GetPostProcessFilter((SDK::ABP_AJBInGamePlayerController_C*)Player);
 
-		if (!IsNull(Filter))
+		if (Filter)
 		{
+			//Filter->SetFilter(SDK::E_VSFilterType::NewEnumerator0);
 			Filter->NextFilter();
-			ConsoleOutput::Text(L"Using shader " + std::to_wstring((uint8)Filter->CurrentType));
+
+			std::wstring Log = L"Using shader " + std::to_wstring((uint8)Filter->CurrentType);
+			ConsoleOutput::Text(Log);
 		}
 	}	
 	else if (StrCommand == "char")
@@ -680,6 +724,14 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			{
 				// Seems redundant but it's not, the stupid widget doesn't show up on clients connected to the server, I'm not sure if it's due to replication which I don't see any flags for or if Login doesn't get called (which it should be either way)
 				if (!AJB::MOD_OptionsMenu->IsInViewport()) AJB::MOD_OptionsMenu->AddToViewport(111);
+				
+				//const float CurrentMaxFPS = OFFSET::VFTable<float(__fastcall*)(SDK::UEngine*, float, bool)>(GEngine.GetPointer())[0x50](GEngine.GetPointer(), AJB::MOD_OptionsMenu->InternalTickCount, true);
+				
+				// Calls UEngine::GetMaxFPS from  the VFTable.
+				const float CurrentMaxFPS = OFFSET::VFTable<float(__fastcall*)(SDK::UEngine*)>(GEngine.GetPointer())[0x51](GEngine.GetPointer());
+
+				// Dynamic polling for different framecaps ensuring no delay, even if you have your game uncapped the game framerate will not actually be uncapped because of a limit Namco placed (I wrote a patch for it and it's still in the codebase but it's not really useful)
+				if (CurrentMaxFPS != 0) AJB::MOD_OptionsMenu->InternalTickRate = CurrentMaxFPS;
 
 				// I'd rather put this in the actual blueprint logic but then ID HAVE TO REDUMP THE SDK AND GET THE NEW STRUCTURE and I don't feel like it until it's actually a proper menu.
 
@@ -888,10 +940,10 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 
 		LogA("GetNetMode", std::format("[WorldNetMode]: {} | [ActorNetMode]: {}", WorldNetMode.ToString(), ActorNetMode.ToString()));
 	}
-	else if (StrCommand == "fix")
+	/*else if (StrCommand == "fix")
 	{
 		AJB::TEMP_FixMatchingPlayers();
-	}
+	}*/
 	else if (StrCommand.find("rce") != std::string::npos && StrCommand.size() > 5)
 	{
 		SDK::AAJBInGamePlayerController* Player = (SDK::AAJBInGamePlayerController*)Pointers::Player();
@@ -1057,6 +1109,7 @@ UFunctions::BrowseReturnVal UFunctions::Browse(SDK::UEngine* This, SDK::FWorldCo
 	{
 		AJB::MOD_OptionsMenu->ToggleVisibility();
 	}
+	AJB::MOD_Global_Synchronizer = nullptr;
 
 	if (wcscmp(URL.Map.CStr(), L"/Game/AJB/Maps/AJBStartUp_P") == 0 || wcscmp(URL.Map.CStr(), L"/Game/AJB/Maps/AJBTitle_P") == 0)
 	{
@@ -1196,6 +1249,7 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 		constexpr const wchar_t* GlobalPatchObjectBlueprintPath{L"/Game/Aeyth8/Blueprints/Global/BP_GlobalPatcher.BP_GlobalPatcher_C"};
 		constexpr const wchar_t* OptionsMenuBlueprintPath{L"/Game/Aeyth8/Blueprints/UI/OptionsMenu/WBP_OptionsMenu.WBP_OptionsMenu_C"};
 		constexpr const wchar_t* CallbackTimerHandlerPath{L"/Game/Aeyth8/Blueprints/Global/WBP_CallbackTimerHandler.WBP_CallbackTimerHandler_C"};
+		constexpr const wchar_t* SynchronizerPath{L"/Game/Aeyth8/Blueprints/Global/ServerReplicated/BP_Synchronizer.BP_Synchronizer_C"};
 
 		AJB::MOD_CallbackTimerClass = UFunctions::StaticLoadClass(AJB::CoreUObject, GEngine, CallbackTimerHandlerPath, nullptr, 0, nullptr);
 		if (AJB::MOD_CallbackTimerClass)
@@ -1216,7 +1270,18 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 			{
 				LogA("Global Patcher", std::format("[ProofOfExistenceSignature]: {} | [Object]: {}", AJB::MOD_GlobalPatcher->ProofOfExistenceSignature, AJB::MOD_GlobalPatcher->GetFullName()));
 			}
-		}	
+		}
+
+		AJB::MOD_SynchronizerClass = UFunctions::StaticLoadClass(SDK::AActor::StaticClass(), GEngine, SynchronizerPath, nullptr, 0, nullptr);
+		if (AJB::MOD_SynchronizerClass)
+		{
+			//LogA("Synchronizer Class", AJB::MOD_SynchronizerClass->GetFullName());
+			AJB::MOD_PROXY_Synchronizer = (SDK::ABP_Synchronizer_C*)Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(AJB::MOD_SynchronizerClass, GEngine, FName::NAME_FindOrAdd(SynchronizerPath), 0, EInternalObjectFlags::RootSet, 0, 0, 0, 0);
+			if (AJB::MOD_PROXY_Synchronizer)
+			{
+				LogA("Synchronizer", AJB::MOD_PROXY_Synchronizer->GetFullName());
+			}
+		}
 
 		//if (AJB::bDebugModeFromCMLA)
 		//{
@@ -1302,21 +1367,20 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 		else if (CurrentGameMode->IsA(SDK::ABP_SimpleStartLocationSelectGameMode_C::StaticClass()))
 		{
 			static_cast<SDK::ABP_SimpleStartLocationSelectGameMode_C*>(CurrentGameMode)->SpawnOnlineBeacon();
+		}
+		if (AJB::IsServer() && CurrentGameMode->IsA(SDK::ABP_SimpleStartLocationSelectGameMode_C::StaticClass()) && NewPlayer->PlayerController != Pointers::Player())
+		{
+			SDK::ABP_AJBBattleGameMode_C* BattleMode = static_cast<SDK::ABP_AJBBattleGameMode_C*>(CurrentGameMode);
+			SDK::ABP_AJBBattleGameState_C* GameState = static_cast<SDK::ABP_AJBBattleGameState_C*>(BattleMode->GameState);
+			__assume (BattleMode != nullptr); // SHUTUP
+
+			SDK::FString Message{L"DRIVING IN MY CAR RIGHT AFTER A BEEEEEEER"};
+			OFF::ClientTeamMessage.VerifyFC<void(__thiscall*)(SDK::APlayerController*, SDK::APlayerState*, SDK::FString*, SDK::FName, float)>()(This, This->PlayerState, &Message, SDK::FName{}, 0.0f);
 		}*/
 	}
 	
-	
-		/**/
-		/*else if (CurrentGameMode->IsA(SDK::ABP_AJBBattleGameMode_C::StaticClass()))
-		{
-			SDK::ABP_AJBBattleGameMode_C* BattleMode = static_cast<SDK::ABP_AJBBattleGameMode_C*>(CurrentGameMode);
-			__assume (BattleMode != nullptr); // SHUTUP
-			SDK::ABP_AJBBattleGameState_C* GameState = static_cast<SDK::ABP_AJBBattleGameState_C*>(BattleMode->GameState);
-
-			GameState->bDisableTimeLimit_Debug_ = true;
-
-		}
-		else if (CurrentGameMode->IsA(SDK::ABP_SimpleStartLocationSelectGameMode_C::StaticClass()))
+		
+		/*else if (CurrentGameMode->IsA(SDK::ABP_SimpleStartLocationSelectGameMode_C::StaticClass()))
 		{
 			SDK::ABP_SimpleStartLocationSelectGameMode_C* MatchingGameMode = static_cast<SDK::ABP_SimpleStartLocationSelectGameMode_C*>(CurrentGameMode);
 			//MatchingGameMode->Say
@@ -1350,6 +1414,19 @@ void UFunctions::PostLogin(SDK::AGameModeBase* This, SDK::APlayerController* Pla
 
 		AJB::CopyString(&static_cast<SDK::AAJBPlayerControllerBase*>(Player)->GameServerUniqueID, &NewUniqueId);
 	}*/
+
+	/*if (AJB::IsServer() && Player != Pointers::Player())
+	{
+		if (!AJB::MOD_Global_Synchronizer) AJB::MOD_Global_Synchronizer = Pointers::SpawnActor<SDK::ABP_Synchronizer_C>();
+		if (AJB::MOD_Global_Synchronizer) AJB::MOD_Global_Synchronizer->PlayMode = (int32)AJB::Instance->PlayMode;
+	}
+	else
+	{
+		if (!AJB::MOD_Global_Synchronizer) AJB::MOD_Global_Synchronizer = Pointers::GetLastOf<SDK::ABP_Synchronizer_C>(false);
+		if (AJB::MOD_Global_Synchronizer) LogA("GLOBAL SYNCHRONIZER", std::format("[Object]: {} | [Replicated PlayMode]: {} ", AJB::MOD_Global_Synchronizer->GetFullName(), AJB::MOD_Global_Synchronizer->PlayMode));
+	}*/
+
+	
 
 	OFF::PostLogin.VerifyFC<Decl::PostLogin>()(This, Player);	
 }
@@ -1423,11 +1500,7 @@ void UFunctions::CloseConnection(SDK::UNetConnection* This)
 			CachedPlayerList.push_back(Cache);
 		}*/
 
-		// Clears the entry for the player who left
-		if (AJB::IsServer())
-		{
-			AJB::CreateCallbackTimer(AJB::TEMP_FixMatchingPlayers, 0.7);
-		}
+		//AJB::CreateCallbackTimer(AJB::TEMP_FixMatchingPlayers, 0.7);
 	}
 
 	LogA(OFF::Close.GetName(), This->GetFullName());

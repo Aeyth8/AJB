@@ -26,6 +26,7 @@
 #include "../../Dumper-7/CustomSDK/BP_GlobalPatcher_classes.hpp"			// Custom SDK header (NOT GAME NATIVE)
 #include "../../Dumper-7/CustomSDK/LemonHelper_classes.hpp"					// Custom SDK header (NOT GAME NATIVE)
 #include "../../Dumper-7/CustomSDK/WBP_CallbackTimerHandler_classes.hpp"	// Custom SDK header (NOT GAME NATIVE)
+#include "../../Dumper-7/CustomSDK/BP_Synchronizer_classes.hpp"				// Custom SDK header (NOT GAME NATIVE)
 
 #include <intrin.h>
 #include "../../Dumper-7/SDK/WB_Credit_classes.hpp"
@@ -45,6 +46,9 @@
 // Needed for AJBSimpleMatch_P translation
 #include "../../Dumper-7/SDK/WB_ModeSelect_classes.hpp"
 #include "../../Dumper-7/SDK/WB_ModeSelectTextBase_classes.hpp"
+
+// Needed for temporarily fixing the infinite loading screen.
+#include "../../Dumper-7/SDK/BP_AJBBattleGameMode_classes.hpp"
 
 /*
 
@@ -80,6 +84,7 @@ bool*								AJB::bDebugInputMode{nullptr};
 SDK::ALemonHelper_C*				AJB::MOD_LemonHelper{nullptr};
 bool								AJB::bIsLemonPossessioned{false};
 bool								AJB::bDebugModeFromCMLA{false};
+int									AJB::TEMP_CachedCharacterID{1};
 
 // -- MOD --
 
@@ -92,13 +97,18 @@ SDK::UBP_GlobalPatcher_C*			AJB::MOD_GlobalPatcher{nullptr};
 SDK::UClass*						AJB::MOD_CallbackTimerClass{nullptr};
 SDK::UWBP_CallbackTimerHandler_C*	AJB::MOD_CallbackTimer{nullptr};
 
-const wchar_t*						AJB::DLLCommitVersion{L"[v0.5.4]"};
+SDK::UClass*						AJB::MOD_SynchronizerClass{nullptr};
+SDK::ABP_Synchronizer_C*			AJB::MOD_PROXY_Synchronizer{nullptr};
+SDK::ABP_Synchronizer_C*			AJB::MOD_Global_Synchronizer{nullptr};
+
+const wchar_t*						AJB::DLLCommitVersion{L"[v0.5.5]"};
 UC::FString*						AJB::StrDLLCommitVersion{nullptr};
 
 // -- Windows External --
 
 HMODULE								AJB::PCPortLib{nullptr};
 HWND								AJB::PCPortWindow{nullptr};
+bool								AJB::bKeepInitialThreadAlive{true};
 
 
 // -- Assembly Opcodes -- 
@@ -741,6 +751,38 @@ void AJB::Init_Vars()
 	}
 	
 	LogA("MatchingPlayers address", HexToString(*reinterpret_cast<uintptr_t*>(&Instance->MatchingPlayers)));
+
+	AJB::ThreadLoop(); // JMPs to the ThreadLoop until process exit or variable set for thread destruction.
+}
+
+void AJB::ThreadLoop()
+{
+	while (AJB::bKeepInitialThreadAlive)
+	{
+		Sleep(460);
+	
+		if (AJB::IsServer())
+		{
+			SDK::UWorld* CurrentWorld = GWorld.GetPointer();
+			if (CurrentWorld->NetDriver->ClientConnections.Num() > 0)
+			{
+				static FActorSpawnParameters ALWAYSSPAWN{};
+				ALWAYSSPAWN.SpawnCollisionHandlingOverride = SDK::ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+				if (!AJB::MOD_Global_Synchronizer) AJB::MOD_Global_Synchronizer = (SDK::ABP_Synchronizer_C*)Pointers::SpawnActorInternal(CurrentWorld, AJB::MOD_SynchronizerClass, SDK::FVector{}, SDK::FRotator{}, ALWAYSSPAWN);
+				if (AJB::MOD_Global_Synchronizer)
+				{
+					LogA("GLOBAL SYNCHRONIZER", std::format("[Object]: {} | [Replicated PlayMode]: {} ", AJB::MOD_Global_Synchronizer->GetFullName(), AJB::MOD_Global_Synchronizer->PlayMode));
+					AJB::MOD_Global_Synchronizer->PlayMode = (int32)AJB::Instance->PlayMode;
+				}
+			}			
+		}
+		else if (AJB::IsInSession())
+		{
+			AJB::CreateCallbackTimer(AJB::SynchronizeClient, 0.0f);
+		}
+	}
+
 }
 
 // -- Pointers
@@ -808,7 +850,7 @@ SDK::ABP_AJBInGameCharacter_C* const& AJB::GetCharacter(const SDK::ABP_AJBInGame
 
 SDK::ABP_PPV_VSFilter_C* AJB::GetPostProcessFilter(const SDK::ABP_AJBInGamePlayerController_C* Player, const bool bCreateIfNull)
 {
-	if (Player)
+	if (Player && Player->IsA(SDK::ABP_AJBInGamePlayerController_C::StaticClass()))
 	{
 		SDK::ABP_PPV_VSFilter_C* Filter = Player->PPVVSFilter;
 
@@ -979,6 +1021,163 @@ void AJB::TranslateSimpleMatch()
 	}
 }
 
+void AJB::TryFixInfiniteLoadingScreen()
+{
+	// If a player leaves and rejoins the stupid PlayerID increments even though the count is wrong, it goes from 1 and upwards but due to the bug you will have missing slots.
+	// So basically if there is [PlayerID 1], [PlayerID 2] and someone leaves, or rejoins, it becomes [PlayerID 1], [PlayerID 3], now there's a gap, and it also breaks the host for some STUPID reason and deletes the entry for that.
+	// And you would assume huh okay so then the disconnecting logic must be broken or missing something, ITS JUST THIS STUPID NUMBER AND SOME OTHER NUMBER THAT HAS NO SYNCHRONIZATION WITH THE REST!
+
+	/*if (BugsToFix & BROKEN_CHARACTER_SPAWN)
+	{
+		SDK::ABP_AJBInGamePlayerController_C* Player = Pointers::Player<SDK::ABP_AJBInGamePlayerController_C>();
+		if (Player) 
+		{
+			Player->ROS_DebugCharaChange(AJB::TEMP_CachedCharacterID);
+		}
+	}
+	if (BugsToFix & BROKEN_ENTRY)
+	{
+		for (int i{0}; i < Instance->MatchingPlayers.Num(); ++i)
+		{
+			auto& Value = Instance->MatchingPlayers[i].Value();
+
+			Value.PlayerID = (i + 1);
+		}
+	}
+	if (BugsToFix & BROKEN_PLAYERID)
+	{
+
+	}*/
+
+	LogA("TryFixInfiniteLoadingScreen", "Attempting...");
+
+	/*for (SDK::ULocalPlayer* Player : AJB::Instance->LocalPlayers)*/
+	for (SDK::APlayerController* Player : Pointers::FindObjects<SDK::APlayerController>())
+	{
+		if (Player && Player->IsA(SDK::ABP_AJBInGamePlayerController_C::StaticClass()))
+		{
+			SDK::ABP_AJBInGamePlayerController_C* Controller = static_cast<SDK::ABP_AJBInGamePlayerController_C*>(Player);
+			if (!Controller->Character)
+			{
+				Controller->DebugCharacterChange(AJB::TEMP_CachedCharacterID);
+			}
+		}
+	}
+
+	/*SDK::ABP_AJBBattleGameMode_C* CurrentGameMode = AJB::GetGameMode<SDK::ABP_AJBBattleGameMode_C>();
+	if (CurrentGameMode)
+	{
+		CurrentGameMode->ResetGame();
+	}*/
+
+	//AJB::CreateCallbackTimer(CheckForInfiniteLoadingScreen, 30.0f);
+}
+
+void AJB::CheckForInfiniteLoadingScreen()
+{	
+	constexpr const char* LogHeader{"CheckForInfiniteLoadingScreen"};
+	constexpr const char* SDT_BUG[4]{"FUNCTIONAL | ", "BROKEN_PLAYERID | ", "BROKEN_ENTRY | ", "BROKEN_CHARACTER_SPAWN | "};
+
+	byte Bug{0};
+
+	SDK::UWorld* CurrentWorld = GWorld.GetPointer();
+	if (CurrentWorld && CurrentWorld->NetDriver && CurrentWorld->NetDriver->ClientConnections.IsValid())
+	{
+		if (Instance->MatchingPlayers.Num() > CurrentWorld->NetDriver->ClientConnections.Num())
+		{
+			Bug |= BROKEN_ENTRY;
+		}
+
+		for (int i{0}; i < Instance->MatchingPlayers.Num(); ++i)
+		{
+			SDK::FMatchingPlayerInfo& Info = Instance->MatchingPlayers[i].Second;
+
+			if (Info.PlayerID == 0)
+			{
+				Bug |= BROKEN_PLAYERID;
+			}
+			if (Info.CharactorID == 0)
+			{
+				Bug |= BROKEN_CHARACTER_SPAWN;
+			}
+
+			LogA(LogHeader, AJB::PlayerInfoParser(Info));
+		}
+
+		std::string BugResult{""};
+
+		if (Bug == 0)
+		{
+			BugResult = "No errors detected.";
+		}
+		else
+		{
+			BugResult += "Errors found: ";
+
+			byte e{1};
+			while (e < 4)
+			{				
+				if (Bug & (1 << e))
+				{
+					BugResult += SDT_BUG[e];
+				}
+				++e;
+			}
+
+			AJB::TryFixInfiniteLoadingScreen();
+		}
+
+		LogA(LogHeader, BugResult);
+	}
+}
+
+void AJB::OnSynchronizeFail()
+{
+	LogA("OnSynchronizeFail", "Begin");
+	AJB::CreateCallbackTimer(AJB::SynchronizeClient, 1.0f);
+}
+
+void AJB::SynchronizeClient()
+{
+	LogA("SynchronizeClient", "Begin");
+
+	bool bFail{false};
+
+	if (AJB::IsInSession())
+	{
+		if (!AJB::MOD_Global_Synchronizer)
+		{
+			std::vector<SDK::ABP_Synchronizer_C*> Pointers = Pointers::FindObjects<SDK::ABP_Synchronizer_C>();
+			for (SDK::ABP_Synchronizer_C* Pointer : Pointers)
+			{
+				if (Pointer->IsDefaultObject() || Pointer == AJB::MOD_PROXY_Synchronizer) continue;
+
+				AJB::MOD_Global_Synchronizer = Pointer;
+				LogA("GLOBAL SYNCHRONIZER", std::format("[Object]: {} | [Replicated PlayMode]: {} ", Pointer->GetFullName(), Pointer->PlayMode));
+
+				break;
+			}
+		}
+		if (AJB::MOD_Global_Synchronizer)
+		{
+			if (AJB::bDebugModeFromCMLA) LogA("GLOBAL SYNCHRONIZER", std::format("[Object]: {} | [Replicated PlayMode]: {} ", AJB::MOD_Global_Synchronizer->GetFullName(), AJB::MOD_Global_Synchronizer->PlayMode));
+			AJB::Instance->PlayMode = (SDK::EPlayMode)AJB::MOD_Global_Synchronizer->PlayMode;
+		}
+
+		if (!AJB::MOD_Global_Synchronizer) bFail = true;
+	}
+	else
+	{
+		bFail = true;
+	}
+
+	if (bFail)
+	{
+		LogA("SynchronizeClient", "Failed, trying again...");
+		AJB::CreateCallbackTimer(AJB::OnSynchronizeFail, 0.5f);
+	}
+}
+
 //struct TEMP_CachedPlayers
 //{
 //	UC::FString					PlayerName;
@@ -987,9 +1186,9 @@ void AJB::TranslateSimpleMatch()
 //extern std::vector<TEMP_CachedPlayers> CachedPlayerList{};
 
 
-int AJB::TEMP_CachedCharacterID{1};
 
-void AJB::TEMP_OnPlayerLeave()
+
+/*void AJB::TEMP_OnPlayerLeave()
 {
 	for (int i{0}; i < Instance->MatchingPlayers.Num(); ++i)
 	{
@@ -1019,7 +1218,7 @@ void AJB::TEMP_FixMatchingPlayers()
 			SDK::FString TempName{ (L"Nameless-Player-" + std::to_wstring(i)).c_str() };
 			AJB::CopyString(&Instance->MatchingPlayers[i].Second.PlayerName, &TempName);
 			AJB::CopyString(&Instance->MatchingPlayers[i].Second.GameServerUserID, &TempName);
-		}*/
+		}* /
 
 		constexpr const static wchar_t* SDT_MatchingFlowstates[]
 		{
@@ -1047,7 +1246,7 @@ void AJB::TEMP_FixMatchingPlayers()
 		}		
 	}
 
-}
+}*/
 
 bool __fastcall AJB::FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag)
 {
@@ -1093,7 +1292,13 @@ bool __fastcall AJB::FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, S
 				PC->bShowMouseCursor = false;
 				break;
 			}
-		}		
+		}
+
+		static SDK::FName InGameStandby = FName::NAME_FindOrAdd(L"InGame.Standby");
+		if (AJB::IsServer() && NextStateTag.TagName == InGameStandby)
+		{
+			AJB::CreateCallbackTimer(AJB::CheckForInfiniteLoadingScreen, 15.0f);
+		}
 	}
 	
 	return OFF::ChangeState.VerifyFC<bool(__fastcall*)(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag)>()(StateHandler, NextStateTag);
@@ -1131,25 +1336,27 @@ void __fastcall AJB::OnToggleFullMapVisibility(SDK::UObject* Object)
 	}
 }
 
-int __fastcall AJB::PostEventAtLocation(SDK::UAkAudioEvent* AkEvent, SDK::FVector* Location, SDK::FRotator* Orientation, SDK::FString* EventName, SDK::UObject* WorldContextObject)
+int __fastcall AJB::PostEventAtLocation(SDK::UAkAudioEvent* AkEvent, SDK::FVector& Location, SDK::FRotator& Orientation, SDK::FString& EventName, SDK::UObject* WorldContextObject)
 {
 	//const int32 Result = OFF::PostEventAtLocation.VerifyFC<int32(__fastcall*)(SDK::UAkAudioEvent*, SDK::FVector*, SDK::FRotator*, SDK::FString*, SDK::UObject*)>()(AkEvent, Location, Orientation, EventName, WorldContextObject);
-	if (AJB::bDebugModeFromCMLA) LogA(OFF::PostEventAtLocation.GetName(), EventName ? EventName->ToString() : "NULL");
+	if (AJB::bDebugModeFromCMLA) LogA(OFF::PostEventAtLocation.GetName(), EventName.ToString());
 
 	// Play_BGM03_Menu2 is the song played for the stupid "GameOver" sequence whenever you run out of time in AJBSimpleMatch_P (which I patched long ago) but also when you click to "exit" the game.
 	// Normally doing so would play the annoying and pointlessly delayed song and then eventually try to go to AJBStartUp_P.
 	// Since my browse hook already redirects it to my Titlescreen this hook will simply end the stupid delayed sequence early and immediately head back to the Titlescreen, I'M DONE WAITING.
 
-	if (EventName && wcscmp(EventName->Data, L"Play_BGM03_Menu2") == 0)
+	//if (EventName && wcscmp(EventName->Data, L"Play_BGM03_Menu2") == 0) THERE IS NO JUSTIFIABLE REASON THAT THIS STUPID THING RANDOMLY CRASHES HERE!
+
+	if (EventName.ToString() == "Play_BGM03_Menu2")
 	{
 		constexpr const wchar_t* Titlescreen = L"open /Game/Aeyth8/Maps/TitleScreen/AJBTitleScreen";
-		static SDK::FString ImmediateExit(Titlescreen);
+		SDK::FString ImmediateExit(Titlescreen);
 
 		UFunctions::UConsole(GEngine->GameViewport->ViewportConsole, ImmediateExit);
 	}
 
 	//return Result;
-	return OFF::PostEventAtLocation.VerifyFC<int32(__fastcall*)(SDK::UAkAudioEvent*, SDK::FVector*, SDK::FRotator*, SDK::FString*, SDK::UObject*)>()(AkEvent, Location, Orientation, EventName, WorldContextObject);
+	return OFF::PostEventAtLocation.VerifyFC<int32(__fastcall*)(SDK::UAkAudioEvent*, SDK::FVector&, SDK::FRotator&, SDK::FString&, SDK::UObject*)>()(AkEvent, Location, Orientation, EventName, WorldContextObject);
 }
 
 SDK::UAJBWindowWidget* __fastcall AJB::AJBWindowWidget(SDK::UAJBWindowWidget* This)

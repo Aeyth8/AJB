@@ -134,7 +134,7 @@ namespace SDK
 	class UWBP_CallbackTimerHandler_C;
 	class AGM_AJBUserInterface_C;
 	class ALemonHelper_C;
-	
+	class ABP_Synchronizer_C;
 }
 
 namespace A8CL
@@ -202,7 +202,7 @@ namespace AJB
 	extern SDK::FGameplayTag* CurrentFlowstate;
 
 	extern __int32* PlayerPoints;
-	extern bool* bDebugInputMode;	
+	extern bool* bDebugInputMode;
 
 	/* -- MOD --
 		
@@ -212,6 +212,10 @@ namespace AJB
 	extern SDK::UClass* MOD_OptionsMenuClass;					// Options menu class, must be loaded to create an object.
 	extern SDK::UClass* MOD_GlobalPatcherClass;					// Global patcher class, must be loaded to create an object.
 	extern SDK::UClass* MOD_CallbackTimerClass;					// Callback timer class, must be loaded to create an object.
+
+	extern SDK::UClass* MOD_SynchronizerClass;					// Synchronizer class, contains replicated variables used to sync PlayModes across from server-client, may be used for more later.
+	extern SDK::ABP_Synchronizer_C* MOD_PROXY_Synchronizer;		// It's stupid but if I want the class to live I need an object instance, however this cannot be used because it's rootset and it's supposed to.. replicate? How is that gonna work..? If it works I'd use it forever. [EDIT: No it does not replicate, this is fine, it's worth it.]
+	extern SDK::ABP_Synchronizer_C* MOD_Global_Synchronizer;	// NULL UNLESS CONNECTED TO SERVER OR IS SERVER
 
 	extern SDK::UWBP_OptionsMenu_C* MOD_OptionsMenu;			// Options menu, a self maintained Widget Blueprint that uses its own internal ticking system, communicates with this DLL internally by executing console commands that are parsed with a hook to (APlayerController::ConsoleCommand).
 	extern SDK::UBP_GlobalPatcher_C* MOD_GlobalPatcher;			// Global object used as a translation layer between my DLL logic and Unreal Engine blueprints.
@@ -223,6 +227,7 @@ namespace AJB
 	extern SDK::ALemonHelper_C* MOD_LemonHelper;				// Only exists as a singleton during in lemon possession mode.
 	extern bool bIsLemonPossessioned;							// Oh that's nice, I work as LP | LP? as in, Loss Prevention? | lemon possession
 	extern bool bDebugModeFromCMLA;								// Used to determine if extra/unnecessary logs for development purposes are enabled.
+	extern int TEMP_CachedCharacterID;
 
 	/* -- Windows External --
 	
@@ -231,6 +236,7 @@ namespace AJB
 
 	extern HMODULE PCPortLib;									// The PC Port library | 'This' DLL | The dynamic global base address of it.
 	extern HWND PCPortWindow;									// The game's process window, containing the process name, title, icon, etc.
+	extern bool bKeepInitialThreadAlive;						// Only one thread gets created by this DLL, it dies at Init_Vars but will be kept alive forever until marked false.
 
 	// ===========================================
 	// ##			  INITIALIZATION			## 
@@ -239,6 +245,7 @@ namespace AJB
 	void Init_Hooks();											// Called before entry, modifies the game's runtime instance before it even starts up, applying bytepatches and hooks.
 	void Init_Engine();											// Called after entry, waits for the core game engine to initialize, and sets all pre-world variables.
 	void Init_Vars();											// Called after game world is initialized, retrieves and sets any applicable pointer variables.
+	void ThreadLoop();											// JMP into after Init_Vars, runs in an infinite loop until the game is shutdown, checks the networking and ensures that server->clients are synchronized.
 
 	// ===========================================
 	// **			POINTER FUNCTIONS			**
@@ -385,10 +392,29 @@ namespace AJB
 	// Called externally by a callback timer, should not be manually called!
 	void TranslateSimpleMatch();
 
-	// Temporary fix to the MatchingPlayers array (the cause of the infamous infinite loading screen)
-	extern int TEMP_CachedCharacterID;
-	void TEMP_OnPlayerLeave();
-	void TEMP_FixMatchingPlayers();
+	enum EInfiniteLoadingReason : unsigned char
+	{
+		FUNCTIONAL				= 1 << 0,
+		BROKEN_PLAYERID			= 1 << 1,
+		BROKEN_ENTRY			= 1 << 2,
+		BROKEN_CHARACTER_SPAWN	= 1 << 3,
+	};
+
+	// Temporary fixes to the MatchingPlayers array (the cause of the infamous infinite loading screen)
+
+	// Called externally by a callback timer, should not be manually called!
+	void TryFixInfiniteLoadingScreen();
+
+	// Called externally by a callback timer, should not be manually called!
+	void CheckForInfiniteLoadingScreen();
+
+	// Called externally by a callback timer, should not be manually called!
+	void OnSynchronizeFail();	// I can't use my callback timers to do recursion so I must callback to a callback.
+	void SynchronizeClient();	// Called externally by a callback timer, should not be manually called!
+	
+	
+	/*void TEMP_OnPlayerLeave();
+	void TEMP_FixMatchingPlayers();*/
 
 	// ===========================================
 	// **		EXTERNAL HOOK FUNCTIONS			**
@@ -396,7 +422,7 @@ namespace AJB
 
 	bool __fastcall FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag);
 	void __fastcall OnToggleFullMapVisibility(SDK::UObject* Object);
-	int __fastcall PostEventAtLocation(SDK::UAkAudioEvent* AkEvent, SDK::FVector* Location, SDK::FRotator* Orientation, UC::FString* EventName, SDK::UObject* WorldContextObject);
+	int __fastcall PostEventAtLocation(SDK::UAkAudioEvent* AkEvent, SDK::FVector& Location, SDK::FRotator& Orientation, UC::FString& EventName, SDK::UObject* WorldContextObject);
 
 	// Constructor Hooks
 	SDK::UAJBWindowWidget* __fastcall AJBWindowWidget(SDK::UAJBWindowWidget* This);
