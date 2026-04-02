@@ -11,11 +11,82 @@
 #include "../SDK/Basic.hpp"
 
 #include "BP_GlobalPatcher_classes.hpp"
-#include "BP_GlobalPatcher_parameters.hpp"
 
 
 namespace SDK
 {
+
+// Function BP_GlobalPatcher.BP_GlobalPatcher_C.RemovePlayerAtIndex
+// (Public, HasOutParams, BlueprintCallable, BlueprintEvent)
+// Parameters:
+// int32                                   Index_0                                                (BlueprintVisible, BlueprintReadOnly, Parm, ZeroConstructor, IsPlainOldData, NoDestructor, HasGetValueTypeHash)
+// TMap<class FString, struct FFMatchingPlayerInfo>&NewParam                                               (BlueprintVisible, BlueprintReadOnly, Parm, OutParm, ZeroConstructor, ReferenceParm)
+
+void UBP_GlobalPatcher_C::RemovePlayerAtIndex(int32 Index, TMap<class FString, struct FMatchingPlayerInfo>& NewParam)
+{
+	static class UFunction* Func = nullptr;
+
+	if (Func == nullptr)
+		Func = Class->GetFunction("BP_GlobalPatcher_C", "RemovePlayerAtIndex");
+
+	SDK::Params::BP_GlobalPatcher_C_RemovePlayerAtIndex Parms{};
+
+	Parms.Index_0 = Index;
+	Parms.NewParam = std::move(NewParam);
+
+	UObject::ProcessEvent(Func, &Parms);
+
+	NewParam = std::move(Parms.NewParam);
+}
+
+
+// Function BP_GlobalPatcher.BP_GlobalPatcher_C.StringToText
+// (Public, HasOutParams, HasDefaults, BlueprintCallable, BlueprintEvent)
+// Parameters:
+// const class FString&                    Input                                                  (BlueprintVisible, BlueprintReadOnly, Parm, ZeroConstructor, HasGetValueTypeHash)
+// class FText*                            Output                                                 (Parm, OutParm)
+
+void UBP_GlobalPatcher_C::StringToText(const class FString& Input, class FText* Output)
+{
+	static class UFunction* Func = nullptr;
+
+	if (Func == nullptr)
+		Func = Class->GetFunction("BP_GlobalPatcher_C", "StringToText");
+
+	SDK::Params::BP_GlobalPatcher_C_StringToText Parms{};
+
+	Parms.Input = std::move(Input);
+
+	UObject::ProcessEvent(Func, &Parms);
+
+	if (Output != nullptr)
+		*Output = std::move(Parms.Output);
+}
+
+
+// Function BP_GlobalPatcher.BP_GlobalPatcher_C.TextToString
+// (Public, HasOutParams, BlueprintCallable, BlueprintEvent)
+// Parameters:
+// const class FText&                      Input                                                  (BlueprintVisible, BlueprintReadOnly, Parm)
+// class FString*                          Output                                                 (Parm, OutParm, ZeroConstructor, HasGetValueTypeHash)
+
+void UBP_GlobalPatcher_C::TextToString(const class FText& Input, class FString* Output)
+{
+	static class UFunction* Func = nullptr;
+
+	if (Func == nullptr)
+		Func = Class->GetFunction("BP_GlobalPatcher_C", "TextToString");
+
+	SDK::Params::BP_GlobalPatcher_C_TextToString Parms{};
+
+	Parms.Input = std::move(Input);
+
+	UObject::ProcessEvent(Func, &Parms);
+
+	if (Output != nullptr)
+		*Output = std::move(Parms.Output);
+}
+
 
 // Function BP_GlobalPatcher.BP_GlobalPatcher_C.SetWidgetText
 // (Public, HasDefaults, BlueprintCallable, BlueprintEvent)
@@ -23,17 +94,17 @@ namespace SDK
 // class UTextBlock*                       TextToEdit                                             (BlueprintVisible, BlueprintReadOnly, Parm, ZeroConstructor, InstancedReference, IsPlainOldData, NoDestructor, HasGetValueTypeHash)
 // const class FString&                    newText                                                (BlueprintVisible, BlueprintReadOnly, Parm, ZeroConstructor, HasGetValueTypeHash)
 
-void UBP_GlobalPatcher_C::SetWidgetText(class UTextBlock* TextToEdit, const class FString& NewText)
+void UBP_GlobalPatcher_C::SetWidgetText(class UTextBlock* TextToEdit, const class FString& newText)
 {
 	static class UFunction* Func = nullptr;
 
 	if (Func == nullptr)
 		Func = Class->GetFunction("BP_GlobalPatcher_C", "SetWidgetText");
 
-	Params::BP_GlobalPatcher_C_SetWidgetText Parms{};
+	SDK::Params::BP_GlobalPatcher_C_SetWidgetText Parms{};
 
 	Parms.TextToEdit = TextToEdit;
-	Parms.NewText = std::move(NewText);
+	Parms.newText = std::move(newText);
 
 	UObject::ProcessEvent(Func, &Parms);
 }

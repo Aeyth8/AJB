@@ -155,6 +155,8 @@ public:
 
 		typedef void(__thiscall* PostLogin)(SDK::AGameModeBase* This, SDK::APlayerController* Player);
 
+		typedef void(__thiscall* Logout)(SDK::AGameModeBase* This, SDK::AController* ExitingController);
+
 		typedef void(__thiscall* HandleStartingNewPlayer)(SDK::AGameModeBase* This, SDK::APlayerController* Player);
 
 		typedef void(__thiscall* BeginPlay)(SDK::UWorld* This);
@@ -234,9 +236,13 @@ public:
 
 	static void PostLogin(SDK::AGameModeBase* This, SDK::APlayerController* Player);
 
+	static void Logout(SDK::AGameModeBase* This, SDK::AController* ExitingController);
+
 	static void HandleStartingNewPlayer(SDK::AGameModeBase* This, SDK::APlayerController* Player);
 
 	static void BeginPlay(SDK::UWorld* This);
+
+	static void CloseConnection(SDK::UNetConnection* This);
 
 	static void AppPreExit();
 

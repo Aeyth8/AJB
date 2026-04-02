@@ -12,6 +12,7 @@
 
 #include "../SDK/CoreUObject_classes.hpp"
 
+#include "../SDK/AJB_structs.hpp"
 
 namespace SDK
 {
@@ -21,12 +22,14 @@ namespace SDK
 class UBP_GlobalPatcher_C final : public UObject
 {
 public:
-	int32                                         ProofOfExistenceSignature;                         // 0x0028(0x0004)(Edit, BlueprintVisible, ZeroConstructor, DisableEditOnInstance, IsPlainOldData, NoDestructor, HasGetValueTypeHash)
+	int32                                         ProofOfExistenceSignature;                         // 0x0028(0x0004)(Edit, BlueprintVisible, ZeroConstructor, IsPlainOldData, NoDestructor, HasGetValueTypeHash)
 
 public:
-	void SetWidgetText(class UTextBlock* TextToEdit, const class FString& NewText);
 
-
+	void RemovePlayerAtIndex(int32 Index, TMap<class FString, struct FMatchingPlayerInfo>& MatchingPlayers);
+	void StringToText(const class FString& Input, class FText* Output);
+	void TextToString(const class FText& Input, class FString* Output);
+	void SetWidgetText(class UTextBlock* TextToEdit, const class FString& newText);
 
 public:
 
@@ -35,5 +38,51 @@ public:
 		return StaticBPGeneratedClassImpl<"BP_GlobalPatcher_C">();
 	}
 };
-}
 
+namespace Params
+{
+
+// Function BP_GlobalPatcher.BP_GlobalPatcher_C.RemovePlayerAtIndex
+// 0x0070 (0x0070 - 0x0000)
+struct BP_GlobalPatcher_C_RemovePlayerAtIndex final
+{
+public:
+	int32                                         Index_0;                                           // 0x0000(0x0004)(BlueprintVisible, BlueprintReadOnly, Parm, ZeroConstructor, IsPlainOldData, NoDestructor, HasGetValueTypeHash)
+	uint8                                         Pad_4[0x4];                                        // 0x0004(0x0004)(Fixing Size After Last Property [ Dumper-7 ])
+	TMap<class FString, struct FMatchingPlayerInfo> NewParam;                                       // 0x0008(0x0050)(BlueprintVisible, BlueprintReadOnly, Parm, OutParm, ZeroConstructor, ReferenceParm)
+	TArray<class FString>                         CallFunc_Map_Keys_Keys;                            // 0x0058(0x0010)(ZeroConstructor, ReferenceParm)
+	bool                                          CallFunc_Map_Remove_ReturnValue;                   // 0x0068(0x0001)(ZeroConstructor, IsPlainOldData, NoDestructor)
+};
+
+// Function BP_GlobalPatcher.BP_GlobalPatcher_C.StringToText
+// 0x0040 (0x0040 - 0x0000)
+struct BP_GlobalPatcher_C_StringToText final
+{
+public:
+	class FString                                 Input;                                             // 0x0000(0x0010)(BlueprintVisible, BlueprintReadOnly, Parm, ZeroConstructor, HasGetValueTypeHash)
+	class FText                                   Output;                                            // 0x0010(0x0018)(Parm, OutParm)
+	class FText                                   CallFunc_Conv_StringToText_ReturnValue;            // 0x0028(0x0018)()
+};
+
+// Function BP_GlobalPatcher.BP_GlobalPatcher_C.TextToString
+// 0x0038 (0x0038 - 0x0000)
+struct BP_GlobalPatcher_C_TextToString final
+{
+public:
+	class FText                                   Input;                                             // 0x0000(0x0018)(BlueprintVisible, BlueprintReadOnly, Parm)
+	class FString                                 Output;                                            // 0x0018(0x0010)(Parm, OutParm, ZeroConstructor, HasGetValueTypeHash)
+	class FString                                 CallFunc_Conv_TextToString_ReturnValue;            // 0x0028(0x0010)(ZeroConstructor, HasGetValueTypeHash)
+};
+
+// Function BP_GlobalPatcher.BP_GlobalPatcher_C.SetWidgetText
+// 0x0030 (0x0030 - 0x0000)
+struct BP_GlobalPatcher_C_SetWidgetText final
+{
+public:
+	class UTextBlock*                             TextToEdit;                                        // 0x0000(0x0008)(BlueprintVisible, BlueprintReadOnly, Parm, ZeroConstructor, InstancedReference, IsPlainOldData, NoDestructor, HasGetValueTypeHash)
+	class FString                                 newText;                                           // 0x0008(0x0010)(BlueprintVisible, BlueprintReadOnly, Parm, ZeroConstructor, HasGetValueTypeHash)
+	class FText                                   CallFunc_Conv_StringToText_ReturnValue;            // 0x0018(0x0018)()
+};
+
+}
+}

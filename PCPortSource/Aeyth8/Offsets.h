@@ -33,10 +33,13 @@ namespace A8CL
 		extern OFFSET AJBPreLogin;
 		extern OFFSET Login;
 		extern OFFSET PostLogin;
+		extern OFFSET Logout;
 		extern OFFSET BeginPlay;
 		extern OFFSET HandleStartingNewPlayer;
 
 		extern OFFSET InitListen;
+
+		extern OFFSET Close;
 
 		extern OFFSET UConsole;	
 		extern OFFSET ConsoleCommand;

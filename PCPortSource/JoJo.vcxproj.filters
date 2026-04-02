@@ -108,6 +108,12 @@
     <Filter Include="SDK\Custom\Global\Timer">
       <UniqueIdentifier>{133a4aa5-bc08-4763-8728-24448bf92202}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SDK\CPP\Storm">
+      <UniqueIdentifier>{098c85fc-5e17-4268-8554-15fe85b0a34c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Aeyth8\Logic\Server">
+      <UniqueIdentifier>{1bc9fa69-484e-4ff8-ba8b-8f18e5b4e87f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -332,6 +338,15 @@
     <ClCompile Include="Aeyth8\Offsets.cpp">
       <Filter>Aeyth8</Filter>
     </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\Landscape_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\BP_AJBDamageAreaLocal_functions.cpp">
+      <Filter>SDK\CPP\Storm</Filter>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\Logic\ServerLogic.cpp">
+      <Filter>Aeyth8\Logic\Server</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Aeyth8\Logger.hpp">
@@ -439,9 +454,6 @@
     <ClInclude Include="Dumper-7\CustomSDK\BP_GlobalPatcher_classes.hpp">
       <Filter>SDK\Custom\Global</Filter>
     </ClInclude>
-    <ClInclude Include="Dumper-7\CustomSDK\BP_GlobalPatcher_parameters.hpp">
-      <Filter>SDK\Custom\Global</Filter>
-    </ClInclude>
     <ClInclude Include="Aeyth8\A8CL\CPUReg\CPUReg.h">
       <Filter>Aeyth8\A8CL\CPUReg</Filter>
     </ClInclude>
@@ -483,6 +495,9 @@
     </ClInclude>
     <ClInclude Include="Aeyth8\UConsole\Core\UConsole.h">
       <Filter>Aeyth8\UConsole\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\Logic\ServerLogic.h">
+      <Filter>Aeyth8\Logic\Server</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

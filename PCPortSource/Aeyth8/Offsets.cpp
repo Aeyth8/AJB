@@ -27,10 +27,13 @@ namespace OFF
 	OFFSET AJBPreLogin("AJBPreLogin", 0x04A4060);						// Used in the AJB GameMode(s)
 	OFFSET Login("AGameModeBase::Login", 0x13D2A20);
 	OFFSET PostLogin("AGameModeBase::PostLogin", 0x13D6A70);
+	OFFSET Logout("AGameModeBase::Logout", 0x13D2CD0);
 	OFFSET BeginPlay("UWorld::BeginPlay", 0x17BAEC0);
 	OFFSET HandleStartingNewPlayer("AGameModeBase::HandleStartingNewPlayer", 0x182C450);
 
 	OFFSET InitListen("UIpNetDriver::InitListen", 0x3FBE40);
+
+	OFFSET Close("UNetConnection::Close", 0x14F30C0);
 
 	OFFSET UConsole("UConsole::ConsoleCommand", 0x1796230);	
 	OFFSET ConsoleCommand("APlayerController::ConsoleCommand", 0x16077D0);

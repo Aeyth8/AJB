@@ -941,12 +941,222 @@ static_assert(offsetof(FAutomationEvent, Message) == 0x000008, "Member 'FAutomat
 static_assert(offsetof(FAutomationEvent, Context) == 0x000018, "Member 'FAutomationEvent::Context' has a wrong offset!");
 static_assert(offsetof(FAutomationEvent, Artifact) == 0x000028, "Member 'FAutomationEvent::Artifact' has a wrong offset!");
 
+// ScriptStruct CoreUObject.Timespan
+// 0x0008 (0x0008 - 0x0000)
+struct alignas(0x08) FTimespan final
+{
+public:
+	uint64                                         Ticks;                                        // 0x0000(0x0008)(Fixing Struct Size After Last Property [ Dumper-7 ])
+};
+static_assert(alignof(FTimespan) == 0x000008, "Wrong alignment on FTimespan");
+static_assert(sizeof(FTimespan) == 0x000008, "Wrong size on FTimespan");
+
+namespace ETimespan
+{
+	/** The maximum number of ticks that can be represented in FTimespan. */
+	constexpr int64 MaxTicks = 9223372036854775807;
+
+	/** The minimum number of ticks that can be represented in FTimespan. */
+	constexpr int64 MinTicks = -9223372036854775807 - 1;
+
+	/** The number of nanoseconds per tick. */
+	constexpr int64 NanosecondsPerTick = 100;
+
+	/** The number of timespan ticks per day. */
+	constexpr int64 TicksPerDay = 864000000000;
+
+	/** The number of timespan ticks per hour. */
+	constexpr int64 TicksPerHour = 36000000000;
+
+	/** The number of timespan ticks per microsecond. */
+	constexpr int64 TicksPerMicrosecond = 10;
+
+	/** The number of timespan ticks per millisecond. */
+	constexpr int64 TicksPerMillisecond = 10000;
+
+	/** The number of timespan ticks per minute. */
+	constexpr int64 TicksPerMinute = 600000000;
+
+	/** The number of timespan ticks per second. */
+	constexpr int64 TicksPerSecond = 10000000;
+
+	/** The number of timespan ticks per week. */
+	constexpr int64 TicksPerWeek = 6048000000000;
+
+	/** The number of timespan ticks per year (365 days, not accounting for leap years). */
+	constexpr int64 TicksPerYear = 365 * TicksPerDay;
+}
+
 // ScriptStruct CoreUObject.DateTime
 // 0x0008 (0x0008 - 0x0000)
 struct alignas(0x08) FDateTime final
 {
 public:
-	uint8                                         Pad_0[0x8];                                        // 0x0000(0x0008)(Fixing Struct Size After Last Property [ Dumper-7 ])
+
+	static constexpr int32 DaysPerMonth[]	= { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+	static constexpr int32 DaysToMonth[]	= { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
+
+	FDateTime() {};
+	FDateTime(int64 InTicks) : Ticks(InTicks) {};
+	FDateTime(int32 Year, int32 Month, int32 Day, int32 Hour, int32 Minute, int32 Second, int32 Millisecond)
+	{
+		int32 TotalDays = 0;
+
+		if ((Month > 2) && (Year % 4 == 0))
+		{
+			++TotalDays;
+		}
+
+		--Year;
+		--Month;
+
+		TotalDays += Year * 365;
+		TotalDays += Year / 4;
+		TotalDays -= Year / 100;
+		TotalDays += Year / 400;
+		TotalDays += DaysToMonth[Month];
+		TotalDays += Day - 1;
+
+		Ticks = TotalDays * ETimespan::TicksPerDay
+			+ Hour * ETimespan::TicksPerHour
+			+ Minute * ETimespan::TicksPerMinute
+			+ Second * ETimespan::TicksPerSecond
+			+ Millisecond * ETimespan::TicksPerMillisecond;
+	}
+
+	uint64                                         Ticks;
+
+	FDateTime operator+(const FTimespan& Other) const
+	{
+		return FDateTime(Ticks + Other.Ticks);
+	}
+
+	/**
+	 * Adds the given time span to this date.
+	 *
+	 * @return This date.
+	 * @see FTimespan
+	 */
+	FDateTime& operator+=(const FTimespan& Other)
+	{
+		Ticks += Other.Ticks;
+
+		return *this;
+	}
+
+	/**
+	 * Adds the time from the given date to this date.
+	 *
+	 * @return This date.
+	 * @see FDateTime
+	 */
+	FDateTime& operator+(const FDateTime& Other)
+	{
+		Ticks += Other.Ticks;
+
+		return *this;
+	}
+
+	/**
+	 * Returns time span between this date and the given date.
+	 *
+	 * @return A time span whose value is the difference of this date and the given date.
+	 * @see FTimespan
+	 */
+	FTimespan operator-(const FDateTime& Other) const
+	{
+		return FTimespan(Ticks - Other.Ticks);
+	}
+
+	/**
+	 * Returns result of subtracting the given time span from this date.
+	 *
+	 * @return A date whose value is the difference of this date and the given time span.
+	 * @see FTimespan
+	 */
+	FDateTime operator-(const FTimespan& Other) const
+	{
+		return FDateTime(Ticks - Other.Ticks);
+	}
+
+	/**
+	 * Subtracts the given time span from this date.
+	 *
+	 * @return This date.
+	 * @see FTimespan
+	 */
+	FDateTime& operator-=(const FTimespan& Other)
+	{
+		Ticks -= Other.Ticks;
+
+		return *this;
+	}
+
+	/**
+	 * Compares this date with the given date for equality.
+	 *
+	 * @param Other The date to compare with.
+	 * @return true if the dates are equal, false otherwise.
+	 */
+	bool operator==(const FDateTime& Other) const
+	{
+		return (Ticks == Other.Ticks);
+	}
+
+	/**
+	 * Compares this date with the given date for inequality.
+	 *
+	 * @param Other The date to compare with.
+	 * @return true if the dates are not equal, false otherwise.
+	 */
+	bool operator!=(const FDateTime& Other) const
+	{
+		return (Ticks != Other.Ticks);
+	}
+
+	/**
+	 * Checks whether this date is greater than the given date.
+	 *
+	 * @param Other The date to compare with.
+	 * @return true if this date is greater, false otherwise.
+	 */
+	bool operator>(const FDateTime& Other) const
+	{
+		return (Ticks > Other.Ticks);
+	}
+
+	/**
+	 * Checks whether this date is greater than or equal to the date span.
+	 *
+	 * @param Other The date to compare with.
+	 * @return true if this date is greater or equal, false otherwise.
+	 */
+	bool operator>=(const FDateTime& Other) const
+	{
+		return (Ticks >= Other.Ticks);
+	}
+
+	/**
+	 * Checks whether this date is less than the given date.
+	 *
+	 * @param Other The date to compare with.
+	 * @return true if this date is less, false otherwise.
+	 */
+	bool operator<(const FDateTime& Other) const
+	{
+		return (Ticks < Other.Ticks);
+	}
+
+	/**
+	 * Checks whether this date is less than or equal to the given date.
+	 *
+	 * @param Other The date to compare with.
+	 * @return true if this date is less or equal, false otherwise.
+	 */
+	bool operator<=(const FDateTime& Other) const
+	{
+		return (Ticks <= Other.Ticks);
+	}
 };
 static_assert(alignof(FDateTime) == 0x000008, "Wrong alignment on FDateTime");
 static_assert(sizeof(FDateTime) == 0x000008, "Wrong size on FDateTime");
@@ -1257,15 +1467,6 @@ static_assert(sizeof(FQualifiedFrameTime) == 0x000010, "Wrong size on FQualified
 static_assert(offsetof(FQualifiedFrameTime, Time) == 0x000000, "Member 'FQualifiedFrameTime::Time' has a wrong offset!");
 static_assert(offsetof(FQualifiedFrameTime, Rate) == 0x000008, "Member 'FQualifiedFrameTime::Rate' has a wrong offset!");
 
-// ScriptStruct CoreUObject.Timespan
-// 0x0008 (0x0008 - 0x0000)
-struct alignas(0x08) FTimespan final
-{
-public:
-	uint8                                         Pad_0[0x8];                                        // 0x0000(0x0008)(Fixing Struct Size After Last Property [ Dumper-7 ])
-};
-static_assert(alignof(FTimespan) == 0x000008, "Wrong alignment on FTimespan");
-static_assert(sizeof(FTimespan) == 0x000008, "Wrong size on FTimespan");
 
 // ScriptStruct CoreUObject.PrimaryAssetId
 // 0x0010 (0x0010 - 0x0000)

@@ -199,6 +199,7 @@ namespace AJB
 
 	extern SDK::AAJBCreadit_C* CreaditPointer;
 	extern SDK::UWB_ModeSelect_C* SimpleMatchHUD;		// Only accessible when in AJBSimpleMatch_P, the constructor is hooked and this value gets updated to transient objects only.
+	extern SDK::FGameplayTag* CurrentFlowstate;
 
 	extern __int32* PlayerPoints;
 	extern bool* bDebugInputMode;	
@@ -221,6 +222,7 @@ namespace AJB
 
 	extern SDK::ALemonHelper_C* MOD_LemonHelper;				// Only exists as a singleton during in lemon possession mode.
 	extern bool bIsLemonPossessioned;							// Oh that's nice, I work as LP | LP? as in, Loss Prevention? | lemon possession
+	extern bool bDebugModeFromCMLA;								// Used to determine if extra/unnecessary logs for development purposes are enabled.
 
 	/* -- Windows External --
 	
@@ -383,13 +385,18 @@ namespace AJB
 	// Called externally by a callback timer, should not be manually called!
 	void TranslateSimpleMatch();
 
+	// Temporary fix to the MatchingPlayers array (the cause of the infamous infinite loading screen)
+	extern int TEMP_CachedCharacterID;
+	void TEMP_OnPlayerLeave();
+	void TEMP_FixMatchingPlayers();
+
 	// ===========================================
 	// **		EXTERNAL HOOK FUNCTIONS			**
 	// ===========================================
 
 	bool __fastcall FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag);
 	void __fastcall OnToggleFullMapVisibility(SDK::UObject* Object);
-	int __fastcall PostEventAtLocation(SDK::UAkAudioEvent* AkEvent, SDK::FVector& Location, SDK::FRotator& Orientation, UC::FString* EventName, SDK::UObject* WorldContextObject);
+	int __fastcall PostEventAtLocation(SDK::UAkAudioEvent* AkEvent, SDK::FVector* Location, SDK::FRotator* Orientation, UC::FString* EventName, SDK::UObject* WorldContextObject);
 
 	// Constructor Hooks
 	SDK::UAJBWindowWidget* __fastcall AJBWindowWidget(SDK::UAJBWindowWidget* This);

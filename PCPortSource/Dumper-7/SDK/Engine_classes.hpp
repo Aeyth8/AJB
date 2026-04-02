@@ -162,7 +162,9 @@ public:
 	struct FActorComponentTickFunction            PrimaryComponentTick;                              // 0x0030(0x0058)(Edit, DisableEditOnInstance, NativeAccessSpecifierPublic)
 	TArray<class FName>                           ComponentTags;                                     // 0x0088(0x0010)(Edit, BlueprintVisible, ZeroConstructor, NativeAccessSpecifierPublic)
 	TArray<class UAssetUserData*>                 AssetUserData;                                     // 0x0098(0x0010)(Edit, ExportObject, ZeroConstructor, ContainsInstancedReference, AdvancedDisplay, Protected, NativeAccessSpecifierProtected)
-	uint8                                         BitPad_A8_0 : 3;                                   // 0x00A8(0x0001)(Fixing Bit-Field Size Between Bits [ Dumper-7 ])
+	uint8                                         bRegistered			: 1;	// I hope this is in the correct spot
+	uint8                                         bRenderStateCreated	: 1;
+	uint8                                         bPhysicsStateCreated	: 1;
 	uint8                                         bReplicates : 1;                                   // 0x00A8(0x0001)(BitIndex: 0x03, PropSize: 0x0001 (Edit, BlueprintVisible, BlueprintReadOnly, Net, DisableEditOnInstance, NoDestructor, Protected, HasGetValueTypeHash, NativeAccessSpecifierProtected))
 	uint8                                         bNetAddressable : 1;                               // 0x00A8(0x0001)(BitIndex: 0x04, PropSize: 0x0001 (NoDestructor, Protected, HasGetValueTypeHash, NativeAccessSpecifierProtected))
 	uint8                                         BitPad_A8_5 : 3;                                   // 0x00A8(0x0001)(Fixing Bit-Field Size For New Byte [ Dumper-7 ])

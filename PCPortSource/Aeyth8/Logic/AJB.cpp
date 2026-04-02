@@ -72,12 +72,14 @@ SDK::UAJBSettings*					AJB::AJBSettings{nullptr};
 
 SDK::AAJBCreadit_C*					AJB::CreaditPointer{nullptr};
 SDK::UWB_ModeSelect_C*				AJB::SimpleMatchHUD{nullptr};
+SDK::FGameplayTag*					AJB::CurrentFlowstate{nullptr};
 
 __int32*							AJB::PlayerPoints{nullptr};
 bool*								AJB::bDebugInputMode{nullptr};
 
 SDK::ALemonHelper_C*				AJB::MOD_LemonHelper{nullptr};
 bool								AJB::bIsLemonPossessioned{false};
+bool								AJB::bDebugModeFromCMLA{false};
 
 // -- MOD --
 
@@ -90,7 +92,7 @@ SDK::UBP_GlobalPatcher_C*			AJB::MOD_GlobalPatcher{nullptr};
 SDK::UClass*						AJB::MOD_CallbackTimerClass{nullptr};
 SDK::UWBP_CallbackTimerHandler_C*	AJB::MOD_CallbackTimer{nullptr};
 
-const wchar_t*						AJB::DLLCommitVersion{L"[v0.5.1]"};
+const wchar_t*						AJB::DLLCommitVersion{L"[v0.5.4]"};
 UC::FString*						AJB::StrDLLCommitVersion{nullptr};
 
 // -- Windows External --
@@ -107,6 +109,8 @@ constexpr BYTE NOP{0x90};
 
 void __fastcall GetNationalMatchSchedule(SDK::UAJBGameInstance*, bool*, bool*, SDK::FAJBMatchSchedule*, SDK::FAJBMatchScheduleDateTime*, SDK::FAJBMatchScheduleDateTime*);
 
+extern void AJBPreLogin(SDK::AGameModeBase* This, SDK::FString* Options, SDK::FString* Address, SDK::FUniqueNetIdRepl* UniqueId, SDK::FString* ErrorMessage);
+
 std::vector<Hooks::HookStructure> StandaloneHooks =
 {
 	{OFF::UConsole,							UFunctions::UConsole},
@@ -115,7 +119,7 @@ std::vector<Hooks::HookStructure> StandaloneHooks =
 	{OFF::Browse,							UFunctions::Browse},
 	{OFF::Login,							UFunctions::Login},
 	{OFF::PreLogin,							UFunctions::PreLogin},
-	{OFF::AJBPreLogin,						UFunctions::PreLogin},
+	{OFF::AJBPreLogin,						AJBPreLogin},
 	{OFF::InitListen,						UFunctions::InitListen},
 	{OFF::AppPreExit,						UFunctions::AppPreExit},
 	{OFF::IsNonPakFileNameAllowed,			UFunctions::IsNonPakFilenameAllowed},
@@ -128,7 +132,9 @@ std::vector<Hooks::HookStructure> StandaloneHooks =
 	{OFF::HandleStartingNewPlayer,			UFunctions::HandleStartingNewPlayer},
 
 	//{OFF::PrepareMapChange,				UFunctions::PrepareMapChange},
-	//{OFF::PostLogin,						UFunctions::PostLogin},
+	{OFF::PostLogin,						UFunctions::PostLogin},
+	//{OFF::Logout,							UFunctions::Logout}, // Doesn't get called for some STUPID reason
+	{OFF::Close,							UFunctions::CloseConnection},
 	//{OFF::BeginPlay,						UFunctions::BeginPlay},
 	//{OFF::RequestLevel,					UFunctions::RequestLevel}, Temporarily disabled since it inevitably crashes and if it doesn't it will stall forever
 	
@@ -137,14 +143,14 @@ std::vector<Hooks::HookStructure> StandaloneHooks =
 
 	{OFF::ALevelScriptActorConstructor,		AJB::ALevelScriptActor},
 	{OFF::AJBWindowWidget,					AJB::AJBWindowWidget},
-	//{OFF::PostEventAtLocation,				AJB::PostEventAtLocation}, // RANDOMLY CRASHES INGAME NEEDS FIXED FOR NULLPTR DEREFERENCE
+	{OFF::PostEventAtLocation,				AJB::PostEventAtLocation}, // RANDOMLY CRASHES INGAME NEEDS FIXED FOR NULLPTR DEREFERENCE
 	{OFF::ChangeState,						AJB::FlowUtilChangeState},
 	
 	// Server logic hooks
 
-	/*{OFF::IsTenpoHost,						AJB::IsServer},
+	{OFF::IsTenpoHost,						AJB::IsServer},
 	{OFF::IsAJBOfflineMode,					AJB::IsOfflineMode},
-	{OFF::IsOfflineMode,					AJB::IsOfflineMode},*/
+	{OFF::IsOfflineMode,					AJB::IsOfflineMode},
 	
 
 	
@@ -173,12 +179,13 @@ void FormatterHook(void* This, bool bInRebuildText, bool bInRebuildAsSource, SDK
 // Server functionality only
 void TryGetMatchingMyPairInfo(SDK::UAJBGameInstance* This, bool* bIsValid, bool* bIsRoomHost, SDK::FMatchingPlayerInfo* Out)
 {
-	LogA(OFF::TryGetMatchingMyPairInfo.GetName(), std::format("[This]: {} [bIsValid]: {} [bIsRoomHost]: {} [Info]: {}", This->GetFullName(), *bIsValid, *bIsRoomHost, AJB::PlayerInfoParser(*Out)));
+	if (AJB::bDebugModeFromCMLA) LogA(OFF::TryGetMatchingMyPairInfo.GetName(), std::format("[This]: {} [bIsValid]: {} [bIsRoomHost]: {} [Info]: {}", This->GetFullName(), *bIsValid, *bIsRoomHost, AJB::PlayerInfoParser(*Out)));
 	//SDK::FString Lemon{L"Lemon Possession"};
 	//AJB::GetBlueprintClass<SDK::UAJBPlayerInfoUtility>()->SetBotFMatchingPlayerInfo(Out, Lemon);
 	//Call<UFunctions::Decl::CopyString>(OFF::CopyString.PlusBase())(&Out->PlayerName, &Lemon);
 	//memcpy(Out, &AJB::Instance->MatchingPlayers[0].Second, sizeof(SDK::FMatchingPlayerInfo));
-	AJB::CopyString(&Out->PlayerName, &AJB::Instance->MatchingPlayers[0].Second.PlayerName);
+	//AJB::CopyString(&Out->PlayerName, &AJB::Instance->MatchingPlayers[0].Second.PlayerName);	
+
 	return OFF::TryGetMatchingMyPairInfo.VerifyFC<void(__thiscall*)(SDK::UAJBGameInstance*, bool*,bool*, SDK::FMatchingPlayerInfo*)>()(This, bIsValid, bIsRoomHost, Out);
 }
 
@@ -187,7 +194,8 @@ bool TryGetMatchingPlayerInfoByPlayerIDPureFunction(SDK::UAJBGameInstance* This,
 	// Valid indexes start at 1 for some reason.
 	//if (PlayerID < 0) return false; 
 
-	if (AJB::IsServer() && PlayerID > 0) // NOTE: Might not have to be the server since the client keeps calling this and it appears to be working anyways when it does
+	/*if (AJB::IsServer() && PlayerID > 0)*/ // NOTE: Might not have to be the server since the client keeps calling this and it appears to be working anyways when it does
+	if (PlayerID > 0)
 	{
 		//bool Result = OFF::TryGetMatchingPlayerInfo.VerifyFC<bool(__thiscall*)(SDK::UAJBGameInstance*, int32, SDK::FMatchingPlayerInfo*)>()(This, PlayerID, Out);
 
@@ -212,10 +220,11 @@ bool TryGetMatchingPlayerInfoByPlayerIDPureFunction(SDK::UAJBGameInstance* This,
 			AJB::CopyString(&Out->PlayerName, &AJB::Instance->MatchingPlayers[IndexedId].First);
 			Out->CharactorID = Info->CharactorID;
 			Out->CustomData.charaSkinId = Info->CustomData.charaSkinId;
+			Out->PlayerID = PlayerID;
 
 		}
 
-		LogA(OFF::TryGetMatchingPlayerInfo.GetName(), std::format("[PlayerID]: {} | [OUT FMatchingPlayerInfo]: {}", PlayerID, Out ? AJB::PlayerInfoParser(*Out) : "NULLPTR"));
+		if (AJB::bDebugModeFromCMLA) LogA(OFF::TryGetMatchingPlayerInfo.GetName(), std::format("[PlayerID]: {} | [OUT FMatchingPlayerInfo]: {}", PlayerID, Out ? AJB::PlayerInfoParser(*Out) : "NULLPTR"));
 		
 		return true;
 	}
@@ -334,7 +343,25 @@ SDK::UMaterial* GetDefaultMaterial(void* This)
 	return oGetDefaultMaterial.VerifyFC<SDK::UMaterial*(__fastcall*)(void*)>()(This);
 }
 
+A8CL::OFFSET FTextConstructor("FText::FText", 0x5DCD20);
+SDK::FText* FText(SDK::FText* This, SDK::FString* InString)
+{
+	SDK::FText* Return = FTextConstructor.VerifyFC<SDK::FText*(__fastcall*)(SDK::FText*, SDK::FString*)>()(This, InString);
+	LogA(FTextConstructor.GetName(), std::format("{} | {}", This->ToString(), InString->ToString()));
 
+	return Return;
+}
+
+A8CL::OFFSET oAddActionMapping("SDK::UPlayerInput::AddActionMapping", 0x1793C60);
+void AddActionMapping(SDK::UPlayerInput* This, SDK::FInputActionKeyMapping& Mapping)
+{
+	LogA(oAddActionMapping.GetName(), std::format("[This]: {} | [Action]: {} | [Key]:{}", This->GetFullName(), Mapping.ActionName.ToString(), Mapping.Key.KeyName.ToString()));
+	if (Mapping.ActionName.ToString() == "HDbg_DebugMenu")
+	{
+		Call<void(__thiscall*)(SDK::UPlayerInput*, SDK::FKey Key, float)>(PB(0x17A80B0))(This, Mapping.Key, 1.0f);
+	}
+	return oAddActionMapping.VerifyFC<void(__thiscall*)(SDK::UPlayerInput*, SDK::FInputActionKeyMapping&)>()(This, Mapping);
+}
 
 static void* GConfigCache{nullptr};
 static constexpr const wchar_t* StaticKey{L"SoftwareCursors"};
@@ -501,7 +528,7 @@ void AJB::Init_Hooks()
 		BytePatcher::ReplaceBytes(PB(0x2076362), ShippingOnlyLaunch); // [__scrt_initialize_crt] The game automatically closes if it isn't set to shipping.
 		BytePatcher::ReplaceByte(PB(0x1DE861), 00); // UAJBUtilityFunctionLibrary::IsShipping
 		*/
-
+		
 		//BytePatcher::ReplaceBytes(PB(0x49DE20), {MOV, 00, RETN, NOP, NOP}); // UAJBUtilityFunctionLibrary::IsAJBOfflineMode (useless)
 		//BytePatcher::ReplaceBytes(PB(0x4ED5D0), { MOV, 00, RETN, NOP, NOP }); // UAJBNetworkObserver::IsOfflineMode (useless)
 		//BytePatcher::ReplaceBytes(PB(0x54D8CE), {MOV, 00, RETN, NOP, NOP, NOP}); // AAJBHUDBase::execSetCreditWidgetInstance (Result: Kills the game)
@@ -546,17 +573,19 @@ void AJB::Init_Hooks()
 		//Hooks::CreateAndEnableHook(ExecCharacterNo, execSetCharNo);
 		if (CMLA::Debug.GetAsBool())
 		{
-			
+			AJB::bDebugModeFromCMLA = true;
 			
 			Hooks::CreateAndEnableHook(GSetString, SetString);			// Major problem that needs to be handled later.
 
 			Hooks::CreateAndEnableHook(PostEventByName, PostEventByNameHook);
+			Hooks::CreateAndEnableHook(oAddActionMapping, AddActionMapping);
 		}
 		
 		if (CMLA::LemonPossession.GetAsBool())
 		{
 			AJB::bIsLemonPossessioned = true;
 		}
+
 		//Hooks::CreateAndEnableHook(GetBaseMaterial, HGetBaseMaterial);
 
 		/* If I remember correctly none of these hooks did anything.
@@ -569,6 +598,10 @@ void AJB::Init_Hooks()
 
 		//Hooks::CreateAndEnableHook(OFF::ALevelScriptActorConstructor, ALevelScriptActor);
 		//Hooks::CreateAndEnableHook(OFF::ToFormattedString, FormatterHook);
+		//Hooks::CreateAndEnableHook(FTextConstructor, FText);
+		
+
+		//BytePatcher::ReplaceBytes(PB(0x47C510),{RETN,NOP}); // UAJBGameInstance::ClearMatchingID
 	}
 
 }
@@ -648,7 +681,7 @@ void AJB::Init_Vars()
 	System = static_cast<SDK::UAJBAMSystemObject*>(Instance->AMSystemObject);
 	PlayerPoints = (&System->PP);
 
-	SDK::FString ElSev{L"1170"};
+	/*SDK::FString ElSev{L"1170"};
 	SDK::FString Username{CMLA::Username.GetArgumentAsString()};
 	CopyString(&Instance->PlayerLoginInfo.SessionID, &ElSev);
 	CopyString(&Instance->PlayerLoginInfo.AccessCode, &ElSev);
@@ -657,7 +690,7 @@ void AJB::Init_Vars()
 	CopyString(&Instance->PlayerLoginInfo.UserDataID, &ElSev);
 	Instance->PlayerLoginInfo.MatchingPlayerInfo.PlayerIconID = 5;
 	Instance->PlayerLoginInfo.bIsBNCard = true;
-	Instance->PlayerLoginInfo.bIsGuest = false;
+	Instance->PlayerLoginInfo.bIsGuest = false;*/
 			
 	/*for (SDK::FCustomData& Data : Instance->PlayerLoginInfo.CustomData)
 	{
@@ -677,6 +710,7 @@ void AJB::Init_Vars()
 		bDebugInputMode = (&Settings->bDebugInputMode);
 
 		Settings->CoinOptions.FreePlay = true;
+		Settings->bUseDedicatedSeverStartSelect = true;
 		//Settings->ShopEventSettings.bIsShopCompetition = true;
 		//Settings->UpdateSettings.bIsServerMode = true;
 
@@ -693,7 +727,7 @@ void AJB::Init_Vars()
 		//AJBSettings->bAvailableAllStages = true;		I'm pretty sure everything is available and enabling this only allows you to open the PvE map on BR which puts you in an infinite loading screen. 
 		AJBSettings->bEnableSkinCustomDebug = true;
 		AJBSettings->bUseDebugClosedArcadeTimeSchedule = true;
-		LogA("AJBSettings AutoPlayTestMode", std::to_string(AJBSettings->AutoPlayTestMode));
+		//LogA("AJBSettings AutoPlayTestMode", std::to_string(AJBSettings->AutoPlayTestMode));
 	}
 
 	SDK::UAJBArcadeTimeManager* TimeManager{nullptr};
@@ -706,6 +740,7 @@ void AJB::Init_Vars()
 
 	}
 	
+	LogA("MatchingPlayers address", HexToString(*reinterpret_cast<uintptr_t*>(&Instance->MatchingPlayers)));
 }
 
 // -- Pointers
@@ -838,8 +873,8 @@ bool AJB::IsServer()
 	SDK::UWorld* CurrentWorld = GWorld.GetPointer();
 	if (CurrentWorld && CurrentWorld->NetDriver)
 	{
-		LogA("GWorld", CurrentWorld->GetFullName());
-		LogA("NetDriver", CurrentWorld->NetDriver->GetFullName());
+		/*LogA("GWorld", CurrentWorld->GetFullName());
+		LogA("NetDriver", CurrentWorld->NetDriver->GetFullName());*/
 		// Only clients have a valid ServerConnection pointer.
 		return CurrentWorld->NetDriver->ServerConnection == nullptr && GetNetMode(CurrentWorld->NetDriver) == Enums::ENetMode::NM_ListenServer;
 	}
@@ -849,8 +884,8 @@ bool AJB::IsServer()
 
 bool A8CL::AJB::IsInSession()
 {
-	SDK::UWorld* CurrentWorld = GWorld;
-	return CurrentWorld && CurrentWorld->NetDriver;
+	SDK::UWorld* CurrentWorld = GWorld.GetPointer();
+	return CurrentWorld && CurrentWorld->NetDriver && CurrentWorld->NetDriver->ServerConnection;
 }
 
 bool A8CL::AJB::IsOfflineMode()
@@ -944,9 +979,81 @@ void AJB::TranslateSimpleMatch()
 	}
 }
 
+//struct TEMP_CachedPlayers
+//{
+//	UC::FString					PlayerName;
+//	SDK::FMatchingPlayerInfo	PlayerInfo;
+//};
+//extern std::vector<TEMP_CachedPlayers> CachedPlayerList{};
+
+
+int AJB::TEMP_CachedCharacterID{1};
+
+void AJB::TEMP_OnPlayerLeave()
+{
+	for (int i{0}; i < Instance->MatchingPlayers.Num(); ++i)
+	{
+		Instance->MatchingPlayers[i].Second.PlayerID = (i + 1);
+		
+		if (AJB::MOD_GlobalPatcher && !GWorld.GetPointer()->NetDriver->ClientConnections.IsValidIndex(i))
+		{
+			AJB::MOD_GlobalPatcher->RemovePlayerAtIndex(i, Instance->MatchingPlayers);
+		}
+	}
+}
+
+void AJB::TEMP_FixMatchingPlayers()
+{
+	for (int i{0}; i < Instance->MatchingPlayers.Num(); ++i)
+	{
+		// If a player leaves and rejoins the stupid PlayerID increments even though the count is wrong, it goes from 1 and upwards but due to the bug you will have missing slots.
+		// So basically if there is [PlayerID 1], [PlayerID 2] and someone leaves, or rejoins, it becomes [PlayerID 1], [PlayerID 3], now there's a gap, and it also breaks the host for some STUPID reason and deletes the entry for that.
+		// And you would assume huh okay so then the disconnecting logic must be broken or missing something, ITS JUST THIS STUPID NUMBER AND SOME OTHER NUMBER THAT HAS NO SYNCHRONIZATION WITH THE REST!
+
+		auto& Value = Instance->MatchingPlayers[i].Value();
+
+		Value.PlayerID = (i + 1);
+
+		/*if (Instance->MatchingPlayers[i].Second.PlayerName.Num() > 1)
+		{
+			SDK::FString TempName{ (L"Nameless-Player-" + std::to_wstring(i)).c_str() };
+			AJB::CopyString(&Instance->MatchingPlayers[i].Second.PlayerName, &TempName);
+			AJB::CopyString(&Instance->MatchingPlayers[i].Second.GameServerUserID, &TempName);
+		}*/
+
+		constexpr const static wchar_t* SDT_MatchingFlowstates[]
+		{
+			L"OutGame.Matching",
+			L"OutGame.SelectStartLocation"
+		};
+
+		constexpr uint32 SDT_Size = sizeof(SDT_MatchingFlowstates) / sizeof(SDT_MatchingFlowstates[0]);
+
+		static SDK::FName BlacklistedFlowstates[SDT_Size]{0};
+		static bool bOne{0};
+
+		if (!bOne)
+		{
+			bOne = 1;
+			for (byte o{0}; o < SDT_Size; ++o) BlacklistedFlowstates[o] = FName::NAME_FindOrAdd(SDT_MatchingFlowstates[o]);			
+		}
+
+		if (AJB::CurrentFlowstate && AJB::CurrentFlowstate->TagName != BlacklistedFlowstates[i])
+		{
+			if (Value.CharactorID == 0)
+			{
+				Value.CharactorID = AJB::TEMP_CachedCharacterID;
+			}
+		}		
+	}
+
+}
+
 bool __fastcall AJB::FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag)
 {
 	LogA("UFlowStateUtil", std::format("New FlowState: {}", NextStateTag.TagName.ToString()));
+	
+	AJB::CurrentFlowstate = &NextStateTag;
 	
 	// The mouse will not lock into the viewport on its own (making KBM compability unplayable unless you enjoy constantly holding down middle click to move your camera)
 	constexpr const static wchar_t* SDT_MouseLockFlowstates[]
@@ -999,7 +1106,7 @@ void __fastcall AJB::OnToggleFullMapVisibility(SDK::UObject* Object)
 
 	bToggled = !bToggled;
 
-	LogA("OnToggleFullMapVisibility", Object->GetFullName());
+	//LogA("OnToggleFullMapVisibility", Object->GetFullName());
 
 	if (Object->IsA(SDK::ABP_AJBInGameHUD_C::StaticClass()))
 	{
@@ -1013,7 +1120,7 @@ void __fastcall AJB::OnToggleFullMapVisibility(SDK::UObject* Object)
 		{
 			if (bToggled)
 			{
-				LogA("FullMapVisibility", MapCache->GetFullName());
+				//LogA("FullMapVisibility", MapCache->GetFullName());
 				OFF::SetInputMode_GameAndUIEx.Call<decltype(&SDK::UWidgetBlueprintLibrary::SetInputMode_GameAndUIEx)>()(HUD->PlayerOwner, nullptr, SDK::EMouseLockMode::LockAlways, false);
 			}
 			else
@@ -1024,26 +1131,25 @@ void __fastcall AJB::OnToggleFullMapVisibility(SDK::UObject* Object)
 	}
 }
 
-int __fastcall AJB::PostEventAtLocation(SDK::UAkAudioEvent* AkEvent, SDK::FVector& Location, SDK::FRotator& Orientation, SDK::FString* EventName, SDK::UObject* WorldContextObject)
+int __fastcall AJB::PostEventAtLocation(SDK::UAkAudioEvent* AkEvent, SDK::FVector* Location, SDK::FRotator* Orientation, SDK::FString* EventName, SDK::UObject* WorldContextObject)
 {
-	//int32 Result = OFF::PostEventAtLocation.VerifyFC<int32(__fastcall*)(SDK::UAkAudioEvent*, SDK::FVector&, SDK::FRotator&, SDK::FString&, SDK::UObject*)>()(AkEvent, Location, Orientation, EventName, WorldContextObject);
-	LogA(OFF::PostEventAtLocation.GetName(),EventName ? EventName->ToString() : "NULL");
+	//const int32 Result = OFF::PostEventAtLocation.VerifyFC<int32(__fastcall*)(SDK::UAkAudioEvent*, SDK::FVector*, SDK::FRotator*, SDK::FString*, SDK::UObject*)>()(AkEvent, Location, Orientation, EventName, WorldContextObject);
+	if (AJB::bDebugModeFromCMLA) LogA(OFF::PostEventAtLocation.GetName(), EventName ? EventName->ToString() : "NULL");
 
 	// Play_BGM03_Menu2 is the song played for the stupid "GameOver" sequence whenever you run out of time in AJBSimpleMatch_P (which I patched long ago) but also when you click to "exit" the game.
 	// Normally doing so would play the annoying and pointlessly delayed song and then eventually try to go to AJBStartUp_P.
 	// Since my browse hook already redirects it to my Titlescreen this hook will simply end the stupid delayed sequence early and immediately head back to the Titlescreen, I'M DONE WAITING.
 
-	if (wcscmp(EventName->GetDataPtr(), L"Play_BGM03_Menu2") == 0)
+	if (EventName && wcscmp(EventName->Data, L"Play_BGM03_Menu2") == 0)
 	{
 		constexpr const wchar_t* Titlescreen = L"open /Game/Aeyth8/Maps/TitleScreen/AJBTitleScreen";
 		static SDK::FString ImmediateExit(Titlescreen);
-		UFunctions::UConsole(GEngine->GameViewport->ViewportConsole, ImmediateExit);
 
-		return 0;
+		UFunctions::UConsole(GEngine->GameViewport->ViewportConsole, ImmediateExit);
 	}
 
 	//return Result;
-	return OFF::PostEventAtLocation.VerifyFC<int32(__fastcall*)(SDK::UAkAudioEvent*, SDK::FVector&, SDK::FRotator&, SDK::FString*, SDK::UObject*)>()(AkEvent, Location, Orientation, EventName, WorldContextObject);
+	return OFF::PostEventAtLocation.VerifyFC<int32(__fastcall*)(SDK::UAkAudioEvent*, SDK::FVector*, SDK::FRotator*, SDK::FString*, SDK::UObject*)>()(AkEvent, Location, Orientation, EventName, WorldContextObject);
 }
 
 SDK::UAJBWindowWidget* __fastcall AJB::AJBWindowWidget(SDK::UAJBWindowWidget* This)

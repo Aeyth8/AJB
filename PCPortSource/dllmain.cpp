@@ -80,8 +80,8 @@ int __stdcall DllMain(HMODULE hModule, DWORD ulReasonForCall, LPVOID lpReserved)
 
 		if (AJB::bIsLemonPossessioned)
 		{
-			const int Box = MessageBoxA(0, "Lemon Possession mode is enabled:\n\nAll materials will be replaced with Lemon Possession.\nFlashing lights may occur.\n\nDo you wish to proceed?", "!!! EPILEPSY WARNING !!!", MB_OKCANCEL);
-			if (Box == IDCANCEL) AJB::bIsLemonPossessioned = false;
+			const int Box = MessageBoxA(0, "Lemon Possession mode is enabled:\n\nAll materials will be replaced with Lemon Possession.\nFlashing lights may occur.\n\nDo you wish to proceed with Lemon Possession mode?", "!!! EPILEPSY WARNING !!!", MB_YESNO);
+			if (Box == IDNO) AJB::bIsLemonPossessioned = false;
 		}
 
 #ifdef PROXY

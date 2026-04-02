@@ -190,7 +190,8 @@ using namespace Global;
 #include "../../Dumper-7/SDK/BP_SimpleStartLocationSelectGameMode_classes.hpp"
 #include "../../Dumper-7/SDK/WB_TournamentMode_Main_classes.hpp"
 #include "../../Dumper-7/SDK/WB_ModeSelect_classes.hpp"
-
+#include "../../Dumper-7/SDK/Landscape_classes.hpp"
+#include "../../Dumper-7/SDK/BP_AJBDamageAreaLocal_classes.hpp"
 
 static bool* TOGGLEDEBUGBADGAMEDESIGN{nullptr};
 
@@ -234,6 +235,7 @@ void LemonPossession()
 		SDK::UClass* BorderClass = SDK::UBorder::StaticClass();
 		SDK::UClass* PrimitiveClass = SDK::UPrimitiveComponent::StaticClass();
 		SDK::UClass* MaterialClass = SDK::UMaterial::StaticClass();
+		SDK::UClass* LandscapeClass = SDK::ALandscapeProxy::StaticClass();
 
 		SDK::UObject* CurrentObject{nullptr};
 		for (int i{0}; i < SDK::UObject::GObjects->Num(); ++i)
@@ -242,34 +244,14 @@ void LemonPossession()
 
 			if (!CurrentObject) continue;
 
-			if (CurrentObject->IsA(ImageClass) || CurrentObject->IsA(BorderClass) || CurrentObject->IsA(PrimitiveClass))
-			{
-				if (CurrentObject->IsA(ImageClass))
-				{	
-					SDK::UImage* Image = static_cast<SDK::UImage*>(CurrentObject);
-					SDK::UMaterial* Mat = static_cast<SDK::UMaterial*>(Image->Brush.ResourceObject); if (Mat && Mat->IsA(MaterialClass)) { if (Mat->MaterialDomain == SDK::EMaterialDomain::MD_UI) LemonEssence = MLemon; else LemonEssence = static_cast<SDK::UMaterial*>(AJB::MOD_CallbackTimer->MaterialCacher->Background.ResourceObject); }
-				}
-				else if (CurrentObject->IsA(BorderClass))
-				{
-					SDK::UBorder* Border = static_cast<SDK::UBorder*>(CurrentObject);
-					SDK::UMaterial* Mat = static_cast<SDK::UMaterial*>(Border->Background.ResourceObject); if (Mat && Mat->IsA(MaterialClass)) { if (Mat->MaterialDomain == SDK::EMaterialDomain::MD_UI) LemonEssence = MLemon; else LemonEssence = static_cast<SDK::UMaterial*>(AJB::MOD_CallbackTimer->MaterialCacher->Background.ResourceObject); }
-				}
-				else if (CurrentObject->IsA(PrimitiveClass))
-				{
-					SDK::UPrimitiveComponent* Primitive = static_cast<SDK::UPrimitiveComponent*>(CurrentObject);
-					for (int i{0}; i < Primitive->GetNumMaterials(); ++i)
-					{
-						SDK::UMaterialInterface* Mat = Primitive->GetMaterial(i);
-						if (Mat) { if (SDK::UMaterial* Base = Mat->GetBaseMaterial()) { if (Base->MaterialDomain == SDK::EMaterialDomain::MD_UI) { LemonEssence = MLemon; } else LemonEssence = static_cast<SDK::UMaterial*>(AJB::MOD_CallbackTimer->MaterialCacher->Background.ResourceObject); }  }
-					}
-				}
-			}
-
 			if (CurrentObject->IsA(ImageClass))
 			{				
 				static uint64 ImageSetBrushFromMaterial(PB(0x10C1D10));
 
 				SDK::UImage* Image = static_cast<SDK::UImage*>(CurrentObject);
+
+				SDK::UMaterial* Mat = static_cast<SDK::UMaterial*>(Image->Brush.ResourceObject); if (Mat && Mat->IsA(MaterialClass)) { if (Mat->MaterialDomain == SDK::EMaterialDomain::MD_UI) LemonEssence = MLemon; else LemonEssence = static_cast<SDK::UMaterial*>(AJB::MOD_CallbackTimer->MaterialCacher->Background.ResourceObject); }
+
 				Call<void(__fastcall*)(SDK::UImage*, SDK::UMaterialInterface*)>(ImageSetBrushFromMaterial)(Image, LemonEssence);
 			}
 			else if (CurrentObject->IsA(BorderClass))
@@ -277,6 +259,9 @@ void LemonPossession()
 				static uint64 BorderSetBrushFromMaterial(PB(0x10C1C10));
 
 				SDK::UBorder* Border = static_cast<SDK::UBorder*>(CurrentObject);
+
+				SDK::UMaterial* Mat = static_cast<SDK::UMaterial*>(Border->Background.ResourceObject); if (Mat && Mat->IsA(MaterialClass)) { if (Mat->MaterialDomain == SDK::EMaterialDomain::MD_UI) LemonEssence = MLemon; else LemonEssence = static_cast<SDK::UMaterial*>(AJB::MOD_CallbackTimer->MaterialCacher->Background.ResourceObject); }
+
 				Call<void(__fastcall*)(SDK::UBorder*, SDK::UMaterialInterface*)>(BorderSetBrushFromMaterial)(Border, LemonEssence);
 			}
 			else if (CurrentObject->IsA(PrimitiveClass))
@@ -286,10 +271,31 @@ void LemonPossession()
 				SDK::UPrimitiveComponent* Primitive = static_cast<SDK::UPrimitiveComponent*>(CurrentObject);
 				for (int i{0}; i < Primitive->GetNumMaterials(); ++i)
 				{
+					SDK::UMaterialInterface* Mat = Primitive->GetMaterial(i);
+					if (Mat) { if (SDK::UMaterial* Base = Mat->GetBaseMaterial()) { if (Base->MaterialDomain == SDK::EMaterialDomain::MD_UI) { LemonEssence = MLemon; } else LemonEssence = static_cast<SDK::UMaterial*>(AJB::MOD_CallbackTimer->MaterialCacher->Background.ResourceObject); }  }
 					Primitive->SetMaterial(i, LemonEssence);
 
 					//Call<void(__fastcall*)(SDK::UPrimitiveComponent*, SDK::Params::PrimitiveComponent_SetMaterial*)>(execPrimitiveSetMaterial)(Primitive, &Parms);
 				}
+
+				/*if (CurrentObject->IsA(LandscapeClass))
+				{
+					SDK::ALandscapeProxy* Landscape = static_cast<SDK::ALandscapeProxy*>(CurrentObject);
+					Landscape->LandscapeMaterial = MLemon;
+
+
+					for (SDK::ULandscapeComponent* Component : Landscape->LandscapeComponents)
+					{
+						if (Component && Component->bRegistered)
+						{
+							SDK::ULandscapeHeightfieldCollisionComponent* CollisionComponent = Component->CollisionComponent.Get();
+							if (CollisionComponent)
+							{
+								CollisionComponent->SetShouldUpdatePhysicsVolume(true);
+							}
+						}
+					}
+				}*/
 			}
 		}
 	}
@@ -304,16 +310,7 @@ void UFunctions::UConsole(SDK::UConsole* This, SDK::FString& Command)
 
 	LogA("UConsole", StrCommand);
 	
-	if (StrCommand == "play")
-	{			
-		SDK::ABP_AJBWwiseManager_C* Manager = Pointers::SpawnActor<SDK::ABP_AJBWwiseManager_C>();
-		
-		if (Manager)
-		{
-			reinterpret_cast<SDK::ABP_AJBWwiseManager_C*>(Manager)->PostWwiseBGMEvent(SDK::FGameplayTag{Pointers::FString2FName(L"Sound.BGM.Play.BGM02.Menu1")}, true);
-		}
-	}
-	else if (StrCommand == "song")
+	if (StrCommand == "song")
 	{
 		LogA("Song", AJB::Instance->LastPlayedWwiseBGMEventTag.TagName.ToString());
 	}
@@ -437,13 +434,14 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		int PARM_Area{0};
 		int PARM_NPCCount{0};
 		int PARM_NPCDifficulty{0};
+		int PARM_PlayMode{0};
 		bool PARM_Respawn{false};
 
-		size_t AreaIdx = StrCommand.find("?Area=");
+		size AreaIdx = StrCommand.find("?Area=");
 		if (AreaIdx != std::string::npos)
 		{
 			AreaIdx += 6;
-			size_t AreaIdxEnd = StrCommand.find("?", AreaIdx);
+			size AreaIdxEnd = StrCommand.find("?", AreaIdx);
 			if (AreaIdxEnd == std::string::npos)
 			{
 				AreaIdxEnd = StrCommand.length();
@@ -452,11 +450,25 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			PARM_Area = std::stoi(StrCommand.substr(AreaIdx, AreaIdxEnd - AreaIdx));
 		}
 
-		size_t NPCIdx = StrCommand.find("?NPCNum=");
+		size ModeIdx = StrCommand.find("?Mode=");
+		if (ModeIdx != std::string::npos)
+		{
+			ModeIdx += 6;
+
+			size ModeIdxEnd = StrCommand.find("?", ModeIdx);
+			if (ModeIdxEnd == std::string::npos)
+			{
+				ModeIdxEnd = StrCommand.length();
+			}
+
+			PARM_PlayMode = std::stoi(StrCommand.substr(ModeIdx, ModeIdxEnd - ModeIdx));
+		}
+
+		size NPCIdx = StrCommand.find("?NPCNum=");
 		if (NPCIdx != std::string::npos)
 		{
 			NPCIdx += 8;
-			size_t NPCIdxEnd = StrCommand.find("?", NPCIdx);
+			size NPCIdxEnd = StrCommand.find("?", NPCIdx);
 			if (NPCIdxEnd == std::string::npos)
 			{
 				NPCIdxEnd = StrCommand.length();
@@ -466,11 +478,11 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		}
 		if (PARM_NPCCount != 0)
 		{
-			size_t NPCDifficultyIdx = StrCommand.find("?NPCDifficulty=");
+			size NPCDifficultyIdx = StrCommand.find("?NPCDifficulty=");
 			if (NPCDifficultyIdx != std::string::npos)
 			{
 				NPCDifficultyIdx += 15;
-				size_t NPCDifficultyEndIdx = StrCommand.find('?', NPCDifficultyIdx); 
+				size NPCDifficultyEndIdx = StrCommand.find('?', NPCDifficultyIdx);
 				if (NPCDifficultyEndIdx == std::string::npos) 
 				{
 					NPCDifficultyEndIdx = StrCommand.length();
@@ -487,7 +499,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		TheSettings.AILevel = PARM_NPCDifficulty;
 		TheSettings.DamageAreaType = PARM_Area;
 		AJB::Instance->SetBattleSettings(TheSettings);
-		AJB::Instance->PlayMode = SDK::EPlayMode::Shop;
+		AJB::Instance->PlayMode = (SDK::EPlayMode)PARM_PlayMode;
 		AJB::Instance->AreaTypeID = PARM_Area;
 
 		//AJB::Instance->DebugNPCCharaIndex = PARM_NPCCount;
@@ -500,6 +512,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	else if (StrCommand.find("AJBExecInternalChar") == 0)
 	{
 		int NewChar = std::stoi(StrCommand.substr(20));
+		AJB::TEMP_CachedCharacterID = NewChar;
 		AJB::SetSelectedCharacter((AJB::ESelectedCharacter)NewChar);
 	}
 	else if (StrCommand.find("AJBExecInternalMode") == 0)
@@ -521,9 +534,32 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 
 		AJB::Instance->PlayMode = (SDK::EPlayMode)NewPlayMode;
 	}
+	else if (StrCommand == "AJBExecInternal Konami")
+	{
+		if (AJB::MOD_CallbackTimerClass && AJB::MOD_CallbackTimer)
+		{
+			AJB::bIsLemonPossessioned = true;
+			AJB::CreateCallbackTimer(LemonPossession, 0.7f);
+		}
+	}
+	else if (StrCommand == "AJBExecInternal GoldShower")
+	{
+		if (AJB::IsServer() || AJB::IsOfflineMode())
+		{
+			SDK::APlayerController* Player = Pointers::Player<SDK::ABP_AJBInGamePlayerController_C>();
+			if (Player)
+			{
+				SDK::ABP_AJBInGameCharacter_C* Character = static_cast<SDK::ABP_AJBInGameCharacter_C*>(Pointers::Player()->Character);
+				if (Character) Character->SprinkleSP();
+			}
+			
+		}
+	}
 	else if (StrCommand == "mute")
 	{
-		SDK::ABP_AJBWwiseManager_C* Manager = Pointers::SpawnActor<SDK::ABP_AJBWwiseManager_C>();
+		SDK::ABP_AJBWwiseManager_C* Manager = Pointers::GetLastOf<SDK::ABP_AJBWwiseManager_C>(false);
+
+		if (!Manager) Manager = Pointers::SpawnActor<SDK::ABP_AJBWwiseManager_C>();
 		
 		Manager->StopWwiseBGMEvent();
 		ConsoleOutput::Text(L"SHUTUP! SHUTUP CHUMLEE");
@@ -531,15 +567,18 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	else if (StrCommand == "hidemouse")
 	{
 		Pointers::Player()->bShowMouseCursor = false;
+		ConsoleOutput::Text(L"Hiding mouse.");
 	}
 	else if (StrCommand == "showmouse")
 	{
 		Pointers::Player()->bShowMouseCursor = true;
+		ConsoleOutput::Text(L"Showing mouse.");
 	}
 	else if (StrCommand == "lockmouse")
 	{
 		SDK::APlayerController* Player = Pointers::Player();
 		OFF::SetInputGameOnly.Call<SetInputModeGameOnly>()(Player);
+		ConsoleOutput::Text(L"Locking mouse.");
 	}
 	else if (StrCommand == "netid")
 	{
@@ -556,7 +595,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 
 		if (!IsNull(Filter))
 		{
-			LogA("Filter", std::to_string((uint8)Filter->CurrentType));
+			ConsoleOutput::Text(L"Using shader " + std::to_wstring((uint8)Filter->CurrentType));
 		}
 	}
 	else if (StrCommand == "shader")
@@ -566,6 +605,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		if (!IsNull(Filter))
 		{
 			Filter->NextFilter();
+			ConsoleOutput::Text(L"Using shader " + std::to_wstring((uint8)Filter->CurrentType));
 		}
 	}	
 	else if (StrCommand == "char")
@@ -629,17 +669,41 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			LogA("Proxy " + std::to_string(Int), std::format("[IsTenpoHost]: {} | [RoomHostUserId] {} | [OutGameProxyState]: {}", Proxy->IsTenpoHost(), Proxy->RoomHostUserID.ToString(), TenpoStatus[(unsigned char)Proxy->OutGameProxyState]));
 		}
 	}
-	else if (StrCommand == "menu")
+	else if (StrCommand.find("AJBExecInternal OptionsMenu Toggle") == 0)
 	{		
 		if (AJB::MOD_OptionsMenu)
 		{
-			if (CMLA::Debug.GetAsBool()) LogA(AJB::MOD_OptionsMenu->GetFullName(), std::format("[bPauseMenuIsVisible]: {} | [Visibility]: {}", AJB::MOD_OptionsMenu->bPauseMenuIsVisible, AJB::MOD_OptionsMenu->Visibility == SDK::ESlateVisibility::Visible ? "Visible" : "Collapsed"));
+			if (AJB::bDebugModeFromCMLA) LogA(AJB::MOD_OptionsMenu->GetFullName(), std::format("[bPauseMenuIsVisible]: {} | [Visibility]: {}", AJB::MOD_OptionsMenu->bPauseMenuIsVisible, AJB::MOD_OptionsMenu->Visibility == SDK::ESlateVisibility::Visible ? "Visible" : "Collapsed"));
 
 			SDK::APlayerController* Player = Pointers::Player();
 			if (Player)
 			{
-				if (!Player->bShowMouseCursor && AJB::MOD_OptionsMenu->bPauseMenuIsVisible) Player->bShowMouseCursor = true;
+				// Seems redundant but it's not, the stupid widget doesn't show up on clients connected to the server, I'm not sure if it's due to replication which I don't see any flags for or if Login doesn't get called (which it should be either way)
+				if (!AJB::MOD_OptionsMenu->IsInViewport()) AJB::MOD_OptionsMenu->AddToViewport(111);
 
+				// I'd rather put this in the actual blueprint logic but then ID HAVE TO REDUMP THE SDK AND GET THE NEW STRUCTURE and I don't feel like it until it's actually a proper menu.
+
+				// Temporary toggle switch for proper mouse visibility
+				static bool bWasShowingMouse{false};
+
+				bool bMenuCurrentlyVisible = AJB::MOD_OptionsMenu->bPauseMenuIsVisible;
+
+				if (bMenuCurrentlyVisible)
+				{
+					bWasShowingMouse = Player->bShowMouseCursor;
+					Player->bShowMouseCursor = true;
+				}
+				else
+				{
+					Player->bShowMouseCursor = bWasShowingMouse;
+				}
+
+				SDK::UWorld* CurrentWorld = GWorld.GetPointer();
+				if (CurrentWorld && !CurrentWorld->NetDriver)
+				{
+					Player->Pause();
+				}
+				
 				if (Player->IsA(SDK::ABP_AJBInGamePlayerController_C::StaticClass()))
 				{
 					SDK::AAJBInGameHUD* HUD = static_cast<SDK::AAJBInGameHUD*>(Player->GetHUD());
@@ -647,8 +711,10 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 				}
 
 				AJB::MOD_OptionsMenu->bPauseMenuIsVisible ? OFF::SetInputMode_GameAndUIEx.Call<SetInputModeGameAndUI>()(Player, AJB::MOD_OptionsMenu, SDK::EMouseLockMode::LockAlways, false) :  OFF::SetInputGameOnly.Call<SetInputModeGameOnly>()(Player);
+
+				ConsoleOutput::Text(std::format(L"[bPauseMenuIsVisible]: {} | [Visibility]: {}", AJB::MOD_OptionsMenu->bPauseMenuIsVisible, AJB::MOD_OptionsMenu->Visibility == SDK::ESlateVisibility::Visible ? L"Visible" : L"Collapsed"));
 			}
-		}		
+		}
 	}
 	else if (StrCommand == "oss")
 	{
@@ -684,7 +750,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	}
 	else if (StrCommand == "showhud")
 	{
-		static bool bOne{ 0 };
+		static bool bOne{0};
 		bOne = !bOne;
 		SDK::APlayerController* Player = Pointers::Player();
 		if (Player)
@@ -695,6 +761,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 				HUD->SetupForceInvisibleAllWidgetsFlag(bOne);
 			}
 		}
+		ConsoleOutput::Text(bOne ? L"Hud is hidden." : L"Hud is visible.");
 	}
 	else if (StrCommand == "toggledebugmenu")
 	{
@@ -776,6 +843,8 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 
 				reinterpret_cast<SDK::UWB_TestModeMenuBase_C*>(Menus[2])->CloseWindow();
 			}
+
+			ConsoleOutput::Text(bToggled ? L"Showing debug menu" : L"Hiding debug menu");
 		}
 	}	
 	else if (StrCommand == "host")
@@ -799,12 +868,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 				LogA("Lemon", Block->GetFullName());
 			}
 		}
-
-	}
-	else if (StrCommand == "screen")
-	{
-		AJB::GetBlueprintClass<SDK::ULoadingScreenSystemBPLibrary>()->StartManualLoadingScreen(0);
-	}
+	}	
 	else if (StrCommand == "toggledebug")
 	{
 		if (TOGGLEDEBUGBADGAMEDESIGN)
@@ -817,66 +881,28 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	{
 		AJB::GetGameMode<SDK::ABP_AJBBattleGameMode_C>()->Say(L"WELL FECK");
 	}
-	else if (StrCommand == "possession")
+	else if (StrCommand == "gnm")
 	{
-		//LogA("LEMONS", SDK::UObject::FindObject<SDK::UTexture2D>("Texture2D lemon_possessing.lemon_possessing")->GetFullName());
-		/*SDK::UTexture2D* LemonPossessing = SDK::UObject::FindObject<SDK::UTexture2D>("Texture2D lemon_possessing.lemon_possessing");
-		if (LemonPossessing)
-		{
-			for (SDK::UImage* Image : Pointers::FindObjects<SDK::UImage>(false))
-			{
-				Image->SetBrushFromTexture(LemonPossessing, true);
-			}
-			for (SDK::UBorder* Image : Pointers::FindObjects<SDK::UBorder>(false))
-			{
-				Image->SetBrushFromTexture(LemonPossessing);
-			}
-		}*/
+		ENetMode WorldNetMode = GetWorldNetMode(GWorld);
+		ENetMode ActorNetMode = GetActorNetMode(Pointers::Player());
 
-		SDK::ALemonHelper_C* LemonHelper = Pointers::SpawnActor<SDK::ALemonHelper_C>();
-		if (LemonHelper)
+		LogA("GetNetMode", std::format("[WorldNetMode]: {} | [ActorNetMode]: {}", WorldNetMode.ToString(), ActorNetMode.ToString()));
+	}
+	else if (StrCommand == "fix")
+	{
+		AJB::TEMP_FixMatchingPlayers();
+	}
+	else if (StrCommand.find("rce") != std::string::npos && StrCommand.size() > 5)
+	{
+		SDK::AAJBInGamePlayerController* Player = (SDK::AAJBInGamePlayerController*)Pointers::Player();
+		if (Player)
 		{
-			LemonHelper->PlayGrayscaleLemonPossession();
-		}
-
-		SDK::UMaterial* LemonEssence = SDK::UObject::FindObject<SDK::UMaterial>("Material M_LemonPossession.M_LemonPossession");
-		if (LemonEssence)
-		{
-			for (SDK::UImage* Image : Pointers::FindObjects<SDK::UImage>(false))
-			{
-				Image->SetBrushFromMaterial(LemonEssence);
-			}
-			for (SDK::UBorder* Image : Pointers::FindObjects<SDK::UBorder>(false))
-			{
-				Image->SetBrushFromMaterial(LemonEssence);
-			}
-			for (SDK::UPrimitiveComponent* Image : Pointers::FindObjects<SDK::UPrimitiveComponent>(false))
-			{
-				const int Num = Image->GetNumMaterials();
-				for (int i{0}; i < Num; ++i)
-				{
-					Image->SetMaterial(i, LemonEssence);
-				}
-				
-			}
+			std::wstring RemoteCommand{ Command->CStr() };
+			RemoteCommand = RemoteCommand.substr(4);
+			Player->ServerCmd(RemoteCommand.c_str());
 		}
 	}
-	else if (StrCommand == "timer")
-	{
-
-		if (AJB::MOD_CallbackTimerClass && AJB::MOD_CallbackTimer)
-		{
-			uint64 Function = (uint64)LemonPossession;
-
-			uint32 Lower = static_cast<uint32>(Function & 0xFFFFFFFF);
-			uint32 Upper = static_cast<uint32>((Function >> 32) & 0xFFFFFFFF);
-
-			LogA("Original Pointer", HexToString(Function));
-			LogA("Timer", AJB::MOD_CallbackTimer->GetFullName());
-			AJB::MOD_CallbackTimer->SetCallbackTimer(5.0f, Upper, Lower);
-		}
-	}
-	else if (StrCommand == "ajbdebug")
+	/*else if (StrCommand == "ajbdebug")
 	{
 		SDK::ABP_AJBInGameHUD_C* HUD = reinterpret_cast<SDK::ABP_AJBInGameHUD_C*>(Pointers::Player()->MyHUD);
 		if (HUD)
@@ -918,14 +944,45 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 
 		bToggle ? ConsoleOutput::Text(L"Flying activated") : ConsoleOutput::Text(L"Flying deactivated.");
 		//LogA("PairId", static_cast<SDK::AAJBInGameCharacterBase*>(Pointers::Player()->Character)->PairID.ToString());
-	}
-	else if (StrCommand == "gnm")
+	}*/
+	
+	/*else if (StrCommand == "partner")
 	{
-		ENetMode WorldNetMode = GetWorldNetMode(GWorld);
-		ENetMode ActorNetMode = GetActorNetMode(Pointers::Player());
-
-		LogA("GetNetMode", std::format("[WorldNetMode]: {} | [ActorNetMode]: {}", WorldNetMode.ToString(), ActorNetMode.ToString()));
+		Pointers::GetLastOf<SDK::AAJBOutGameProxy>(false)->SetupPartnerNPCMatchingPlayerInfo();
 	}
+	else if (StrCommand == "isserver")
+	{
+		if (AJB::Settings)
+		{			
+			bool bToggle = AJB::Settings->UpdateSettings.bIsServerMode;
+			AJB::Settings->SetUpdateServerMode(GWorld.GetPointer(), !bToggle);
+			ConsoleOutput::Text(L"Toggling IsServer, the output is: " + std::to_wstring(!bToggle));
+		}		
+	}
+	else if (StrCommand == "storm")
+	{
+
+		SDK::UBP_AJBDamageAreaLocal_C* Storm = Pointers::SpawnActor<SDK::UBP_AJBDamageAreaLocal_C>();
+		if (Storm)
+		{
+			LogA("Storm Actor", Storm->GetFullName());
+		}
+		
+		SDK::ABP_AJBBattleGameMode_C* GameMode = AJB::GetGameMode<SDK::ABP_AJBBattleGameMode_C>();
+		if (GameMode)
+		{
+
+			SDK::ABP_AJBBattleGameState_C* GameState = static_cast<SDK::ABP_AJBBattleGameState_C*>(GameMode->GameState);
+			if (!GameState->BP_AJBDamageAreaLocal)
+			{
+				SDK::UBP_AJBDamageAreaLocal_C* Storm = Pointers::SpawnActor<SDK::UBP_AJBDamageAreaLocal_C>();
+				if (Storm)
+				{
+					GameState->BP_AJBDamageAreaLocal = Storm;
+				}
+			}
+		}
+	}*/
 
 	//LogA("ConsoleCommand", std::format("[Owning PlayerController]: {} | [Command]: {}", This->GetFullName(), StrCommand));
 
@@ -994,6 +1051,11 @@ UFunctions::BrowseReturnVal UFunctions::Browse(SDK::UEngine* This, SDK::FWorldCo
 {
 	if (!Global::bConstructedUConsole) { Global::bConstructedUConsole = Pointers::ConstructUConsole(SDK::FString(CMLA::ConsoleKey.GetArgumentAsString()));
 		LogA("Browse", "Constructed UConsole early.");
+	}
+
+	if (AJB::MOD_OptionsMenu && AJB::MOD_OptionsMenu->bPauseMenuIsVisible)
+	{
+		AJB::MOD_OptionsMenu->ToggleVisibility();
 	}
 
 	if (wcscmp(URL.Map.CStr(), L"/Game/AJB/Maps/AJBStartUp_P") == 0 || wcscmp(URL.Map.CStr(), L"/Game/AJB/Maps/AJBTitle_P") == 0)
@@ -1078,6 +1140,17 @@ No clue what 0-1 is
 
 */
 
+void AJBPreLogin(SDK::AGameModeBase* This, SDK::FString* Options, SDK::FString* Address, SDK::FUniqueNetIdRepl* UniqueId, SDK::FString* ErrorMessage)
+{
+	LogA("AJB PreLogin", std::format("[AGameModeBase]: {} | [Options]: {} | [Address]: {} | [ErrorMessage]: {}", This->GetFullName(), Options->ToString(), Address->ToString(), ErrorMessage->ToString()));
+
+	OFF::AJBPreLogin.VerifyFC<UFunctions::Decl::PreLogin>()(This, Options, Address, UniqueId, ErrorMessage);
+
+	static SDK::FString NOBLOCKLOGIN{L""};
+	AJB::CopyString(ErrorMessage, &NOBLOCKLOGIN);
+
+}
+
 void UFunctions::PreLogin(SDK::AGameModeBase* This, SDK::FString* Options, SDK::FString* Address, SDK::FUniqueNetIdRepl* UniqueId, SDK::FString* ErrorMessage)
 {
 	LogA("PreLogin", std::format("[AGameModeBase]: {} | [Options]: {} | [Address]: {} | [ErrorMessage]: {}", This->GetFullName(), Options->ToString(), Address->ToString(), ErrorMessage->ToString()));
@@ -1145,8 +1218,8 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 			}
 		}	
 
-		if (CMLA::Debug.GetAsBool())
-		{
+		//if (AJB::bDebugModeFromCMLA)
+		//{
 			AJB::MOD_OptionsMenuClass = UFunctions::StaticLoadClass(SDK::UUserWidget::StaticClass(), GEngine, OptionsMenuBlueprintPath, nullptr, 0, nullptr);
 			if (AJB::MOD_OptionsMenuClass)
 			{
@@ -1163,7 +1236,8 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 					{
 						AJB::MOD_OptionsMenu->SetDLLCommitVersion(*AJB::StrDLLCommitVersion);
 					}
-
+					
+					//if (!AJB::bDebugModeFromCMLA) AJB::MOD_OptionsMenu->SettingsButton->SetIsEnabled(false);
 					/*OptionsMenu->AddToViewport(111);
 					OptionsMenu->SetVisibility(SDK::ESlateVisibility::Collapsed);*/
 					//OptionsMenu->ToggleVisibility();
@@ -1201,7 +1275,7 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 
 				}
 			}
-		}
+		//}
 		
 
 
@@ -1221,17 +1295,18 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 		{
 			if (AJB::StrDLLCommitVersion) static_cast<SDK::AGM_AJBUserInterface_C*>(CurrentGameMode)->SetGlobalGameModeScopeVersioningInfo(AJB::StrDLLCommitVersion);
 		}
-		else if (CurrentGameMode->IsA(SDK::ABP_AJBSimpleMatchGameMode_C::StaticClass()) && AJB::MOD_GlobalPatcher)
+		/*else if (CurrentGameMode->IsA(SDK::ABP_AJBSimpleMatchGameMode_C::StaticClass()) && AJB::MOD_GlobalPatcher)
 		{
 			
 		}
-	}
-
-	
-		/*else if (CurrentGameMode->IsA(SDK::ABP_SimpleStartLocationSelectGameMode_C::StaticClass()))
+		else if (CurrentGameMode->IsA(SDK::ABP_SimpleStartLocationSelectGameMode_C::StaticClass()))
 		{
 			static_cast<SDK::ABP_SimpleStartLocationSelectGameMode_C*>(CurrentGameMode)->SpawnOnlineBeacon();
 		}*/
+	}
+	
+	
+		/**/
 		/*else if (CurrentGameMode->IsA(SDK::ABP_AJBBattleGameMode_C::StaticClass()))
 		{
 			SDK::ABP_AJBBattleGameMode_C* BattleMode = static_cast<SDK::ABP_AJBBattleGameMode_C*>(CurrentGameMode);
@@ -1257,7 +1332,6 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 	return OFF::Login.VerifyFC<Decl::Login>()(This, NewPlayer, InRemoteRole, Portal, Options, UniqueId, ErrorMessage);
 }
 
-FActorSpawnParameters LemonParm{};
 
 void UFunctions::PostLogin(SDK::AGameModeBase* This, SDK::APlayerController* Player)
 {
@@ -1277,10 +1351,22 @@ void UFunctions::PostLogin(SDK::AGameModeBase* This, SDK::APlayerController* Pla
 		AJB::CopyString(&static_cast<SDK::AAJBPlayerControllerBase*>(Player)->GameServerUniqueID, &NewUniqueId);
 	}*/
 
-	OFF::PostLogin.VerifyFC<Decl::PostLogin>()(This, Player);
-
-	
+	OFF::PostLogin.VerifyFC<Decl::PostLogin>()(This, Player);	
 }
+
+//void UFunctions::Logout(SDK::AGameModeBase* This, SDK::AController* ExitingController)
+//{
+//	LogA("Logout", std::format("[AGameModeBase]: {} | [Player]: {}", This->GetFullName(), ExitingController->GetFullName()));
+//
+//	OFF::Logout.VerifyFC<Decl::Logout>()(This, ExitingController);
+//
+//	// Clears the entry for the player who left
+//	if (AJB::IsServer())
+//	{
+//		AJB::TEMP_OnPlayerLeave();
+//		AJB::TEMP_FixMatchingPlayers();
+//	}
+//}
 
 void UFunctions::HandleStartingNewPlayer(SDK::AGameModeBase* This, SDK::APlayerController* Player)
 {
@@ -1290,7 +1376,17 @@ void UFunctions::HandleStartingNewPlayer(SDK::AGameModeBase* This, SDK::APlayerC
 	{
 		if (AJB::MOD_CallbackTimerClass && AJB::MOD_CallbackTimer)
 		{
-			AJB::CreateCallbackTimer(LemonPossession, 0.7f);
+			static bool bOne{0};
+			static SYSTEM_INFO CPUInfo{};
+			
+			if (!bOne)
+			{
+				bOne = 1;
+				GetSystemInfo(&CPUInfo);
+			}
+			
+			static const float WaitTimer = CPUInfo.dwNumberOfProcessors >= 4 ? (16.0f / CPUInfo.dwNumberOfProcessors) * 0.7f : 5.0f;
+			AJB::CreateCallbackTimer(LemonPossession, WaitTimer);
 		}
 	}
 
@@ -1302,6 +1398,42 @@ void UFunctions::BeginPlay(SDK::UWorld* This)
 	LogA("BeginPlay", This->GetFullName());
 
 	OFF::BeginPlay.VerifyFC<Decl::BeginPlay>()(This);	
+}
+
+//struct TEMP_CachedPlayers
+//{
+//	UC::FString					PlayerName;
+//	SDK::FMatchingPlayerInfo	PlayerInfo;
+//};
+//extern std::vector<TEMP_CachedPlayers> CachedPlayerList;
+
+void UFunctions::CloseConnection(SDK::UNetConnection* This)
+{
+	// Clears the entry for the player who left
+	if (AJB::IsServer())
+	{
+		/*CachedPlayerList.clear();
+
+		for (int i{0}; i < AJB::Instance->MatchingPlayers.Num(); ++i)
+		{
+			TEMP_CachedPlayers Cache{};
+			AJB::CopyString(&Cache.PlayerName, &AJB::Instance->MatchingPlayers[i].First);
+			memcpy(&Cache.PlayerInfo, &AJB::Instance->MatchingPlayers[i].Second, sizeof(SDK::FMatchingPlayerInfo));
+
+			CachedPlayerList.push_back(Cache);
+		}*/
+
+		// Clears the entry for the player who left
+		if (AJB::IsServer())
+		{
+			AJB::CreateCallbackTimer(AJB::TEMP_FixMatchingPlayers, 0.7);
+		}
+	}
+
+	LogA(OFF::Close.GetName(), This->GetFullName());
+	OFF::Close.VerifyFC<void(__fastcall*)(SDK::UNetConnection*)>()(This);
+
+	
 }
 
 void UFunctions::AppPreExit()
