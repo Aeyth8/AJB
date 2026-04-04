@@ -38,6 +38,8 @@ namespace A8CL
 		extern OFFSET HandleStartingNewPlayer;
 
 		extern OFFSET InitListen;
+		extern OFFSET InitLocalConnection;
+		extern OFFSET NotifyControlMessage;
 
 		extern OFFSET Close;
 

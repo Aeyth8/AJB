@@ -223,6 +223,7 @@ namespace AJB
 
 	extern const wchar_t* DLLCommitVersion;						// Global hardcoded string used for commit versioning.
 	extern UC::FString* StrDLLCommitVersion;					// FString Singleton for UI usage, not guaranteed to be a valid pointer.
+	extern UC::FString* StrInGameUserName;						// Temporary because it's 4am and my mind has shattered I AM SO TIRED TODAY
 
 	extern SDK::ALemonHelper_C* MOD_LemonHelper;				// Only exists as a singleton during in lemon possession mode.
 	extern bool bIsLemonPossessioned;							// Oh that's nice, I work as LP | LP? as in, Loss Prevention? | lemon possession

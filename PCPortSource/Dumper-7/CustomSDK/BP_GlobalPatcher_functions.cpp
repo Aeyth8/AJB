@@ -109,5 +109,28 @@ void UBP_GlobalPatcher_C::SetWidgetText(class UTextBlock* TextToEdit, const clas
 	UObject::ProcessEvent(Func, &Parms);
 }
 
+// Function BP_GlobalPatcher.BP_GlobalPatcher_C.AppendToFStringArray
+// (Public, HasOutParams, BlueprintCallable, BlueprintEvent)
+// Parameters:
+// TArray<class FString>&                  StringArray                                            (BlueprintVisible, BlueprintReadOnly, Parm, OutParm, ZeroConstructor, ReferenceParm)
+// const class FString&                    ToAppend                                               (BlueprintVisible, BlueprintReadOnly, Parm, ZeroConstructor, HasGetValueTypeHash)
+
+void UBP_GlobalPatcher_C::AppendToFStringArray(TArray<class FString>& StringArray, const class FString& ToAppend)
+{
+	static class UFunction* Func = nullptr;
+
+	if (Func == nullptr)
+		Func = Class->GetFunction("BP_GlobalPatcher_C", "AppendToFStringArray");
+
+	Params::BP_GlobalPatcher_C_AppendToFStringArray Parms{};
+
+	Parms.StringArray = std::move(StringArray);
+	Parms.ToAppend = std::move(ToAppend);
+
+	UObject::ProcessEvent(Func, &Parms);
+
+	StringArray = std::move(Parms.StringArray);
+}
+
 }
 

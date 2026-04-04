@@ -50,6 +50,9 @@
 // Needed for temporarily fixing the infinite loading screen.
 #include "../../Dumper-7/SDK/BP_AJBBattleGameMode_classes.hpp"
 
+// ......
+#include "Server/Temporary/MRWT.h"
+
 /*
 
 Written by Aeyth8
@@ -103,6 +106,7 @@ SDK::ABP_Synchronizer_C*			AJB::MOD_Global_Synchronizer{nullptr};
 
 const wchar_t*						AJB::DLLCommitVersion{L"[v0.5.5]"};
 UC::FString*						AJB::StrDLLCommitVersion{nullptr};
+UC::FString*						AJB::StrInGameUserName{nullptr};
 
 // -- Windows External --
 
@@ -131,6 +135,8 @@ std::vector<Hooks::HookStructure> StandaloneHooks =
 	{OFF::PreLogin,							UFunctions::PreLogin},
 	{OFF::AJBPreLogin,						AJBPreLogin},
 	{OFF::InitListen,						UFunctions::InitListen},
+	{OFF::NotifyControlMessage,				UFunctions::NotifyControlMessage},
+	{OFF::InitLocalConnection,					UFunctions::InitLocalConnection},
 	{OFF::AppPreExit,						UFunctions::AppPreExit},
 	{OFF::IsNonPakFileNameAllowed,			UFunctions::IsNonPakFilenameAllowed},
 	{OFF::FindFileInPakFiles,				UFunctions::FindFileInPakFiles},
@@ -160,10 +166,7 @@ std::vector<Hooks::HookStructure> StandaloneHooks =
 
 	{OFF::IsTenpoHost,						AJB::IsServer},
 	{OFF::IsAJBOfflineMode,					AJB::IsOfflineMode},
-	{OFF::IsOfflineMode,					AJB::IsOfflineMode},
-	
-
-	
+	{OFF::IsOfflineMode,					AJB::IsOfflineMode},	
 };
 
 A8CL::OFFSET NetID("UAJBNetworkObserver::GetNetID", 0x4ECC80);
@@ -373,6 +376,17 @@ void AddActionMapping(SDK::UPlayerInput* This, SDK::FInputActionKeyMapping& Mapp
 	return oAddActionMapping.VerifyFC<void(__thiscall*)(SDK::UPlayerInput*, SDK::FInputActionKeyMapping&)>()(This, Mapping);
 }
 
+A8CL::OFFSET oWinGetUsername("FWindowsPlatformProcess::UserName", 0x699AA0);
+const wchar_t* WinGetUsername()
+{
+	if (AJB::StrInGameUserName)
+	{
+		return AJB::StrInGameUserName->CStr();
+	}
+
+	return L"NAMELESS FECKER";
+}
+
 static void* GConfigCache{nullptr};
 static constexpr const wchar_t* StaticKey{L"SoftwareCursors"};
 static const SDK::FString StaticValue{L"SoftwareCursors=((Default, /Game/Aeyth8/Blueprints/WBP_Cursor.WBP_Cursor_C))"};
@@ -575,7 +589,7 @@ void AJB::Init_Hooks()
 		Hooks::CreateAndEnableHook(CharacterNo, SetCharNo);
 
 		Hooks::CreateAndEnableHook(OFF::TryGetMatchingPlayerInfo, TryGetMatchingPlayerInfoByPlayerIDPureFunction);
-
+		//Hooks::CreateAndEnableHook(oWinGetUsername, WinGetUsername);
 
 
 		//Hooks::CreateAndEnableHook(oGetDefaultMaterial, GetDefaultMaterial);
@@ -612,6 +626,8 @@ void AJB::Init_Hooks()
 		
 
 		//BytePatcher::ReplaceBytes(PB(0x47C510),{RETN,NOP}); // UAJBGameInstance::ClearMatchingID
+
+		
 	}
 
 }
@@ -619,6 +635,8 @@ void AJB::Init_Hooks()
 void AJB::Init_Engine()
 {
 	while (!GEngine) Sleep(25);
+
+	MRWT::Activate();
 
 	byte* LogVerbosity = reinterpret_cast<byte*>(PB(0x300D3C8));
 	*LogVerbosity = 6u;
@@ -750,39 +768,19 @@ void AJB::Init_Vars()
 
 	}
 	
-	LogA("MatchingPlayers address", HexToString(*reinterpret_cast<uintptr_t*>(&Instance->MatchingPlayers)));
-
-	AJB::ThreadLoop(); // JMPs to the ThreadLoop until process exit or variable set for thread destruction.
+	//AJB::ThreadLoop(); // JMPs to the ThreadLoop until process exit or variable set for thread destruction.
 }
 
 void AJB::ThreadLoop()
 {
 	while (AJB::bKeepInitialThreadAlive)
 	{
-		Sleep(460);
-	
-		if (AJB::IsServer())
-		{
-			SDK::UWorld* CurrentWorld = GWorld.GetPointer();
-			if (CurrentWorld->NetDriver->ClientConnections.Num() > 0)
-			{
-				static FActorSpawnParameters ALWAYSSPAWN{};
-				ALWAYSSPAWN.SpawnCollisionHandlingOverride = SDK::ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		//Sleep(100);
 
-				if (!AJB::MOD_Global_Synchronizer) AJB::MOD_Global_Synchronizer = (SDK::ABP_Synchronizer_C*)Pointers::SpawnActorInternal(CurrentWorld, AJB::MOD_SynchronizerClass, SDK::FVector{}, SDK::FRotator{}, ALWAYSSPAWN);
-				if (AJB::MOD_Global_Synchronizer)
-				{
-					LogA("GLOBAL SYNCHRONIZER", std::format("[Object]: {} | [Replicated PlayMode]: {} ", AJB::MOD_Global_Synchronizer->GetFullName(), AJB::MOD_Global_Synchronizer->PlayMode));
-					AJB::MOD_Global_Synchronizer->PlayMode = (int32)AJB::Instance->PlayMode;
-				}
-			}			
-		}
-		else if (AJB::IsInSession())
-		{
-			AJB::CreateCallbackTimer(AJB::SynchronizeClient, 0.0f);
-		}
+		/*
+			To be implemented later if needed....
+		*/
 	}
-
 }
 
 // -- Pointers
@@ -1134,7 +1132,7 @@ void AJB::CheckForInfiniteLoadingScreen()
 void AJB::OnSynchronizeFail()
 {
 	LogA("OnSynchronizeFail", "Begin");
-	AJB::CreateCallbackTimer(AJB::SynchronizeClient, 1.0f);
+	//AJB::CreateCallbackTimer(AJB::SynchronizeClient, 1.0f);
 }
 
 void AJB::SynchronizeClient()
@@ -1147,21 +1145,25 @@ void AJB::SynchronizeClient()
 	{
 		if (!AJB::MOD_Global_Synchronizer)
 		{
-			std::vector<SDK::ABP_Synchronizer_C*> Pointers = Pointers::FindObjects<SDK::ABP_Synchronizer_C>();
-			for (SDK::ABP_Synchronizer_C* Pointer : Pointers)
+			SDK::UObject* CurrentObject{nullptr};
+
+			for (int i{0}; i < SDK::UObject::GObjects->Num(); ++i)
 			{
-				if (Pointer->IsDefaultObject() || Pointer == AJB::MOD_PROXY_Synchronizer) continue;
+				CurrentObject = SDK::UObject::GObjects->GetByIndex(i);
 
-				AJB::MOD_Global_Synchronizer = Pointer;
-				LogA("GLOBAL SYNCHRONIZER", std::format("[Object]: {} | [Replicated PlayMode]: {} ", Pointer->GetFullName(), Pointer->PlayMode));
+				if (!CurrentObject) continue;
 
-				break;
-			}
+				if (CurrentObject && !CurrentObject->IsDefaultObject() && CurrentObject->IsA(AJB::MOD_SynchronizerClass) && CurrentObject != AJB::MOD_PROXY_Synchronizer)
+				{
+					LogA("GLOBAL SYNCHRONIZER", std::format("[Object]: {} | [Replicated PlayMode]: {} ", CurrentObject->GetFullName(), ((SDK::ABP_Synchronizer_C*)CurrentObject)->PlayMode));
+					break;
+				}
+			}			
 		}
 		if (AJB::MOD_Global_Synchronizer)
 		{
 			if (AJB::bDebugModeFromCMLA) LogA("GLOBAL SYNCHRONIZER", std::format("[Object]: {} | [Replicated PlayMode]: {} ", AJB::MOD_Global_Synchronizer->GetFullName(), AJB::MOD_Global_Synchronizer->PlayMode));
-			AJB::Instance->PlayMode = (SDK::EPlayMode)AJB::MOD_Global_Synchronizer->PlayMode;
+			//AJB::Instance->PlayMode = (SDK::EPlayMode)AJB::MOD_Global_Synchronizer->PlayMode;
 		}
 
 		if (!AJB::MOD_Global_Synchronizer) bFail = true;
@@ -1174,7 +1176,8 @@ void AJB::SynchronizeClient()
 	if (bFail)
 	{
 		LogA("SynchronizeClient", "Failed, trying again...");
-		AJB::CreateCallbackTimer(AJB::OnSynchronizeFail, 0.5f);
+		//AJB::OnSynchronizeFail();
+		//AJB::CreateCallbackTimer(AJB::OnSynchronizeFail, 0.5f);
 	}
 }
 

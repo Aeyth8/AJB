@@ -77,17 +77,30 @@ namespace A8CL
 			ROLE_Authority,
 			ROLE_MAX
 		};
+
+		enum EConnectionState
+		{
+			USOCK_Invalid   = 0, // Connection is invalid, possibly uninitialized.
+			USOCK_Closed    = 1, // Connection permanently closed.
+			USOCK_Pending	= 2, // Connection is awaiting connection.
+			USOCK_Open      = 3, // Connection is open.
+		};
 	}
 	namespace SDT
 	{
 		static constexpr const char* ENetMode[5]{ "NM_Standalone", "NM_DedicatedServer", "NM_ListenServer", "NM_Client", "NM_MAX" };
 		static constexpr const char* ENetRole[5]{ "ROLE_None", "ROLE_SimulatedProxy", "ROLE_AutonomousProxy", "ROLE_Authority", "ROLE_MAX" };
+		static constexpr const char* EConnectionState[4]{ "USOCK_Invalid", "USOCK_Closed", "USOCK_Pending", "USOCK_Open" };
 	}
 	
 	template <class Enum, const char* const* Array> 
 	struct EnumWrapper
 	{
 		Enum RealValue;
+
+		/*__forceinline EnumWrapper(int32 EnumValue)
+			: RealValue(static_cast<Enum>(EnumValue)) {
+		}*/
 
 		__forceinline const char* ToString() const
 		{
@@ -102,6 +115,7 @@ namespace A8CL
 
 	using ENetMode = EnumWrapper<Enums::ENetMode, SDT::ENetMode>;
 	using ENetRole = EnumWrapper<Enums::ENetRole, SDT::ENetRole>;
+	using EConnectionState = EnumWrapper<Enums::EConnectionState, SDT::EConnectionState>;
 
 	__forceinline ENetMode GetNetMode(SDK::UNetDriver* NetDriver, uint64 Offset = UEW::NetDriverGetNetMode)
 	{

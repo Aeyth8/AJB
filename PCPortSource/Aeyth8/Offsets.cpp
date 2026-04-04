@@ -32,6 +32,9 @@ namespace OFF
 	OFFSET HandleStartingNewPlayer("AGameModeBase::HandleStartingNewPlayer", 0x182C450);
 
 	OFFSET InitListen("UIpNetDriver::InitListen", 0x3FBE40);
+	//OFFSET InitConnection("UNetConnection::InitConnection", 0x14FBAF0);
+	OFFSET InitLocalConnection("UIpConnection::InitLocalConnection", 0x3FBFB0); 
+	OFFSET NotifyControlMessage("UPendingNetGame::NotifyControlMessage", 0x15BDFE0);
 
 	OFFSET Close("UNetConnection::Close", 0x14F30C0);
 

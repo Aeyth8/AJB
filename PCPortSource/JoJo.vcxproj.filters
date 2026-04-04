@@ -117,6 +117,12 @@
     <Filter Include="SDK\Custom\ServerReplicated">
       <UniqueIdentifier>{a1a088c7-ff78-4056-9333-2eda57b4d76a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Aeyth8\Logic\Server\Temporary">
+      <UniqueIdentifier>{06a32d13-17e1-41f2-91a6-83e79751e9da}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Aeyth8\Logic\Server\Temporary\MWRT">
+      <UniqueIdentifier>{c2b22739-b2f6-413b-b39d-698f2ca5b677}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -507,6 +513,9 @@
     </ClInclude>
     <ClInclude Include="Dumper-7\CustomSDK\BP_Synchronizer_classes.hpp">
       <Filter>SDK\Custom\ServerReplicated</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\Logic\Server\Temporary\MRWT.h">
+      <Filter>Aeyth8\Logic\Server\Temporary\MWRT</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

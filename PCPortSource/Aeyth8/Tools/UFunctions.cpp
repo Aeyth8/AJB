@@ -384,6 +384,11 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	using SetInputModeGameAndUI = decltype(&SDK::UWidgetBlueprintLibrary::SetInputMode_GameAndUIEx);
 	using SetInputModeGameOnly = decltype(&SDK::UWidgetBlueprintLibrary::SetInputMode_GameOnly);
 
+	if (StrCommand == "exit")
+	{
+		exit(0);
+	}
+
 	if (StrCommand.find("AJBExecInternal Callback") == 0)
 	{
 		int Index = std::stoi(StrCommand.substr(25));
@@ -444,6 +449,15 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			{
 				Player->ROS_DebugCharaChange(AJB::TEMP_CachedCharacterID);
 			}
+		}
+	}
+	else if (StrCommand.find("AJBExecInternalError") == 0)
+	{
+		size HeaderEnd = StrCommand.find('~');
+		if (HeaderEnd != std::string::npos)
+		{
+			const int Box = MessageBoxA(0, StrCommand.substr((HeaderEnd + 1)).c_str(), StrCommand.substr(21, HeaderEnd - 21).c_str(), MB_OK);
+			if (Box == IDNO) AJB::bIsLemonPossessioned = false;
 		}
 	}
 	else if (StrCommand.find("AJBExecInternalHost") == 0)
@@ -595,6 +609,14 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 
 		}
 	}
+	else if (StrCommand.find("AJBExecInternal SetName") == 0)
+	{
+		static SDK::FString Username{};
+		AJB::StrInGameUserName = &Username;
+		
+		SDK::FString NewUser = SDK::FString(std::wstring(Command->CStr()).substr(24).c_str());
+		AJB::CopyString(&Username, &NewUser);
+	}
 	else if (StrCommand == "mute")
 	{
 		SDK::ABP_AJBWwiseManager_C* Manager = Pointers::SpawnActor<SDK::ABP_AJBWwiseManager_C>();
@@ -651,56 +673,6 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			std::wstring Log = L"Using shader " + std::to_wstring((uint8)Filter->CurrentType);
 			ConsoleOutput::Text(Log);
 		}
-	}	
-	else if (StrCommand == "char")
-	{
-		static bool bToggle{false};
-		SDK::ABP_AJBOutGameHUD_C* HUD{nullptr};
-
-		/*SDK::ULevelStreamingKismet::GetDefaultObj()->LoadLevelInstance(GWorld.GetPointer(), L"/Game/AJB/Maps/OutGame/AJBCharacterSelect", SDK::FVector{}, SDK::FRotator{}, 0);
-		SDK::ULevelStreamingKismet::GetDefaultObj()->LoadLevelInstance(GWorld.GetPointer(), L"/Game/AJB/Maps/OutGame/AJBOutGame_ENV01", SDK::FVector{}, SDK::FRotator{}, 0);*/
-		static SDK::UWB_ModeSelect_C* CurrentModeSelectPtr{nullptr};
-
-		bToggle = !bToggle;
-
-		
-
-		AJB::GetBlueprintClass<SDK::UBPF_AJBOutGameHUD_C>()->GetAJBOutGameHUD_BP(0, GWorld.GetPointer(), 0, &HUD);
-		if (HUD)
-		{
-			HUD->ShowCharacterSelect();
-			SDK::UWB_CharacterSelect_C* OutWidget{nullptr};
-			HUD->FindAJBWidgetOfClass(SDK::UWB_CharacterSelect_C::StaticClass(), (SDK::UAJBUserWidget**)&OutWidget);
-
-			if (OutWidget)
-			{
-				OutWidget->CurrentTimer = 9999999999999999.0f;
-				OutWidget->CountDownTimer = 9999999999999999.0f;
-				if (bToggle)
-				{
-					OutWidget->OpenWindow();
-				}
-				else
-				{
-					OutWidget->CloseWindow();
-					OutWidget->SetVisibility(SDK::ESlateVisibility::Collapsed);
-					Pointers::GetLastOf<SDK::UWB_Fade_C>(false)->bFinishedFade = true;
-				}
-			}
-			//Pointers::GetLastOf<SDK::AAJBHUDBase>(false)->SetupForceInvisibleAllWidgetsFlag(true);
-		}
-
-		CurrentModeSelectPtr = Pointers::GetLastOf<SDK::UWB_ModeSelect_C>(0);
-		if (CurrentModeSelectPtr)
-		{
-			bToggle ? CurrentModeSelectPtr->SetVisibility(SDK::ESlateVisibility::Collapsed) : CurrentModeSelectPtr->SetVisibility(SDK::ESlateVisibility::Visible);
-		}
-
-	}
-	else if (StrCommand == "skin")
-	{
-		AJB::SetSelectedCharacter(AJB::KAKYOIN, 7, 7);
-		LogA("Selected Character", std::to_string(AJB::GetSelectedCharacter()));
 	}
 	else if (StrCommand == "tenpo")
 	{
@@ -724,6 +696,8 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			{
 				// Seems redundant but it's not, the stupid widget doesn't show up on clients connected to the server, I'm not sure if it's due to replication which I don't see any flags for or if Login doesn't get called (which it should be either way)
 				if (!AJB::MOD_OptionsMenu->IsInViewport()) AJB::MOD_OptionsMenu->AddToViewport(111);
+
+				AJB::MOD_OptionsMenu->SetOnlineStatus(AJB::IsInSession());
 				
 				//const float CurrentMaxFPS = OFFSET::VFTable<float(__fastcall*)(SDK::UEngine*, float, bool)>(GEngine.GetPointer())[0x50](GEngine.GetPointer(), AJB::MOD_OptionsMenu->InternalTickCount, true);
 				
@@ -944,7 +918,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	{
 		AJB::TEMP_FixMatchingPlayers();
 	}*/
-	else if (StrCommand.find("rce") != std::string::npos && StrCommand.size() > 5)
+	/*else if (StrCommand.find("rce") != std::string::npos && StrCommand.size() > 5)
 	{
 		SDK::AAJBInGamePlayerController* Player = (SDK::AAJBInGamePlayerController*)Pointers::Player();
 		if (Player)
@@ -953,7 +927,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			RemoteCommand = RemoteCommand.substr(4);
 			Player->ServerCmd(RemoteCommand.c_str());
 		}
-	}
+	}*/
 	/*else if (StrCommand == "ajbdebug")
 	{
 		SDK::ABP_AJBInGameHUD_C* HUD = reinterpret_cast<SDK::ABP_AJBInGameHUD_C*>(Pointers::Player()->MyHUD);
@@ -1160,6 +1134,44 @@ bool UFunctions::InitListen(SDK::UIpNetDriver* This, SDK::UObject* InNotify, SDK
 	return OFF::InitListen.VerifyFC<Decl::InitListen>()(This, InNotify, LocalURL, bReuseAddressAndPort, Error);
 }
 
+void UFunctions::NotifyControlMessage(SDK::UPendingNetGame* This, SDK::UNetConnection* Connection, uint8 MessageType, void* InBunch)
+{
+	/*if (!AJB::IsServer() && AJB::MOD_GlobalPatcher)
+	{
+		AJB::MOD_GlobalPatcher->AppendToFStringArray(This->URL.Op, AJB::DLLCommitVersion);
+	}*/
+	LogA(OFF::NotifyControlMessage.GetName(), std::format("[UPendingNetGame]: {} | [Connection]: {} | [MessageType]: {}", This->GetFullName(), Connection->GetFullName(), MessageType));
+	
+	OFF::NotifyControlMessage.VerifyFC<Decl::NotifyControlMessage>()(This, Connection, MessageType, InBunch);
+
+
+}
+
+void UFunctions::InitLocalConnection(SDK::UNetConnection* This, SDK::UNetDriver* InDriver, void* InSocket, SDK::FURL& InURL, EConnectionState InState, int InMaxPacket, int InPacketOverhead)
+{
+	LogA(OFF::InitLocalConnection.GetName(), std::format("[This]: {} | [InDriver]: {} | [InURL]: {} | [InState]: {} | [InMaxPacket]: {} | [InPacketOverhead]: {}", This->GetFullName(), InDriver->GetFullName(), Helpers::FURLParser(InURL), (*(A8CL::EConnectionState*)(&InState)).ToString(), InMaxPacket, InPacketOverhead));
+
+	if (!AJB::IsServer())
+	{
+		bool bAppend{true};
+
+		for (SDK::FString& String : InURL.Op)
+		{
+			if (String.ToString().find("listen") != std::string::npos)
+			{
+				bAppend = false;
+			}			
+		}
+		if (bAppend && AJB::MOD_GlobalPatcher)
+		{
+
+			AJB::MOD_GlobalPatcher->AppendToFStringArray(InURL.Op, AJB::DLLCommitVersion);
+		}
+	}
+
+	OFF::InitLocalConnection.VerifyFC<Decl::InitLocalConnection>()(This, InDriver, InSocket, InURL, InState, InMaxPacket, InPacketOverhead);
+}
+
 template <typename Class, typename T>
 Class* GetTypedOuter(T* Object)
 {
@@ -1200,8 +1212,19 @@ void AJBPreLogin(SDK::AGameModeBase* This, SDK::FString* Options, SDK::FString* 
 	OFF::AJBPreLogin.VerifyFC<UFunctions::Decl::PreLogin>()(This, Options, Address, UniqueId, ErrorMessage);
 
 	static SDK::FString NOBLOCKLOGIN{L""};
-	AJB::CopyString(ErrorMessage, &NOBLOCKLOGIN);
+	static SDK::FString CLIENTINCOMPATIBLE{L"OUTDATED CLIENT | INCOMPATIBLE"};
 
+	if (Options)
+	{
+		if (Options->ToWString().find(AJB::DLLCommitVersion) != std::string::npos)
+		{
+			AJB::CopyString(ErrorMessage, &NOBLOCKLOGIN);
+		}
+		else
+		{
+			AJB::CopyString(ErrorMessage, &CLIENTINCOMPATIBLE);
+		}
+	}
 }
 
 void UFunctions::PreLogin(SDK::AGameModeBase* This, SDK::FString* Options, SDK::FString* Address, SDK::FUniqueNetIdRepl* UniqueId, SDK::FString* ErrorMessage)
@@ -1283,64 +1306,25 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 			}
 		}
 
-		//if (AJB::bDebugModeFromCMLA)
-		//{
-			AJB::MOD_OptionsMenuClass = UFunctions::StaticLoadClass(SDK::UUserWidget::StaticClass(), GEngine, OptionsMenuBlueprintPath, nullptr, 0, nullptr);
-			if (AJB::MOD_OptionsMenuClass)
+		AJB::MOD_OptionsMenuClass = UFunctions::StaticLoadClass(SDK::UUserWidget::StaticClass(), GEngine, OptionsMenuBlueprintPath, nullptr, 0, nullptr);
+		if (AJB::MOD_OptionsMenuClass)
+		{
+			AJB::MOD_OptionsMenu = (SDK::UWBP_OptionsMenu_C*)Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(AJB::MOD_OptionsMenuClass, static_cast<SDK::UGameViewportClient*>(GEngine->GameViewport), FName::NAME_FindOrAdd(OptionsMenuBlueprintPath), 0, EInternalObjectFlags::RootSet, 0, 0, 0, 0);
+			//	OptionsMenu = static_cast<SDK::UWBP_OptionsMenu_C*>(AJB::GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->Create(AJB::GWorld(), PrototypeMenu, Pointers::Player()));
+			if (AJB::MOD_OptionsMenu)
 			{
-				AJB::MOD_OptionsMenu = (SDK::UWBP_OptionsMenu_C*)Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(AJB::MOD_OptionsMenuClass, static_cast<SDK::UGameViewportClient*>(GEngine->GameViewport), FName::NAME_FindOrAdd(OptionsMenuBlueprintPath), 0, EInternalObjectFlags::RootSet, 0, 0, 0, 0);
-				//	OptionsMenu = static_cast<SDK::UWBP_OptionsMenu_C*>(AJB::GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->Create(AJB::GWorld(), PrototypeMenu, Pointers::Player()));
-				if (AJB::MOD_OptionsMenu)
+				LogA("OptionsMenu Success", AJB::MOD_OptionsMenu->GetFullName());
+
+				AJB::MOD_OptionsMenu->AddToViewport(1170);
+				AJB::MOD_OptionsMenu->SetVisibility(SDK::ESlateVisibility::Collapsed);
+
+				if (AJB::StrDLLCommitVersion)
 				{
-					LogA("OptionsMenu Success", AJB::MOD_OptionsMenu->GetFullName());
-
-					AJB::MOD_OptionsMenu->AddToViewport(1170);
-					AJB::MOD_OptionsMenu->SetVisibility(SDK::ESlateVisibility::Collapsed);
-
-					if (AJB::StrDLLCommitVersion)
-					{
-						AJB::MOD_OptionsMenu->SetDLLCommitVersion(*AJB::StrDLLCommitVersion);
-					}
-					
-					//if (!AJB::bDebugModeFromCMLA) AJB::MOD_OptionsMenu->SettingsButton->SetIsEnabled(false);
-					/*OptionsMenu->AddToViewport(111);
-					OptionsMenu->SetVisibility(SDK::ESlateVisibility::Collapsed);*/
-					//OptionsMenu->ToggleVisibility();
-					// AJBSimpleMatch_P's hud has a ZOrder of 30, the ALLNet status is a different story, the number is a lot higher. (IDK what it is) 
-
-					// I read the source code and these flags seemingly do absolutely nothing.
-					//OptionsMenu->Flags = static_cast<SDK::EObjectFlags>(static_cast<int32>(OptionsMenu->Flags) | static_cast<int32>(EInternalObjectFlags::RootSet));
-
-					//float MaxFrameRate = Call<float(__fastcall*)()>(PB(0x176A220))();
-					/*float MaxFrameRate = Call<float(__fastcall*)(SDK::UEngine * This, float DeltaTime, bool bAllowFrameRateSmoothing)>(PB(0x13CCAE0))(Pointers::UEngine(), 0.0f, true);
-
-					MaxFrameRate > 60.0f ? OptionsMenu->InternalTickRate = MaxFrameRate * 1.5f : OptionsMenu->InternalTickRate = 60.0f;
-					LogA("AJBMaxTickRate", std::to_string(MaxFrameRate));*/
-
-
-
-					/* if (MaxFrameRate > 60.0f)
-					{
-						OptionsMenu->InternalTickRate = MaxFrameRate * 1.5f;
-					}
-					else
-					{
-						float MaxTickRate = Call<float(__fastcall*)(SDK::UEngine* This, float DeltaTime, bool bAllowFrameRateSmoothing)>(PB(0x176A260))(Pointers::UEngine(), 0.0f, true);
-						if (MaxTickRate == 0.0f)
-						{
-							OptionsMenu->InternalTickRate = 120.0f;
-						}
-						else
-						{
-							OptionsMenu->InternalTickRate = MaxTickRate * 1.5f;
-						}
-
-					}*/
-
-
+					AJB::MOD_OptionsMenu->SetDLLCommitVersion(*AJB::StrDLLCommitVersion);
 				}
+					
 			}
-		//}
+		}
 		
 
 
@@ -1364,42 +1348,28 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 		{
 			
 		}
-		else if (CurrentGameMode->IsA(SDK::ABP_SimpleStartLocationSelectGameMode_C::StaticClass()))
-		{
-			static_cast<SDK::ABP_SimpleStartLocationSelectGameMode_C*>(CurrentGameMode)->SpawnOnlineBeacon();
-		}
-		if (AJB::IsServer() && CurrentGameMode->IsA(SDK::ABP_SimpleStartLocationSelectGameMode_C::StaticClass()) && NewPlayer->PlayerController != Pointers::Player())
-		{
-			SDK::ABP_AJBBattleGameMode_C* BattleMode = static_cast<SDK::ABP_AJBBattleGameMode_C*>(CurrentGameMode);
-			SDK::ABP_AJBBattleGameState_C* GameState = static_cast<SDK::ABP_AJBBattleGameState_C*>(BattleMode->GameState);
-			__assume (BattleMode != nullptr); // SHUTUP
-
-			SDK::FString Message{L"DRIVING IN MY CAR RIGHT AFTER A BEEEEEEER"};
-			OFF::ClientTeamMessage.VerifyFC<void(__thiscall*)(SDK::APlayerController*, SDK::APlayerState*, SDK::FString*, SDK::FName, float)>()(This, This->PlayerState, &Message, SDK::FName{}, 0.0f);
 		}*/
 	}
-	
-		
-		/*else if (CurrentGameMode->IsA(SDK::ABP_SimpleStartLocationSelectGameMode_C::StaticClass()))
-		{
-			SDK::ABP_SimpleStartLocationSelectGameMode_C* MatchingGameMode = static_cast<SDK::ABP_SimpleStartLocationSelectGameMode_C*>(CurrentGameMode);
-			//MatchingGameMode->Say
-		}
-		if (NewPlayer->IsA(SDK::UIpConnection::StaticClass()))
-		{
-			// DOES NOT WORK DUE TO NO IMPLEMENTATION IN THE GAME MODE, I'm gonna have to find another way to synchronize it, there's plenty of RPC crap in the SDK that Namco implemented but I don't know how to use it nor do I honestly trust their bloated hellscape but it's worth a shot.
-			//SDK::FString Message{L"DRIVING IN MY CAR RIGHT AFTER A BEEEEEEER"};
-			//OFF::ClientTeamMessage.VerifyFC<void(__thiscall*)(SDK::APlayerController*, SDK::APlayerState*, SDK::FString*, SDK::FName, float)>()(This, This->PlayerState, &Message, SDK::FName{}, 0.0f);
-			//OFFSET::VFTable<void(__thiscall*)(SDK::AGameMode*, SDK::AActor*, SDK::FString*, SDK::FName)>(CurrentGameMode)[0x114](GetTypedOuter<SDK::AGameMode>(CurrentGameMode), This, &Message, SDK::FName{});
-		}*/
 
 	return OFF::Login.VerifyFC<Decl::Login>()(This, NewPlayer, InRemoteRole, Portal, Options, UniqueId, ErrorMessage);
 }
 
-
+static FActorSpawnParameters ALWAYSSPAWN{};
 void UFunctions::PostLogin(SDK::AGameModeBase* This, SDK::APlayerController* Player)
 {
 	LogA("PostLogin", std::format("[AGameModeBase]: {} | [Player]: {}", This->GetFullName(), Player->GetFullName()));
+
+	if (AJB::IsServer())
+	{		
+		ALWAYSSPAWN.SpawnCollisionHandlingOverride = SDK::ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		if (!AJB::MOD_Global_Synchronizer) AJB::MOD_Global_Synchronizer = (SDK::ABP_Synchronizer_C*)Pointers::SpawnActorInternal(GWorld.GetPointer(), AJB::MOD_SynchronizerClass, SDK::FVector{}, SDK::FRotator{}, ALWAYSSPAWN);
+		if (AJB::MOD_Global_Synchronizer)
+		{
+			if (AJB::bDebugModeFromCMLA) LogA("GLOBAL SYNCHRONIZER", std::format("[Object]: {} | [Replicated PlayMode]: {}", AJB::MOD_Global_Synchronizer->GetFullName(), AJB::MOD_Global_Synchronizer->PlayMode));
+		}		
+	}
+
 
 	/*	This actually reflects on both the server and client but it needs some adjusting and needs to run ONLY when it's the server.
 	
@@ -1414,19 +1384,6 @@ void UFunctions::PostLogin(SDK::AGameModeBase* This, SDK::APlayerController* Pla
 
 		AJB::CopyString(&static_cast<SDK::AAJBPlayerControllerBase*>(Player)->GameServerUniqueID, &NewUniqueId);
 	}*/
-
-	/*if (AJB::IsServer() && Player != Pointers::Player())
-	{
-		if (!AJB::MOD_Global_Synchronizer) AJB::MOD_Global_Synchronizer = Pointers::SpawnActor<SDK::ABP_Synchronizer_C>();
-		if (AJB::MOD_Global_Synchronizer) AJB::MOD_Global_Synchronizer->PlayMode = (int32)AJB::Instance->PlayMode;
-	}
-	else
-	{
-		if (!AJB::MOD_Global_Synchronizer) AJB::MOD_Global_Synchronizer = Pointers::GetLastOf<SDK::ABP_Synchronizer_C>(false);
-		if (AJB::MOD_Global_Synchronizer) LogA("GLOBAL SYNCHRONIZER", std::format("[Object]: {} | [Replicated PlayMode]: {} ", AJB::MOD_Global_Synchronizer->GetFullName(), AJB::MOD_Global_Synchronizer->PlayMode));
-	}*/
-
-	
 
 	OFF::PostLogin.VerifyFC<Decl::PostLogin>()(This, Player);	
 }

@@ -15437,8 +15437,10 @@ public:
 	uint8                                         Pad_28[0x8];                                       // 0x0028(0x0008)(Fixing Size After Last Property [ Dumper-7 ])
 	class UNetDriver*                             NetDriver;                                         // 0x0030(0x0008)(ZeroConstructor, IsPlainOldData, NoDestructor, HasGetValueTypeHash, NativeAccessSpecifierPublic)
 	class UDemoNetDriver*                         DemoNetDriver;                                     // 0x0038(0x0008)(ZeroConstructor, IsPlainOldData, NoDestructor, HasGetValueTypeHash, NativeAccessSpecifierPublic)
-	uint8                                         Pad_40[0x88];                                      // 0x0040(0x0088)(Fixing Struct Size After Last Property [ Dumper-7 ])
-
+	struct FURL									  URL;
+	bool										  bSuccessfullyConnected;
+	bool										  bSentJoinRequest;
+	class FString								  ConnectionError;
 public:
 	static class UClass* StaticClass()
 	{

@@ -30,6 +30,7 @@ public:
 	void StringToText(const class FString& Input, class FText* Output);
 	void TextToString(const class FText& Input, class FString* Output);
 	void SetWidgetText(class UTextBlock* TextToEdit, const class FString& newText);
+	void AppendToFStringArray(TArray<class FString>& StringArray, const class FString& ToAppend);
 
 public:
 
@@ -82,6 +83,16 @@ public:
 	class UTextBlock*                             TextToEdit;                                        // 0x0000(0x0008)(BlueprintVisible, BlueprintReadOnly, Parm, ZeroConstructor, InstancedReference, IsPlainOldData, NoDestructor, HasGetValueTypeHash)
 	class FString                                 newText;                                           // 0x0008(0x0010)(BlueprintVisible, BlueprintReadOnly, Parm, ZeroConstructor, HasGetValueTypeHash)
 	class FText                                   CallFunc_Conv_StringToText_ReturnValue;            // 0x0018(0x0018)()
+};
+
+// Function BP_GlobalPatcher.BP_GlobalPatcher_C.AppendToFStringArray
+// 0x0028 (0x0028 - 0x0000)
+struct BP_GlobalPatcher_C_AppendToFStringArray final
+{
+public:
+	TArray<class FString>                         StringArray;                                       // 0x0000(0x0010)(BlueprintVisible, BlueprintReadOnly, Parm, OutParm, ZeroConstructor, ReferenceParm)
+	class FString                                 ToAppend;                                          // 0x0010(0x0010)(BlueprintVisible, BlueprintReadOnly, Parm, ZeroConstructor, HasGetValueTypeHash)
+	int32                                         CallFunc_Array_Add_ReturnValue;                    // 0x0020(0x0004)(ZeroConstructor, IsPlainOldData, NoDestructor, HasGetValueTypeHash)
 };
 
 }

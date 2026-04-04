@@ -138,6 +138,14 @@ public:
 		MakingInvisible
 	};
 
+	enum EConnectionState
+	{
+		USOCK_Invalid   = 0, // Connection is invalid, possibly uninitialized.
+		USOCK_Closed    = 1, // Connection permanently closed.
+		USOCK_Pending	= 2, // Connection is awaiting connection.
+		USOCK_Open      = 3, // Connection is open.
+	};
+
 	class Decl
 	{
 	public:
@@ -148,6 +156,12 @@ public:
 		typedef BrowseReturnVal(__thiscall* Browse)(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SDK::FURL URL, SDK::FString& Error);
 
 		typedef bool(__thiscall* InitListen)(SDK::UIpNetDriver*, SDK::UObject*, SDK::FURL& LocalURL, bool bReuseAddressAndPort, SDK::FString& Error);
+
+		typedef void(__thiscall* InitConnection)(SDK::UNetConnection* This, SDK::UNetDriver* InDriver, EConnectionState InState, SDK::FURL& InURL, int InConnectionSpeed, int MaxPacket);
+
+		typedef void(__thiscall* InitLocalConnection)(SDK::UNetConnection* This, SDK::UNetDriver* InDriver, void* InSocket, SDK::FURL& InURL, EConnectionState InState, int InMaxPacket, int InPacketOverhead);
+
+		typedef void(__thiscall* NotifyControlMessage)(SDK::UPendingNetGame* This, SDK::UNetConnection* Connection, unsigned char MessageType, void* InBunch);
 
 		typedef void(__thiscall* PreLogin)(SDK::AGameModeBase* This, SDK::FString* Options, SDK::FString* Address, SDK::FUniqueNetIdRepl* UniqueId, SDK::FString* ErrorMessage);
 
@@ -197,7 +211,7 @@ public:
 
 		typedef bool (__thiscall* RequestLevel)(SDK::ULevelStreaming* This, SDK::UWorld* PersistentWorld, bool bAllowLevelLoadRequests, EReqLevelBlock BlockPolicy);
 
-		typedef void(__thiscall* ClientTeamMessageImplementation)(SDK::APlayerController* This, SDK::APlayerState* SenderPlayerState, SDK::FString* String, SDK::FName Type, float MsgLifeTime);
+		typedef void(__thiscall* ClientTeamMessageImplementation)(SDK::APlayerController* This, SDK::APlayerState* SenderPlayerState, SDK::FString* String, SDK::FName Type, float MsgLifeTime);		
 	};
 
 	
@@ -227,6 +241,11 @@ public:
 	static bool PrepareMapChange(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SDK::TArray<SDK::FName>& LevelNames);
 
 	static bool InitListen(SDK::UIpNetDriver* This, SDK::UObject* InNotify, SDK::FURL& LocalURL, bool bReuseAddressAndPort, SDK::FString& Error);
+
+	static void NotifyControlMessage(SDK::UPendingNetGame* This, SDK::UNetConnection* Connection, unsigned char MessageType, void* InBunch);
+
+	//static void InitConnection(SDK::UNetConnection* This, SDK::UNetDriver* InDriver, EConnectionState InState, SDK::FURL& InURL, int InConnectionSpeed, int MaxPacket);
+	static void InitLocalConnection(SDK::UNetConnection* This, SDK::UNetDriver* InDriver, void* InSocket, SDK::FURL& InURL, EConnectionState InState, int InMaxPacket, int InPacketOverhead);
 
 	static void ClientTeamMessageImplementation(SDK::APlayerController* This, SDK::APlayerState* SenderPlayerState, SDK::FString* String, SDK::FName Type, float MsgLifeTime);
 
