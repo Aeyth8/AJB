@@ -1057,7 +1057,12 @@ void AJB::TryFixInfiniteLoadingScreen()
 			SDK::ABP_AJBInGamePlayerController_C* Controller = static_cast<SDK::ABP_AJBInGamePlayerController_C*>(Player);
 			if (!Controller->Character)
 			{
-				Controller->DebugCharacterChange(AJB::TEMP_CachedCharacterID);
+				const bool bIsHost = Pointers::Player() == Controller;
+				if (bIsHost)
+				{
+					Controller->DebugCharacterChange(AJB::TEMP_CachedCharacterID);
+				}
+				else Controller->DebugCharacterChange(Controller->CharacterNo > 0 ? Controller->CharacterNo : 1);
 			}
 		}
 	}
