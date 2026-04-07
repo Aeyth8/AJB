@@ -636,7 +636,7 @@ void AJB::Init_Engine()
 {
 	while (!GEngine) Sleep(25);
 
-	//MRWT::Activate();
+	MRWT::Activate();
 
 	byte* LogVerbosity = reinterpret_cast<byte*>(PB(0x300D3C8));
 	*LogVerbosity = 6u;
