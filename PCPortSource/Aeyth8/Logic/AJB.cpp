@@ -1186,76 +1186,6 @@ void AJB::SynchronizeClient()
 	}
 }
 
-//struct TEMP_CachedPlayers
-//{
-//	UC::FString					PlayerName;
-//	SDK::FMatchingPlayerInfo	PlayerInfo;
-//};
-//extern std::vector<TEMP_CachedPlayers> CachedPlayerList{};
-
-
-
-
-/*void AJB::TEMP_OnPlayerLeave()
-{
-	for (int i{0}; i < Instance->MatchingPlayers.Num(); ++i)
-	{
-		Instance->MatchingPlayers[i].Second.PlayerID = (i + 1);
-		
-		if (AJB::MOD_GlobalPatcher && !GWorld.GetPointer()->NetDriver->ClientConnections.IsValidIndex(i))
-		{
-			AJB::MOD_GlobalPatcher->RemovePlayerAtIndex(i, Instance->MatchingPlayers);
-		}
-	}
-}
-
-void AJB::TEMP_FixMatchingPlayers()
-{
-	for (int i{0}; i < Instance->MatchingPlayers.Num(); ++i)
-	{
-		// If a player leaves and rejoins the stupid PlayerID increments even though the count is wrong, it goes from 1 and upwards but due to the bug you will have missing slots.
-		// So basically if there is [PlayerID 1], [PlayerID 2] and someone leaves, or rejoins, it becomes [PlayerID 1], [PlayerID 3], now there's a gap, and it also breaks the host for some STUPID reason and deletes the entry for that.
-		// And you would assume huh okay so then the disconnecting logic must be broken or missing something, ITS JUST THIS STUPID NUMBER AND SOME OTHER NUMBER THAT HAS NO SYNCHRONIZATION WITH THE REST!
-
-		auto& Value = Instance->MatchingPlayers[i].Value();
-
-		Value.PlayerID = (i + 1);
-
-		/*if (Instance->MatchingPlayers[i].Second.PlayerName.Num() > 1)
-		{
-			SDK::FString TempName{ (L"Nameless-Player-" + std::to_wstring(i)).c_str() };
-			AJB::CopyString(&Instance->MatchingPlayers[i].Second.PlayerName, &TempName);
-			AJB::CopyString(&Instance->MatchingPlayers[i].Second.GameServerUserID, &TempName);
-		}* /
-
-		constexpr const static wchar_t* SDT_MatchingFlowstates[]
-		{
-			L"OutGame.Matching",
-			L"OutGame.SelectStartLocation"
-		};
-
-		constexpr uint32 SDT_Size = sizeof(SDT_MatchingFlowstates) / sizeof(SDT_MatchingFlowstates[0]);
-
-		static SDK::FName BlacklistedFlowstates[SDT_Size]{0};
-		static bool bOne{0};
-
-		if (!bOne)
-		{
-			bOne = 1;
-			for (byte o{0}; o < SDT_Size; ++o) BlacklistedFlowstates[o] = FName::NAME_FindOrAdd(SDT_MatchingFlowstates[o]);			
-		}
-
-		if (AJB::CurrentFlowstate && AJB::CurrentFlowstate->TagName != BlacklistedFlowstates[i])
-		{
-			if (Value.CharactorID == 0)
-			{
-				Value.CharactorID = AJB::TEMP_CachedCharacterID;
-			}
-		}		
-	}
-
-}*/
-
 bool __fastcall AJB::FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag)
 {
 	LogA("UFlowStateUtil", std::format("New FlowState: {}", NextStateTag.TagName.ToString()));
@@ -1328,7 +1258,10 @@ void __fastcall AJB::OnToggleFullMapVisibility(SDK::UObject* Object)
 
 		// SDK::UWB_LandmarkableMap_C* MapCache = HUD->BP_AJBCompass->TargetWidget->CachedLastMapWidget; // Doesn't work because it's null IDK which one I should use
 		//if (!MapCache) MapCache = GetLastOf<SDK::UWB_FullMap_C>(false);
-		HUD->FindAJBWidgetOfClass(SDK::UWB_FullMap_C::StaticClass(), (SDK::UAJBUserWidget**)&MapCache);
+		OFFSET::VFTable<void(__thiscall*)(SDK::AAJBHUDBase*, SDK::UClass*, SDK::UAJBUserWidget**)>(HUD)[0xFE](HUD, SDK::UWB_FullMap_C::StaticClass(), (SDK::UAJBUserWidget**)&MapCache); // AAJBHUDBase::FindAJBWidgetOfClass
+
+		//(*(__int64(__fastcall**)(SDK::AAJBHUDBase*, SDK::UClass*, SDK::UAJBUserWidget**))(*(__int64*)HUD + 2032LL))(HUD, SDK::UWB_FullMap_C::StaticClass(), (SDK::UAJBUserWidget**)&MapCache);
+		//HUD->FindAJBWidgetOfClass(SDK::UWB_FullMap_C::StaticClass(), (SDK::UAJBUserWidget**)&MapCache);
 		if (MapCache)
 		{
 			if (bToggled)
@@ -1375,7 +1308,7 @@ SDK::UAJBWindowWidget* __fastcall AJB::AJBWindowWidget(SDK::UAJBWindowWidget* Th
 	{
 		if (Result->IsA(SDK::UWB_ModeSelect_C::StaticClass()))
 		{
-			LogA("ModeSelect", Result->GetFullName());
+			//LogA("ModeSelect", Result->GetFullName());
 
 			AJB::SimpleMatchHUD = (SDK::UWB_ModeSelect_C*)This;
 

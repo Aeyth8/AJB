@@ -413,20 +413,65 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	else if (StrCommand.find("AJBExecInternalSwapCharacter") == 0)
 	{
 		SDK::ABP_AJBInGamePlayerController_C* Player = Pointers::Player<SDK::ABP_AJBInGamePlayerController_C>();
-
-		if (Player) 
+		if (Player && Player->Character->IsA(SDK::AAJBInGameCharacterBase::StaticClass()))
 		{
 			int NewChar = std::stoi(StrCommand.substr(29));
 			if (NewChar)
 			{
+				//static_cast<SDK::AAJBInGameCharacterBase*>(Player->Character)->SetMatchingPlayerIndex(NewChar);
 				Player->ROS_DebugCharaChange(NewChar);
 				ConsoleOutput::Text(L"Changing character to " + std::to_wstring(NewChar));
-			}
+			}			
 		}
 		else
 		{
 			ConsoleOutput::Text(L"Unable to swap characters.");
 		}
+	}
+	else if (StrCommand == "char")
+	{
+		static bool bToggle{false};
+		SDK::ABP_AJBOutGameHUD_C* HUD{nullptr};
+
+		/*SDK::ULevelStreamingKismet::GetDefaultObj()->LoadLevelInstance(GWorld.GetPointer(), L"/Game/AJB/Maps/OutGame/AJBCharacterSelect", SDK::FVector{}, SDK::FRotator{}, 0);
+		SDK::ULevelStreamingKismet::GetDefaultObj()->LoadLevelInstance(GWorld.GetPointer(), L"/Game/AJB/Maps/OutGame/AJBOutGame_ENV01", SDK::FVector{}, SDK::FRotator{}, 0);*/
+		static SDK::UWB_ModeSelect_C* CurrentModeSelectPtr{nullptr};
+
+		bToggle = !bToggle;
+
+		
+
+		AJB::GetBlueprintClass<SDK::UBPF_AJBOutGameHUD_C>()->GetAJBOutGameHUD_BP(0, GWorld.GetPointer(), 0, &HUD);
+		if (HUD)
+		{
+			HUD->ShowCharacterSelect();
+			SDK::UWB_CharacterSelect_C* OutWidget{nullptr};
+			HUD->FindAJBWidgetOfClass(SDK::UWB_CharacterSelect_C::StaticClass(), (SDK::UAJBUserWidget**)&OutWidget);
+
+			if (OutWidget)
+			{
+				OutWidget->CurrentTimer = 9999999999999999.0f;
+				OutWidget->CountDownTimer = 9999999999999999.0f;
+				if (bToggle)
+				{
+					OutWidget->OpenWindow();
+				}
+				else
+				{
+					OutWidget->CloseWindow();
+					OutWidget->SetVisibility(SDK::ESlateVisibility::Collapsed);
+					Pointers::GetLastOf<SDK::UWB_Fade_C>(false)->bFinishedFade = true;
+				}
+			}
+			//Pointers::GetLastOf<SDK::AAJBHUDBase>(false)->SetupForceInvisibleAllWidgetsFlag(true);
+		}
+
+		CurrentModeSelectPtr = Pointers::GetLastOf<SDK::UWB_ModeSelect_C>(0);
+		if (CurrentModeSelectPtr)
+		{
+			bToggle ? CurrentModeSelectPtr->SetVisibility(SDK::ESlateVisibility::Collapsed) : CurrentModeSelectPtr->SetVisibility(SDK::ESlateVisibility::Visible);
+		}
+
 	}
 	else if (StrCommand.find("AJBExecInternal PlayBG") == 0) // Hardcoding this until I finish my console command parser (but this is a bad practice)
 	{
@@ -914,11 +959,26 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 
 		LogA("GetNetMode", std::format("[WorldNetMode]: {} | [ActorNetMode]: {}", WorldNetMode.ToString(), ActorNetMode.ToString()));
 	}
+	else if (StrCommand == "firstperson")
+	{
+		static bool bToggle{false};
+		
+		SDK::APlayerController* Player = Pointers::Player<SDK::ABP_AJBInGamePlayerController_C>();
+		if (Player)
+		{
+			bToggle = !bToggle;
+
+			SDK::ABP_AJBInGameCharacter_C* Character = static_cast<SDK::ABP_AJBInGameCharacter_C*>(Pointers::Player()->Character);
+			if (Character) Character->bFindCameraComponentWhenViewTarget = bToggle;
+		}
+		
+
+	}
 	/*else if (StrCommand == "fix")
 	{
 		AJB::TEMP_FixMatchingPlayers();
-	}*/
-	/*else if (StrCommand.find("rce") != std::string::npos && StrCommand.size() > 5)
+	}
+	*/else if (StrCommand.find("rce") != std::string::npos && StrCommand.size() > 5)
 	{
 		SDK::AAJBInGamePlayerController* Player = (SDK::AAJBInGamePlayerController*)Pointers::Player();
 		if (Player)
@@ -927,7 +987,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			RemoteCommand = RemoteCommand.substr(4);
 			Player->ServerCmd(RemoteCommand.c_str());
 		}
-	}*/
+	}
 	/*else if (StrCommand == "ajbdebug")
 	{
 		SDK::ABP_AJBInGameHUD_C* HUD = reinterpret_cast<SDK::ABP_AJBInGameHUD_C*>(Pointers::Player()->MyHUD);
@@ -956,7 +1016,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 
 			Character->DesiredCameraParam = *(SDK::FST_CameraParam*)&NewParms;
 		}
-	}
+	}*/
 	else if (StrCommand == "fly")
 	{
 		static bool bToggle{0};
@@ -970,13 +1030,12 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 
 		bToggle ? ConsoleOutput::Text(L"Flying activated") : ConsoleOutput::Text(L"Flying deactivated.");
 		//LogA("PairId", static_cast<SDK::AAJBInGameCharacterBase*>(Pointers::Player()->Character)->PairID.ToString());
-	}*/
-	
-	/*else if (StrCommand == "partner")
-	{
-		Pointers::GetLastOf<SDK::AAJBOutGameProxy>(false)->SetupPartnerNPCMatchingPlayerInfo();
 	}
-	else if (StrCommand == "isserver")
+	else if (StrCommand == "partner")
+	{
+		//((SDK::AAJBInGameCharacter*)(Pointers::Player()->Player))->SetPairID(AJB::IsServer() ? AJB::Instance->MatchingPlayers[1].First : AJB::Instance->MatchingPlayers[0].First);
+	}
+	/*else if (StrCommand == "isserver")
 	{
 		if (AJB::Settings)
 		{			
@@ -1590,142 +1649,272 @@ void UFunctions::Invoke(SDK::UFunction* This, SDK::UObject* Obj, void* FFrame_St
 
 	if (bIsDebugging)
 	{
-		static constexpr const int32 ObjectBlacklist[] =
+		static constexpr const wchar_t* StrFunctionNameBlacklist[] =
 		{
-			96692, // KismetArrayLibrary Engine.Default__KismetArrayLibrary
-			97352, // AkGameplayStatics AkAudio.Default__AkGameplayStatics
-			96702, // KismetSystemLibrary Engine.Default__KismetSystemLibrary
-			96703, // KismetTextLibrary Engine.Default__KismetTextLibrary
-			96700, // KismetStringLibrary Engine.Default__KismetStringLibrary
-			96440, // DataTableFunctionLibrary Engine.Default__DataTableFunctionLibrary
-			96580, // GameplayStatics Engine.Default__GameplayStatics
-			96311, // BlueprintMapLibrary Engine.Default__BlueprintMapLibrary
+			L"Activate",
+			L"AddComponentByClass",
+			L"AddToViewport",
+			L"Array_Clear",
+			L"Array_Get",
+			L"Array_Length",
+			L"Array_Add",
+			L"Array_IsValidIndex",
+			L"Map_Add",
+			L"Map_Keys",
+			L"AddChildToCanvas",
 
-			// Not UE Native
+			L"BeginDeferredActorSpawnFromClass",
+			
+			L"ExecuteUbergraph_WBP_ServerBrowser", 			
+			L"ExecuteUbergraph_AJBFrontEnd",
+			L"ExecuteUbergraph_WBP_CallbackTimerHandler",
+			L"ExecuteUbergraph_WBP_ServerBrowser",
+			L"ExecuteUbergraph_WBP_OptionsMenu",
 
-			98612, // AJBNetworkObserver AJB.Default__AJBNetworkObserver
-			97329 // LoadingScreenSystem.Default__LoadingScreenSystemBPLibrary
+			L"EqualEqual_GameplayTag",
+
+			L"Create",
+			L"Concat_StrStr",
+			L"Conv_IntToText",
+			L"Conv_FloatToString",
+			L"Conv_StringToText",
+			L"Conv_StringToInt",
+			L"Conv_TextToString",
+			L"Conv_IntToString",
+			L"Conv_StringToName",
+			L"Conv_SoftObjectReferenceToString",
+			L"ClearChildren",
+			L"NotEqual_StrStr",
+			L"Construct",
+			L"Delay",
+			
+			L"FindSessions",
+			L"Format",
+			L"FinishSpawningActor",
+			L"FlushNetDormancy",
+
+			L"IsEditor",
+			L"IsShipping",
+			L"IsDedicatedServer",
+			L"IsFreePlay",
+			L"IsVisible",
+			L"IsValid",
+			L"IsValidClass",
+			L"IsInViewport",			
+			L"IsPlayingReplay",
+			L"IsValidSoftClassReference",
+			L"IsValidSoftObjectReference",
+			L"InitializeLoadingScreen",
+
+			L"GetCreaditNum",
+			L"GetCacheInteger",
+			L"GetComponentByClass",
+			L"GetDataTableRowFromName",
+			L"GetDataTableRowNames",
+			L"GetDisplayName",
+			L"GetDebugStringFromGameplayContainer",
+			L"GetDynamicMaterial",
+			L"GetGameInstance",
+			L"GetGameMode",
+			L"GetHUD",
+			L"GetOwner",
+			L"GetPlayerController",
+			L"GetRenderOpacity",			
+			L"GetWorldDeltaSeconds",
+			L"GetViewportSize",
+			L"GetTagName",
+			L"GetTextBlock",
+			L"GetShopEventSettings",
+			L"GetButton",
+			L"GetOutputLevelIndexHeadphone",
+			L"GetMaxOutputLevelIndex",
+			L"GetMaxSoundVolumeValue",
+			L"GetDefaultSoundVolumeValue",
+			L"GetVolumeGame",
+			L"GetEffectMaterial",
+			L"GetAvailableAllStages",
+			L"Handled",
+			L"HasTag",						
+			L"ReceiveTick",
+			L"ReceiveBeginPlay",
+			
+			L"LoadAsset",
+			L"MakeLiteralByte",
+			
+			L"ClientUpdateLevelStreamingStatus",
+			L"CurveAnimationFinishDelegate",
+			L"RegisterCurve_Scale",
+			
+			L"FindAJBWidgetOfClass",
+			L"EndManualLoadingScreen",
+
+			L"SetBrushFromTexture",
+			L"SetBrushFromMaterial",
+			L"SetBrushTintColor",
+			L"SetCipherMode",
+			L"SetColorAndOpacity",
+			L"SetInputMode_GameAndUIEx",
+			L"SetRenderOpacity",
+			L"SetVisibility",
+			L"SetWidthOverride",
+			L"SetStructurePropertyByName",
+			L"SetIntPropertyByName",
+			L"SlotAsCanvasSlot",
+			L"SetZOrder",
+			L"SetAutoSize",
+			L"SetText",
+			L"SetUseTickReceive",
+			L"SetRenderTransform",
+			L"SetRenderTransformPivot",
+			L"SetFloatPropertyByName",
+			L"SetValue",
+			L"SetRTPCValue",
+			L"SetScalarParameterValue",
+			L"SetRenderScale",
+			L"SetFont",
+			
+			L"ServerUpdateLevelVisibility",
+
+			L"Tick",
+
+			L"PreConstruct",
+			L"PrintString",
+			L"UserConstructionScript",
+						
+			L"WasInputKeyJustPressed",
+			L"OnSuccess_FE90A7E041FD831919A89B9B2A54A74B",
+			L"OnAnimationStarted",
+			L"OnMouseMove",
+			L"OnStartFadeOut",
+			L"ResetAnimation",
 		};
 
-		static constexpr const int32 FunctionBlacklist[] =
+		static constexpr const wchar_t* StrObjectNameBlacklist[] =
 		{
-			8321, // Function <Class> ReceiveTick
-			14300, // Function UMG.Widget.IsVisible
-			14310, // UMG.Widget.SetRenderOpacity
-			14319, // Function UMG.Widget.SetVisibility
-			14423, // Function UMG.WidgetBlueprintLibrary.Create
-			14739, // Function UMG.BrushBinding.GetValue
-			15873, // Function UMG.UserWidget.AddToViewport
-			15895, // Function UMG.TextBlock.SetColorAndOpacity
-			15991, // Function Engine.Controller.GetViewTarget
-			16039, // Function Engine.PlayerController.GetViewportSize
-			16062, // Function Engine.PlayerController.WasInputKeyJustPressed
-			16392, // Function UMG.Image.GetDynamicMaterial
-			16396, // Function UMG.Image.SetBrushFromMaterial		
-			16400, // Function UMG.Image.SetBrushTintColor
-			16925, // Function UMG.TextBlock.SetText
-			17338, // Function UMG.CanvasPanel.AddChildToCanvas
-			17617, // Function UMG.WidgetBlueprintLibrary.MakeBrushFromTexture
-			17669, // UMG.WidgetLayoutLibrary.GetViewportScale		
-			18269, // Function Engine.GameplayStatics.GetPlayerController
-			18277, // Function Engine.GameplayStatics.GetWorldDeltaSeconds
-			18592, // Function Engine.MaterialInstanceDynamic.SetScalarParameterValue
-			18517, // Function Engine.KismetArrayLibrary.Array_Get
-			18521, // Function Engine.KismetArrayLibrary.Array_Length
-			18259, // Function Engine.GameplayStatics.GetGameInstance
+			L"Default__KismetSystemLibrary",
+			L"Default__FlowStateUtil",
+			L"Default__AJBUtilityFunctionLibrary",
+			L"Default__AJBAMSystemSettings ",
+			L"Default__WidgetLayoutLibrary",
+			L"Default__WidgetBlueprintLibrary",
+			L"Default__GameplayStatics",
+			L"Default__KismetArrayLibrary",
+			L"Default__AJBAMSystemObject",
+			
+			L"AJBHighlightManager_0",
+			L"BP_AJBGameInstance_C_0",
+			L"BP_AJBSimpleMatchPlayerController_C_0",
+			L"Button_PPBuy",
 
-
-
-			// Not UE Native
-
-			7393, // Function <UAJBUserWidget> Tick
-			7384, // Function <UAJBUserWidget> OnPaint
-			14391, // Function FlowState.FlowStateUtil.TickFlowState
-			14412, // Function LoadingScreenSystem.LoadingScreenSystemBPLibrary.SetCacheInteger
-			14669, // Function AJB.AJBUtilityFunctionLibrary.IsEditor
-			15801, // Function AJB.AJBAMSystemObject.IsAMSystemErrorMode
-			16204, // Function AJB.AJBHighlightManager.GetFocusActor
-			16210, // Function AJB.AJBGameInstance.GetHighlightManager
-			16220, // Function AJB.AJBGameInstance.GetParamRepos
-			16229, // Function AJB.AJBGameInstance.IsConsumePP
-			16231, // Function AJB.AJBGameInstance.IsFreePlay
-			16241, // Function AJB.AJBHighlightManager.IsPlayingReplay
-			16244, // Function AJB.AJBGameInstance.IsServicePlay
-			16799, // Function AJB.AJBParamRepos.CheckExistParamFile		
-			16802, // Function AJB.AJBParamRepos.LoadParamFile
-			16971, // Function AJB.AJBUtilityFunctionLibrary.IsAJBOfflineMode
-			16929, // Function AJB.AJBUtilityFunctionLibrary.CanAJBArcadeGamePlay
-			16973, // Function AJB.AJBUtilityFunctionLibrary.IsDistribution
-			134207, // Function WB_CharacterSelect.WB_CharacterSelect_C.ExecuteUbergraph_WB_CharacterSelect
-			135155, // Function WB_Credit.WB_Credit_C.Get_Img_AllNetIcon_Brush_0
-			136949, // Function WB_PPBuyButton.WB_PPBuyButton_C.OnCheckPP
+			L"WB_AJBInGameGionScreen_C_0",
+			L"WB_CharacterSelect_C_0",
+			L"WB_ModeSelect_Button_RewardPercent",
+			L"WB_ModeSelect_Button_Reward",
+			L"WB_ModeSelect_Button_PAIR",
 		};
 
-		// Must be called once at runtime since the index always varies.
-		static constexpr const wchar_t* ClassFunctionBlacklist[][2] =
+		/*
+		L"",
+		L"",
+		L"",
+		L"",
+		L"",
+		L"",
+		L"",
+		L"",
+		L"",
+		L"",
+		L"",
+		L"",
+		*/
+
+		constexpr int32 FNBLSize = sizeof(StrFunctionNameBlacklist) / sizeof(StrFunctionNameBlacklist[0]);
+		constexpr int32 ONBLSize = sizeof(StrObjectNameBlacklist) / sizeof(StrObjectNameBlacklist[0]);
+
+		static SDK::FName FunctionNameBlacklist[FNBLSize]{0};
+		static SDK::FName ObjectNameBlacklist[ONBLSize]{0};
+
+		static bool bOne{0};
+		static bool bFailed{false};
+
+		if (!bOne)
 		{
-			{L"WB_Credit_C", L"Get_Img_AllNetIcon_Brush_0"},
-			{L"WB_PPBuyButton_C", L"OnCheckPP"},
-			{L"WB_CharacterSelect_C", L"ExecuteUbergraph_WB_CharacterSelect"}
-		};
+			bOne = true;
+			bool bFailed{false};
 
-		constexpr const unsigned char CFBL_Size = sizeof(ClassFunctionBlacklist) / sizeof(ClassFunctionBlacklist[0]);
-
-		int32 DynamicClassFunctionIndexArray[CFBL_Size]{ -1 };
-
+			int32 i{0};
+			while (i < FNBLSize)
+			{
+				FunctionNameBlacklist[i] = FName::NAME_FindOrAdd(StrFunctionNameBlacklist[i], FName::FNAME_Find);
+				if (FunctionNameBlacklist[i].ComparisonIndex == 0 || FunctionNameBlacklist[i].Number == 0)
+				{
+					bFailed = true;
+				}
+				++i;
+			}
+			i = 0;
+			while (i < ONBLSize)
+			{
+				ObjectNameBlacklist[i] = FName::NAME_FindOrAdd(StrObjectNameBlacklist[i], FName::FNAME_Find);
+				if (ObjectNameBlacklist[i].ComparisonIndex == 0 || ObjectNameBlacklist[i].Number == 0)
+				{
+					bFailed = true;
+				}
+				++i;
+			}
+		}
+		else if (bFailed)
+		{
+			bFailed = false;
+			bOne = false;
+		}
+		
 		bool bLogInvoke{true};
 
-		if (AJB::MOD_OptionsMenu && Obj->Name.ComparisonIndex == AJB::MOD_OptionsMenu->Name.ComparisonIndex)
-			bLogInvoke = false;
-
-		for (const int32& ObjNameIndex : ObjectBlacklist)
+		for (const SDK::FName& FunctionNameIndex : FunctionNameBlacklist)
 		{
-			if (Obj->Name.ComparisonIndex == ObjNameIndex)
+			if (This->Name == FunctionNameIndex)
 			{
 				bLogInvoke = false;
 				break;
 			}
 		}
-		if (bLogInvoke)
+		for (const SDK::FName& ObjectNameIndex : ObjectNameBlacklist)
 		{
-			for (const int32& FuncNameIndex : FunctionBlacklist)
+			if (Obj->Name == ObjectNameIndex)
 			{
-				if (This->Name.ComparisonIndex == FuncNameIndex)
-				{
-					bLogInvoke = false;
-					break;
-				}
-			}
-		}
-		if (bLogInvoke)
-		{
-			for (const int32& ClassFuncNameIndex : DynamicClassFunctionIndexArray)
-			{
-				if (ClassFuncNameIndex != -1 && This->Name.ComparisonIndex == ClassFuncNameIndex)
-				{
-					bLogInvoke = false;
-					break;
-				}
+				bLogInvoke = false;
+				break;
 			}
 		}
 
 		if (bLogInvoke)
 		{
-			LogA(OFF::Invoke.GetName(), std::format("[UFunction]: {} | [ComparisonIndex]: {} | [UObject]: {} | [ComparisonIndex]: {}", This->GetFullName(), This->Name.ComparisonIndex, Obj->GetFullName(), Obj->Name.ComparisonIndex));
+			LogA(OFF::Invoke.GetName(), std::format("[UFunction]: {} | [ComparisonIndex]: {} | [UObject]: {} | [ComparisonIndex]: {}", This->GetName(), This->Name.ComparisonIndex, Obj->GetName(), Obj->Name.ComparisonIndex));
 		}
 	}
 
+
 	// A structure I made allowing me to pass the object obtained here to external functions.
-	struct TExternFunction { void(*Function)(SDK::UObject*); int32 FunctionIndex; };
-	constexpr TExternFunction ExternFunctionList[] = 
+	struct TExternFunction 
+	{ 
+		void(*Function)(SDK::UObject*);
+		const wchar_t*	FunctionStrName;
+		SDK::FName		FunctionName;
+	};
+	static TExternFunction ExternFunctionList[] = 
 	{
-		{AJB::OnToggleFullMapVisibility, 2427}, // Function BP_AJBInGameHUD.BP_AJBInGameHUD_C.OnToggleFullMapVisibility
+		{AJB::OnToggleFullMapVisibility, L"OnToggleFullMapVisibility", {}}, // Function BP_AJBInGameHUD.BP_AJBInGameHUD_C.OnToggleFullMapVisibility
 		// More will be added later.
 	};
 
-	for (TExternFunction const& Entry : ExternFunctionList)
+	for (TExternFunction& Entry : ExternFunctionList)
 	{
-		if (This->Name.ComparisonIndex == Entry.FunctionIndex)
+		if (Entry.FunctionName.ComparisonIndex == 0 || Entry.FunctionName.Number == 0)
+		{
+			FName::NAME_FindOrAdd(&Entry.FunctionName, Entry.FunctionStrName, FName::FNAME_Find);
+		}
+		if (This->Name == Entry.FunctionName)
 		{
 			Entry.Function(Obj);
 			break;

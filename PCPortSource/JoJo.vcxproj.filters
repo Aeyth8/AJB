@@ -123,6 +123,12 @@
     <Filter Include="Aeyth8\Logic\Server\Temporary\MWRT">
       <UniqueIdentifier>{c2b22739-b2f6-413b-b39d-698f2ca5b677}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Aeyth8\A8CL\Filesystem">
+      <UniqueIdentifier>{f87eeaf0-4e26-4fa1-9f92-4a0d317e7e73}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Aeyth8\A8CL\NTSurfer">
+      <UniqueIdentifier>{1f8eaef1-7f86-49d3-88f6-a40fb32ef07b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -359,6 +365,12 @@
     <ClCompile Include="Dumper-7\SDK\WB_DBISequencerSkipper_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
+    <ClCompile Include="Aeyth8\A8CL\Filesystem\FileSystem.cpp">
+      <Filter>Aeyth8\A8CL\Filesystem</Filter>
+    </ClCompile>
+    <ClCompile Include="Aeyth8\A8CL\NTSurfer\NTSurfer.cpp">
+      <Filter>Aeyth8\A8CL\NTSurfer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Aeyth8\Logger.hpp">
@@ -516,6 +528,12 @@
     </ClInclude>
     <ClInclude Include="Aeyth8\Logic\Server\Temporary\MRWT.h">
       <Filter>Aeyth8\Logic\Server\Temporary\MWRT</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\A8CL\Filesystem\FileSystem.h">
+      <Filter>Aeyth8\A8CL\Filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\A8CL\NTSurfer\NTSurfer.hpp">
+      <Filter>Aeyth8\A8CL\NTSurfer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

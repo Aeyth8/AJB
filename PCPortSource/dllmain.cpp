@@ -9,6 +9,7 @@
 
 #include "Aeyth8/Offsets.h"
 #include "Aeyth8/Proxy8/Entry/ProxyEntry.hpp"
+//#include "Aeyth8/A8CL/NTSurfer/NTSurfer.hpp"
 
 #include <intrin.h>
 #include <format>
@@ -37,7 +38,8 @@ static long __stdcall VEH_Filter(PEXCEPTION_POINTERS Error)
 static void PreInit()
 {
 	// Implementing a new system with an old one is going to take some time...
-	GBA = Proxy8::GBA;
+	Global::GBA = Proxy8::GBA;
+	//Proxy8::NTDLL = NTS::NTSurfer::FindDLLAddress(Proxy8::PEB, L"ntdll.dll");
 
 	CommandLineArguments::ParseCommandLine(GetCommandLineW(), CMLA::GlobalCommandLineArgs, CMLA::GlobalCommandLine);
 

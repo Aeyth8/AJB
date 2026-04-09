@@ -118,6 +118,8 @@
     <ClInclude Include="Aeyth8\A8CL\CPUReg\CPUReg.h" />
     <ClInclude Include="Aeyth8\A8CL\CTypes\IntegerTypes.h" />
     <ClInclude Include="Aeyth8\A8CL\CTypes\CArray.h" />
+    <ClInclude Include="Aeyth8\A8CL\Filesystem\FileSystem.h" />
+    <ClInclude Include="Aeyth8\A8CL\NTSurfer\NTSurfer.hpp" />
     <ClInclude Include="Aeyth8\A8CL\Strings\CStrings.h" />
     <ClInclude Include="Aeyth8\CmdArgs\CommandLineArgs.h" />
     <ClInclude Include="Aeyth8\CmdArgs\Core\CMLA.h" />
@@ -173,6 +175,8 @@
     <ClInclude Include="Version\resource.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Aeyth8\A8CL\Filesystem\FileSystem.cpp" />
+    <ClCompile Include="Aeyth8\A8CL\NTSurfer\NTSurfer.cpp" />
     <ClCompile Include="Aeyth8\CmdArgs\CommandLineArgs.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">CMLA.h</PrecompiledHeaderFile>
