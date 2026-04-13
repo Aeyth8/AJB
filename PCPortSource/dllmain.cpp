@@ -10,6 +10,7 @@
 #include "Aeyth8/Offsets.h"
 #include "Aeyth8/Proxy8/Entry/ProxyEntry.hpp"
 #include "Aeyth8/A8CL/Logger/Logger.h"
+#include "Aeyth8/Tools/UnrealTypes.h"
 
 #include <intrin.h>
 #include <format>

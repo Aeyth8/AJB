@@ -97,13 +97,5 @@ namespace OFF
 	OFFSET IsAJBOfflineMode("UAJBUtilityFunctionLibrary::IsAJBOfflineMode", 0x49DE20);
 	OFFSET IsOfflineMode("UAJBNetworkObserver::IsOfflineMode", 0x4ED5D0);
 
-	/*
-	
-	nbamsavdatread - 0x2233A0 
-	This is the offset for the game, in only one function it calls the externs from nbamsavdat.dll
-	
-	*/
-
-	
 }
 }

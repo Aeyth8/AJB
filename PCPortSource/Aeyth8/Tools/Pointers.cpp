@@ -41,7 +41,12 @@ SDK::UWorld* Pointers::UWorld()
 			return Engine->GameViewport->World;
 		}
 	}	
-}	
+}
+
+SDK::AGameModeBase* Pointers::GameMode(SDK::UWorld* InWorld)
+{
+	return InWorld && InWorld->AuthorityGameMode ? InWorld->AuthorityGameMode : nullptr;
+}
 
 SDK::APlayerController* Pointers::Player(const int Index)
 {
@@ -57,6 +62,14 @@ SDK::APlayerController* Pointers::Player(const int Index)
 SDK::FName Pointers::FString2FName(const SDK::FString& String)
 {
 	return SDK::UKismetStringLibrary::Conv_StringToName(String);
+}
+
+SDK::UBlueprintFunctionLibrary* A8CL::Pointers::BlueprintFunctionLibrary()
+{
+	static SDK::UBlueprintFunctionLibrary* Library{nullptr};
+	if (!Library) Library = SDK::UBlueprintFunctionLibrary::GetDefaultObj();
+
+	return Library;
 }
 
 bool Pointers::ConstructUConsole(const SDK::FName& ConsoleKey)

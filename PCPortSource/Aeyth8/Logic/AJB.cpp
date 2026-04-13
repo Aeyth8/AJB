@@ -6,6 +6,7 @@
 
 #include "../Tools/Pointers.h"
 #include "../Tools/UFunctions.hpp"
+#include "../Tools/UnrealTypes.h"
 #include "../Tools/BytePatcher.h"
 
 #include "../Tools/UnrealExternWrapper.h"
@@ -88,6 +89,7 @@ SDK::ALemonHelper_C*				AJB::MOD_LemonHelper{nullptr};
 bool								AJB::bIsLemonPossessioned{false};
 bool								AJB::bDebugModeFromCMLA{false};
 int									AJB::TEMP_CachedCharacterID{1};
+int									AJB::NUM_CPUCores{0};
 
 // -- MOD --
 
@@ -464,6 +466,16 @@ void AJB::Init_Hooks()
 	if (GBA != 0)
 	{
 		/*
+		
+		
+		#################### TO DO ####################
+
+		Recreate this logic without any offsets by parsing the import directory and finding all DLLs requiring to be patched.
+		Have something to find the end instruction to ensure that the patch can fit, also have something that ISN'T string parsing to determine the return value without too much accuracy just enough to make sure it works.
+		
+		*/
+
+		/*
 			Since each call manually unprotects and reprotects a 4kb page, and since the memory regions are so close I should be able to just one and done some of them to be more efficient 
 		*/
 
@@ -629,7 +641,7 @@ void AJB::Init_Hooks()
 
 		
 	}
-
+	
 }
 
 void AJB::Init_Engine()
@@ -698,6 +710,11 @@ void AJB::Init_Engine()
 	lstrcatW(VersioningBuffer, AJB::DLLCommitVersion);
 	SetWindowTextW(AJB::PCPortWindow, VersioningBuffer);
 	//SetConsoleTitleW(AJB::DLLCommitVersion);
+
+	SYSTEM_INFO CPUInfo{};
+	GetSystemInfo(&CPUInfo);
+
+	AJB::NUM_CPUCores = CPUInfo.dwNumberOfProcessors;
 }
 
 
@@ -784,67 +801,6 @@ void AJB::ThreadLoop()
 }
 
 // -- Pointers
-
-SDK::UEngine* const& AJB::GUEngine(const bool bLog)
-{
-	SDK::UEngine*& Engine = *reinterpret_cast<SDK::UEngine**>(OFF::GEngine.PlusBase());
-	if (bLog && IsNull(Engine))
-	{
-		LogA("Logic", "GEngine is a null pointer!");
-	}
-	return Engine;
-}
-
-SDK::UWorld* const& AJB::GUWorld(const bool bLog)
-{
-	SDK::UWorld*& World = *reinterpret_cast<SDK::UWorld**>(OFF::GWorld.PlusBase());
-	if (bLog && IsNull(World))
-	{
-		LogA("Logic", "GWorld is a null pointer!");
-	}
-	return World;
-}
-
-SDK::APlayerController* AJB::GPlayer(const int& Index)
-{
-	return Pointers::Player(Index);
-}
-
-SDK::UBlueprintFunctionLibrary* const& AJB::BlueprintFunctionLibrary()
-{
-	static SDK::UBlueprintFunctionLibrary* Library{nullptr};
-	if (!Library) Library = SDK::UBlueprintFunctionLibrary::GetDefaultObj();
-
-	return Library;
-}
-
-SDK::AGameModeBase* AJB::GetGameMode(SDK::UWorld* OverrideWorld)
-{
-	return GetBlueprintClass<SDK::UGameplayStatics>()->GetGameMode(OverrideWorld);
-}
-
-SDK::ABP_AJBInGamePlayerController_C* const& AJB::GetPlayer(const int& Index)
-{
-	SDK::APlayerController* Player = Pointers::Player();
-
-	if (Player && Player->IsA(SDK::ABP_AJBInGamePlayerController_C::StaticClass()))
-	{
-		return static_cast<SDK::ABP_AJBInGamePlayerController_C*>(Player);
-	}
-
-	return nullptr;
-}
-
-SDK::ABP_AJBInGameCharacter_C* const& AJB::GetCharacter(const SDK::ABP_AJBInGamePlayerController_C* Player)
-{
-	if (Player && Player->Character->IsA(SDK::ABP_AJBInGameCharacter_C::StaticClass()))
-	{
-		return static_cast<SDK::ABP_AJBInGameCharacter_C*>(Player->Character);
-	}
-
-	return nullptr;
-
-}
 
 SDK::ABP_PPV_VSFilter_C* AJB::GetPostProcessFilter(const SDK::ABP_AJBInGamePlayerController_C* Player, const bool bCreateIfNull)
 {
@@ -1134,65 +1090,13 @@ void AJB::CheckForInfiniteLoadingScreen()
 	}
 }
 
-void AJB::OnSynchronizeFail()
-{
-	LogA("OnSynchronizeFail", "Begin");
-	//AJB::CreateCallbackTimer(AJB::SynchronizeClient, 1.0f);
-}
-
-void AJB::SynchronizeClient()
-{
-	LogA("SynchronizeClient", "Begin");
-
-	bool bFail{false};
-
-	if (AJB::IsInSession())
-	{
-		if (!AJB::MOD_Global_Synchronizer)
-		{
-			SDK::UObject* CurrentObject{nullptr};
-
-			for (int i{0}; i < SDK::UObject::GObjects->Num(); ++i)
-			{
-				CurrentObject = SDK::UObject::GObjects->GetByIndex(i);
-
-				if (!CurrentObject) continue;
-
-				if (CurrentObject && !CurrentObject->IsDefaultObject() && CurrentObject->IsA(AJB::MOD_SynchronizerClass) && CurrentObject != AJB::MOD_PROXY_Synchronizer)
-				{
-					LogA("GLOBAL SYNCHRONIZER", std::format("[Object]: {} | [Replicated PlayMode]: {} ", CurrentObject->GetFullName(), ((SDK::ABP_Synchronizer_C*)CurrentObject)->PlayMode));
-					break;
-				}
-			}			
-		}
-		if (AJB::MOD_Global_Synchronizer)
-		{
-			if (AJB::bDebugModeFromCMLA) LogA("GLOBAL SYNCHRONIZER", std::format("[Object]: {} | [Replicated PlayMode]: {} ", AJB::MOD_Global_Synchronizer->GetFullName(), AJB::MOD_Global_Synchronizer->PlayMode));
-			//AJB::Instance->PlayMode = (SDK::EPlayMode)AJB::MOD_Global_Synchronizer->PlayMode;
-		}
-
-		if (!AJB::MOD_Global_Synchronizer) bFail = true;
-	}
-	else
-	{
-		bFail = true;
-	}
-
-	if (bFail)
-	{
-		LogA("SynchronizeClient", "Failed, trying again...");
-		//AJB::OnSynchronizeFail();
-		//AJB::CreateCallbackTimer(AJB::OnSynchronizeFail, 0.5f);
-	}
-}
-
 bool __fastcall AJB::FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag)
 {
 	LogA("UFlowStateUtil", std::format("New FlowState: {}", NextStateTag.TagName.ToString()));
 	
 	AJB::CurrentFlowstate = &NextStateTag;
 	
-	// The mouse will not lock into the viewport on its own (making KBM compability unplayable unless you enjoy constantly holding down middle click to move your camera)
+	// The mouse will not lock into the viewport on its own (making KBM compatibility unplayable unless you enjoy constantly holding down middle click to move your camera)
 	constexpr const static wchar_t* SDT_MouseLockFlowstates[]
 	{
 		L"InGame.Gameplay",
@@ -1235,7 +1139,8 @@ bool __fastcall AJB::FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, S
 		static SDK::FName InGameStandby = FName::NAME_FindOrAdd(L"InGame.Standby");
 		if (AJB::IsServer() && NextStateTag.TagName == InGameStandby)
 		{
-			AJB::CreateCallbackTimer(AJB::CheckForInfiniteLoadingScreen, 15.0f);
+			static const float WaitFor = AJB::NUM_CPUCores >= 4 ? (16.0f / AJB::NUM_CPUCores) * 10.0f : 60.0f;
+			AJB::CreateCallbackTimer(AJB::CheckForInfiniteLoadingScreen, WaitFor);
 		}
 	}
 	
@@ -1245,7 +1150,7 @@ bool __fastcall AJB::FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, S
 void __fastcall AJB::OnToggleFullMapVisibility(SDK::UObject* Object)
 {
 	static bool bToggled{false};
-	/*static*/ SDK::UWB_FullMap_C* MapCache{nullptr};
+	SDK::UWB_FullMap_C* MapCache{nullptr};
 
 	bToggled = !bToggled;
 
@@ -1256,12 +1161,8 @@ void __fastcall AJB::OnToggleFullMapVisibility(SDK::UObject* Object)
 		SDK::ABP_AJBInGameHUD_C* HUD = reinterpret_cast<SDK::ABP_AJBInGameHUD_C*>(Object);
 		HUD->PlayerOwner->bShowMouseCursor = bToggled;
 
-		// SDK::UWB_LandmarkableMap_C* MapCache = HUD->BP_AJBCompass->TargetWidget->CachedLastMapWidget; // Doesn't work because it's null IDK which one I should use
-		//if (!MapCache) MapCache = GetLastOf<SDK::UWB_FullMap_C>(false);
 		OFFSET::VFTable<void(__thiscall*)(SDK::AAJBHUDBase*, SDK::UClass*, SDK::UAJBUserWidget**)>(HUD)[0xFE](HUD, SDK::UWB_FullMap_C::StaticClass(), (SDK::UAJBUserWidget**)&MapCache); // AAJBHUDBase::FindAJBWidgetOfClass
 
-		//(*(__int64(__fastcall**)(SDK::AAJBHUDBase*, SDK::UClass*, SDK::UAJBUserWidget**))(*(__int64*)HUD + 2032LL))(HUD, SDK::UWB_FullMap_C::StaticClass(), (SDK::UAJBUserWidget**)&MapCache);
-		//HUD->FindAJBWidgetOfClass(SDK::UWB_FullMap_C::StaticClass(), (SDK::UAJBUserWidget**)&MapCache);
 		if (MapCache)
 		{
 			if (bToggled)
@@ -1279,14 +1180,11 @@ void __fastcall AJB::OnToggleFullMapVisibility(SDK::UObject* Object)
 
 int __fastcall AJB::PostEventAtLocation(SDK::UAkAudioEvent* AkEvent, SDK::FVector& Location, SDK::FRotator& Orientation, SDK::FString& EventName, SDK::UObject* WorldContextObject)
 {
-	//const int32 Result = OFF::PostEventAtLocation.VerifyFC<int32(__fastcall*)(SDK::UAkAudioEvent*, SDK::FVector*, SDK::FRotator*, SDK::FString*, SDK::UObject*)>()(AkEvent, Location, Orientation, EventName, WorldContextObject);
 	if (AJB::bDebugModeFromCMLA) LogA(OFF::PostEventAtLocation.GetName(), EventName.ToString());
 
 	// Play_BGM03_Menu2 is the song played for the stupid "GameOver" sequence whenever you run out of time in AJBSimpleMatch_P (which I patched long ago) but also when you click to "exit" the game.
 	// Normally doing so would play the annoying and pointlessly delayed song and then eventually try to go to AJBStartUp_P.
 	// Since my browse hook already redirects it to my Titlescreen this hook will simply end the stupid delayed sequence early and immediately head back to the Titlescreen, I'M DONE WAITING.
-
-	//if (EventName && wcscmp(EventName->Data, L"Play_BGM03_Menu2") == 0) THERE IS NO JUSTIFIABLE REASON THAT THIS STUPID THING RANDOMLY CRASHES HERE!
 
 	if (EventName.ToString() == "Play_BGM03_Menu2")
 	{
@@ -1296,7 +1194,6 @@ int __fastcall AJB::PostEventAtLocation(SDK::UAkAudioEvent* AkEvent, SDK::FVecto
 		UFunctions::UConsole(GEngine->GameViewport->ViewportConsole, ImmediateExit);
 	}
 
-	//return Result;
 	return OFF::PostEventAtLocation.VerifyFC<int32(__fastcall*)(SDK::UAkAudioEvent*, SDK::FVector&, SDK::FRotator&, SDK::FString&, SDK::UObject*)>()(AkEvent, Location, Orientation, EventName, WorldContextObject);
 }
 
@@ -1334,45 +1231,3 @@ SDK::ALevelScriptActor* __fastcall AJB::ALevelScriptActor(SDK::AActor* This, voi
 	return OFF::ALevelScriptActorConstructor.VerifyFC<SDK::ALevelScriptActor* (__fastcall*)(SDK::AActor*, void*)>()(This, ObjectInitializer);
 }
 
-// -- FMemory
-
-void* FMemory::Malloc(unsigned long long Count, unsigned int Alignment)
-{
-	return OFF::FMalloc.VerifyFC<Decl::Malloc>()(Count, Alignment);
-}
-
-void* FMemory::Realloc(void* Original, unsigned long long Count, unsigned int Alignment)
-{
-	return OFF::FRealloc.VerifyFC<Decl::Realloc>()(Original, Count, Alignment);
-}
-
-void FMemory::Free(void* Original)
-{
-	OFF::FFree.VerifyFC<Decl::Free>()(Original);
-}
-
-// -- FName
-
-SDK::FName A8CL::FName::NAME_FindOrAdd(SDK::FName* Obj, const char* StringName, EFindName FindNameRule)
-{
-	return *OFF::FNameA.VerifyFC<SDK::FName*(__fastcall*)(SDK::FName*, const char*, EFindName)>()(Obj, StringName, FindNameRule);
-}
-
-SDK::FName A8CL::FName::NAME_FindOrAdd(const char* StringName, EFindName FindNameRule)
-{
-	SDK::FName Return{};
-	OFF::FNameA.VerifyFC<SDK::FName*(__fastcall*)(SDK::FName*, const char*, EFindName)>()(&Return, StringName, FindNameRule);
-	return Return;
-}
-
-SDK::FName A8CL::FName::NAME_FindOrAdd(SDK::FName* Obj, const wchar_t* StringName, EFindName FindNameRule)
-{
-	return *OFF::FNameW.VerifyFC<SDK::FName*(__fastcall*)(SDK::FName*, const wchar_t*, EFindName)>()(Obj, StringName, FindNameRule);
-}
-
-SDK::FName A8CL::FName::NAME_FindOrAdd(const wchar_t* StringName, EFindName FindNameRule)
-{
-	SDK::FName Return{};
-	OFF::FNameW.VerifyFC<SDK::FName*(__fastcall*)(SDK::FName*, const wchar_t*, EFindName)>()(&Return, StringName, FindNameRule);
-	return Return;
-}

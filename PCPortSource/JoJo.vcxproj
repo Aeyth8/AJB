@@ -141,6 +141,7 @@
     <ClInclude Include="Aeyth8\Tools\Pointers.h" />
     <ClInclude Include="Aeyth8\Tools\UFunctions.hpp" />
     <ClInclude Include="Aeyth8\Tools\UnrealExternWrapper.h" />
+    <ClInclude Include="Aeyth8\Tools\UnrealTypes.h" />
     <ClInclude Include="Aeyth8\UConsole\Core\UConsole.h" />
     <ClInclude Include="Aeyth8\UConsole\ExecInternalConfig.h" />
     <ClInclude Include="Dumper-7\CustomSDK\BPAC_LoadTags_classes.hpp" />
@@ -223,6 +224,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Aeyth8\Tools\UnrealTypes.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="Dumper-7\CustomSDK\BP_GlobalPatcher_functions.cpp" />
     <ClCompile Include="Dumper-7\CustomSDK\GM_AJBUserInterface_functions.cpp" />

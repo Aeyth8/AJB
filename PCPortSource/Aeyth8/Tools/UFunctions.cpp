@@ -10,6 +10,7 @@
 #include "../../Dumper-7/SDK/GameplayTags_structs.hpp"
 
 #include "../CmdArgs/CommandLineArgs.h"
+#include "../Tools/UnrealTypes.h"
 
 /*
 
@@ -105,10 +106,13 @@ void UFunctions::Helpers::ProcessEnd()
 
 extern "C" bool IsInLocalDirectory(const wchar_t*);
 
-bool UFunctions::Helpers::CheckForLocalDirectory(const wchar_t* Filename, unsigned char& Byte)
+bool UFunctions::Helpers::CheckForLocalDirectory(const wchar_t* Filename)
 {
 	//Old function written in bitflag hellscape C++ is 249 bytes
 	//New function in ASM is (IsInLocalDirectory 0x46) + (actual function 0x92) is 216 bytes, barely any difference looking back but the logic should be much faster
+
+	return IsInLocalDirectory(Filename);
+	
 
 	/*constexpr const wchar_t LocalPath[8] = {L'.', L'.', L'/', L'.', L'.', L'/', L'.', L'.'};
 	constexpr const wchar_t LocalPathBack[8] = {L'.', L'.', L'\\', L'.', L'.', L'\\', L'.', L'.'};*/
@@ -130,28 +134,6 @@ bool UFunctions::Helpers::CheckForLocalDirectory(const wchar_t* Filename, unsign
 	std::wcout << "LocalQuad1B " << std::hex << LocalQuad1B << '\n';
 	std::wcout << "LocalQuad2B " << std::hex << LocalQuad2B << '\n';
 	*/
-
-	/*while ((Byte & 0b11) < 3)
-	{
-		// 1,3,6								  // 2,4,7
-		if (Filename[((Byte & 0b11) * 3) + 0] != '.' || Filename[((Byte & 0b11) * 3) + 1] != '.')
-		{
-			break;
-		}
-
-		// 0,5,8 (due to iterators and arrays this is technically 1,6,9)
-		if (Filename[((Byte & 0b11) * 3) + 2] != '/' && Filename[((Byte & 0b11) * 3) + 2] != '\\')
-		{
-			break;
-		}
-
-		Byte |= (1 << ((Byte & 0b11) + 2));
-
-		Byte = (Byte & ~0b11) | ((Byte & 0b11) + 1);
-	}
-
-	// This logic ensures that we are only allowing file overrides from within the game directory, and disallowing from externals such as AppData\Local
-	return ((Byte & 0b00011100) == 0b00011100);*/
 }
 
 
@@ -344,7 +326,7 @@ void UFunctions::UConsole(SDK::UConsole* This, SDK::FString& Command)
 	}
 	else if (StrCommand == "game")
 	{
-		LogA("Owning GameMode", AJB::GetGameMode()->GetFullName());
+		LogA("Owning GameMode", Pointers::GameMode()->GetFullName());
 	}
 	else if (StrCommand == "playmode")
 	{
@@ -467,7 +449,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 
 		
 
-		AJB::GetBlueprintClass<SDK::UBPF_AJBOutGameHUD_C>()->GetAJBOutGameHUD_BP(0, GWorld.GetPointer(), 0, &HUD);
+		Pointers::GetBlueprintClass<SDK::UBPF_AJBOutGameHUD_C>()->GetAJBOutGameHUD_BP(0, GWorld.GetPointer(), 0, &HUD);
 		if (HUD)
 		{
 			HUD->ShowCharacterSelect();
@@ -722,7 +704,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	}	
 	else if (StrCommand == "filter")
 	{
-		SDK::ABP_PPV_VSFilter_C* Filter = AJB::GetPostProcessFilter(AJB::GetPlayer<SDK::ABP_AJBInGamePlayerController_C>());
+		SDK::ABP_PPV_VSFilter_C* Filter = AJB::GetPostProcessFilter(Pointers::Player<SDK::ABP_AJBInGamePlayerController_C>());
 
 		if (!IsNull(Filter))
 		{
@@ -930,7 +912,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 				reinterpret_cast<SDK::UWB_TestModePage_C*>(MenuObj)->SetUserFocus(Pointers::Player());
 
 				SDK::ABP_AJBOutGameHUD_C* HUD{nullptr};
-				AJB::GetBlueprintClass<SDK::UBPF_AJBOutGameHUD_C>()->GetAJBOutGameHUD_BP(0, GWorld.GetPointer(), 0, &HUD);
+				Pointers::GetBlueprintClass<SDK::UBPF_AJBOutGameHUD_C>()->GetAJBOutGameHUD_BP(0, GWorld.GetPointer(), 0, &HUD);
 				if (HUD) HUD->OnShowDebugMenu();
 			}
 			else
@@ -976,7 +958,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	}
 	else if (StrCommand == "communicate")
 	{
-		AJB::GetGameMode<SDK::ABP_AJBBattleGameMode_C>()->Say(L"WELL FECK");
+		Pointers::GameMode<SDK::ABP_AJBBattleGameMode_C>()->Say(L"WELL FECK");
 	}
 	else if (StrCommand == "gnm")
 	{
@@ -1257,38 +1239,7 @@ void UFunctions::InitLocalConnection(SDK::UNetConnection* This, SDK::UNetDriver*
 	OFF::InitLocalConnection.VerifyFC<Decl::InitLocalConnection>()(This, InDriver, InSocket, InURL, InState, InMaxPacket, InPacketOverhead);
 }
 
-template <typename Class, typename T>
-Class* GetTypedOuter(T* Object)
-{
-	return Object->IsA(Class::StaticClass()) ? (Class*)Object : (Class*)GetTypedOuter<Class>((T*)Object->Outer);
-}
 
-/*
-0x176A260 UEngine::GetMaxTickRate
-0x176A220 UEngine::GetMaxFPS ? (idk for sure I got this offset from an AOB I made back when I sucked at decompilation and I dont feel like looking right now)
-*/
-
-/*
-
-SDK::FAJBBattleSettings
-
-1 Morioh Town (Trattoria Trussardi) | DamageAreaType = 7
-2 Morioh Town (Train Station) | DamageAreaType = 2
-3 Morioh Town (Angelo Rock) | DamageAreaType = 3
-4 Morioh Town (Rural) | DamageAreaType = 4
-5 Morioh Town (Owson) | DamageAreaType = 5
-6 Morioh Town (Kameyu) | DamageAreaType = 6
-7 Cairo | DamageAreaType = 8
-8 Farm | DamageAreaType = 9
-9 Colosseum | DamageAreaType = 10
-10 Venezia | DamageAreaType = 11
-
-PvE | DamageAreaType = 101
-Tutorial | DamageAreaType = 2
-
-No clue what 0-1 is
-
-*/
 
 void AJBPreLogin(SDK::AGameModeBase* This, SDK::FString* Options, SDK::FString* Address, SDK::FUniqueNetIdRepl* UniqueId, SDK::FString* ErrorMessage)
 {
@@ -1327,7 +1278,7 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 		Call<Decl::CopyString>(OFF::CopyString.PlusBase())(&Options, &NewUser);
 	}*/
 	
-	SDK::AGameModeBase* CurrentGameMode = AJB::GetGameMode();
+	SDK::AGameModeBase* CurrentGameMode = Pointers::GameMode();
 
 	if (AJB::PlayerPoints) *AJB::PlayerPoints = 1170;
 	if (AJB::Instance)
@@ -1492,16 +1443,7 @@ void UFunctions::HandleStartingNewPlayer(SDK::AGameModeBase* This, SDK::APlayerC
 	{
 		if (AJB::MOD_CallbackTimerClass && AJB::MOD_CallbackTimer)
 		{
-			static bool bOne{0};
-			static SYSTEM_INFO CPUInfo{};
-			
-			if (!bOne)
-			{
-				bOne = 1;
-				GetSystemInfo(&CPUInfo);
-			}
-			
-			static const float WaitTimer = CPUInfo.dwNumberOfProcessors >= 4 ? (16.0f / CPUInfo.dwNumberOfProcessors) * 0.7f : 5.0f;
+			static const float WaitTimer = AJB::NUM_CPUCores >= 4 ? (16.0f / AJB::NUM_CPUCores) * 0.7f : 5.0f;
 			AJB::CreateCallbackTimer(LemonPossession, WaitTimer);
 		}
 	}
@@ -1531,7 +1473,7 @@ void UFunctions::AppPreExit()
 __int64* UFunctions::SpawnActor(SDK::UWorld* This, SDK::UClass* Class, const SDK::FVector* Location, const SDK::FRotator* Rotation, FActorSpawnParameters& SpawnParameters)
 {
 	constexpr const char* SDT_SpawnCollision[6] = { "Undefined", "AlwaysSpawn", "AdjustIfPossibleButAlwaysSpawn", "AdjustIfPossibleButDontSpawnIfColliding", "DontSpawnIfColliding", "ESpawnActorCollisionHandlingMethod_MAX" };
-	const SDK::UKismetStringLibrary* Kismet = AJB::GetBlueprintClass<SDK::UKismetStringLibrary>();
+	const SDK::UKismetStringLibrary* Kismet = Pointers::GetBlueprintClass<SDK::UKismetStringLibrary>();
 
 	std::string SpawnParms = std::format("[Name]: {} | [Template]: {} | [Owner]: {} | [Instigator]: {} | [OverrideLevel]: {} | [SpawnCollisionHandlingOverride]: {}",
 		SpawnParameters.Name.ToString(),
@@ -1958,7 +1900,7 @@ bool UFunctions::IsNonPakFilenameAllowed(__int64* This, SDK::FString& InFilename
 {
 	if (!InFilename) return false;
 
-	if (IsInLocalDirectory(InFilename.Data) && GetFileAttributesW(InFilename.Data) != INVALID_FILE_ATTRIBUTES)
+	if (Helpers::CheckForLocalDirectory(InFilename.Data) && GetFileAttributesW(InFilename.Data) != INVALID_FILE_ATTRIBUTES)
 	{
 		//LogA("IsNonPakFilenameAllowed OVERRIDE", InFilename.ToString());
 		return true;
@@ -1969,7 +1911,7 @@ bool UFunctions::IsNonPakFilenameAllowed(__int64* This, SDK::FString& InFilename
 
 bool UFunctions::FindFileInPakFiles(__int64* This, const wchar_t* Filename, __int64** OutPakFile, __int64* OutEntry)
 {
-	if (IsInLocalDirectory(Filename) && GetFileAttributesW(Filename) != INVALID_FILE_ATTRIBUTES)
+	if (Helpers::CheckForLocalDirectory(Filename) && GetFileAttributesW(Filename) != INVALID_FILE_ATTRIBUTES)
 	{
 		/*std::wstring WFile(Filename);
 		LogA("FindFileInPakFiles OVERRIDE", std::string(WFile.begin(), WFile.end()));*/
@@ -2019,35 +1961,7 @@ SDK::UObject* __fastcall UFunctions::StaticLoadObject(SDK::UClass* ObjectClass, 
 {
 	SDK::FString AName{InName ? InName : L"None"};
 	SDK::FString AFilename{ Filename ? Filename : L"None"};
-	/*bool One{0};
-	if (!One && ObjectClass->GetFullName() == "Class CoreUObject.Class")
-	{
-		One = 1;
-		OFF::StaticLoadObject.VerifyFC<Decl::StaticLoadObject>()(ObjectClass, nullptr, L"/Game/Aeyth8/UI/InGame/WBP_OptionsMenu.WBP_OptionsMenu_C", nullptr, 0, nullptr, true);
-	}*/
 
 	LogA("StaticLoadObject", std::format("[ObjectClass]: {} {} | [InOuter]: {} | [Name]: {} | [Filename]: {} | [LoadFlags]: {} | [Sandbox]: {}", ObjectClass->GetFullName(), HexToString((uintptr_t)ObjectClass), InOuter->GetFullName(), AName.ToString(), AFilename.ToString(), LoadFlags, Sandbox->GetFullName()));
 	return OFF::StaticLoadObject.VerifyFC<Decl::StaticLoadObject>()(ObjectClass, InOuter, InName, Filename, LoadFlags, Sandbox, bAllowObjectReconciliation);
 }
-
-/*
-Cleanup later:
-
-Stupid function just HAD to be inline but fortunately it doesn't seem to be too big of a deal
-
-//
-// Add an object to the root set. This prevents the object and all
-// its descendants from being deleted during garbage collection.
-//
-FORCEINLINE void AddToRoot()
-{
-	GUObjectArray.IndexToObject(InternalIndex)->SetRootSet();
-}
-
-FORCEINLINE void SetRootSet()
-{
-	Flags |= int32(EInternalObjectFlags::RootSet);
-}
-
-
-*/

@@ -141,38 +141,73 @@ namespace A8CL
 {
 namespace AJB
 {
+	// Blame the devs for making the numbers a mess
 	enum ESelectedCharacter : unsigned char
+	{		
+		INVALID						= 0,
+		JOTARO						= 1,
+		DIO							= 11,
+		POLNAREFF					= 8,
+		DIO_GREATEST_HIGH			= 14,
+		JOSUKE						= 7,
+		OKUYASU						= 15,
+		GIORNO						= 9,
+		BUCCIARATI					= 3,
+		DIAVOLO						= 17,
+		JOLYNE						= 18,
+		JOTARO_P6					= 20,
+		ANASUI						= 21,
+		AVDOL						= 23,
+		KAKYOIN						= 2,
+		HOL_HORSE					= 10,
+		MISTA						= 4,
+		NARANCIA					= 13,
+		KOICHI						= 5,
+		ROHAN						= 6,
+		KIRA						= 12,
+		KOSAKU						= 24,
+		FUGO						= 22,
+		ABBACCHIO					= 25,
+		RISOTTO						= 16,
+		PUCCI						= 28,
+		WEATHER_REPORT				= 19,
+		JOSEPH						= 26,
+		CAESAR						= 27
+	};
+
+
+	/*
+	SDK::FAJBBattleSettings
+
+	1 Morioh Town (Trattoria Trussardi) | DamageAreaType = 7
+	2 Morioh Town (Train Station) | DamageAreaType = 2
+	3 Morioh Town (Angelo Rock) | DamageAreaType = 3
+	4 Morioh Town (Rural) | DamageAreaType = 4
+	5 Morioh Town (Owson) | DamageAreaType = 5
+	6 Morioh Town (Kameyu) | DamageAreaType = 6
+	7 Cairo | DamageAreaType = 8
+	8 Farm | DamageAreaType = 9
+	9 Colosseum | DamageAreaType = 10
+	10 Venezia | DamageAreaType = 11
+
+	PvE | DamageAreaType = 101
+	Tutorial | DamageAreaType = 2
+
+	No clue what 0-1 is
+	*/
+	enum EDamageAreaType : unsigned char
 	{
-		// Blame the devs for making the numbers a mess
-		INVALID = 0,
-		JOTARO = 1,
-		DIO = 11,
-		JEAN = 8,
-		DIO_THE_WORLD = 14,
-		JOSUKE = 7,
-		OKUYASU = 15,
-		GIORNO = 9,
-		BRUNO = 3,
-		DIAVOLO = 17,
-		JOLYNE = 18,
-		JOTARO_STONE_OCEAN = 20,
-		ANASUI = 21,
-		AVDOL = 23,
-		KAKYOIN = 2,
-		HOL_HORSE = 10,
-		MISTA = 4,
-		NARANCIA = 13,
-		KOICHI = 5,
-		ROHAN = 6,
-		KIRA = 12,
-		KOSAKU = 24,
-		FUGO = 22,
-		LEONE = 25,
-		RISOTTO = 16,
-		PUCCI = 28,
-		WEATHER_REPORT = 19,
-		JOSEPH = 26,
-		CAESAR = 27
+		MORIOH_TRATTORIA_TRUSSARDI	= 7,
+		MORIOH_TRAIN_STATION		= 2,	// Tutorial uses this
+		MORIOH_ANGELO_ROCK			= 3,
+		MORIOH_RURAL				= 4,
+		MORIOH_OWSON				= 5,
+		MORIOH_KAMEYU				= 6,
+		CAIRO						= 8,
+		FARM						= 9,
+		COLOSSEUM					= 10,
+		VENEZIA						= 11,
+		PVE							= 101,
 	};
 
 	// ===========================================
@@ -228,7 +263,9 @@ namespace AJB
 	extern SDK::ALemonHelper_C* MOD_LemonHelper;				// Only exists as a singleton during in lemon possession mode.
 	extern bool bIsLemonPossessioned;							// Oh that's nice, I work as LP | LP? as in, Loss Prevention? | lemon possession
 	extern bool bDebugModeFromCMLA;								// Used to determine if extra/unnecessary logs for development purposes are enabled.
+
 	extern int TEMP_CachedCharacterID;
+	extern int NUM_CPUCores;
 
 	/* -- Windows External --
 	
@@ -252,119 +289,9 @@ namespace AJB
 	// **			POINTER FUNCTIONS			**
 	// ===========================================
 
-	SDK::UEngine* const& GUEngine(const bool bLog = false);
-	SDK::UWorld* const& GUWorld(const bool bLog = false);
-	SDK::APlayerController* GPlayer(const int& Index = 0);
-	SDK::UBlueprintFunctionLibrary* const& BlueprintFunctionLibrary();
+	SDK::ABP_PPV_VSFilter_C* GetPostProcessFilter(const SDK::ABP_AJBInGamePlayerController_C* Player, const bool bCreateIfNull = true); // Only accessible ingame from the PlayerController.
 
-	SDK::AGameModeBase* GetGameMode(SDK::UWorld* OverrideWorld = GUWorld());
-	SDK::ABP_AJBInGamePlayerController_C* const& GetPlayer(const int& Index = 0);
-	SDK::ABP_AJBInGameCharacter_C* const& GetCharacter(const SDK::ABP_AJBInGamePlayerController_C* Player = GetPlayer());
-	SDK::ABP_PPV_VSFilter_C* GetPostProcessFilter(const SDK::ABP_AJBInGamePlayerController_C* Player = GetPlayer(), const bool bCreateIfNull = true); // Only accessible ingame from the PlayerController.
-
-	bool IsOfType(SDK::UObject* Object, SDK::UClass* Type);
-
-	template <class Subclass>
-	Subclass* const& GetBlueprintClass()
-	{
-		return static_cast<Subclass*>(BlueprintFunctionLibrary());
-	}
-	
-	template <class UClass>
-	UClass* const& GetGameMode(SDK::UClass* Class = UClass::StaticClass(), SDK::UWorld* OverrideWorld = nullptr)
-	{
-		SDK::AGameModeBase* AuthorityGameMode = GetGameMode();
-
-		if (AuthorityGameMode && IsOfType((SDK::UObject*)AuthorityGameMode, Class))
-		{
-			return static_cast<UClass*>(AuthorityGameMode);
-		}
-	
-		return nullptr;
-	}
-
-	template <class UClass>
-	UClass* const& GetPlayer(SDK::UClass* Class = UClass::StaticClass(), const int& Index = 0)
-	{
-		SDK::APlayerController* Player = GPlayer();
-
-		if (Player && IsOfType((SDK::UObject*)Player, Class))
-		{
-			return static_cast<UClass*>(Player);
-		}
-
-		return nullptr;
-	}
-
-	struct IConsoleObject
-	{
-		void* VFTable;
-		unsigned __int32 FindCallCount;
-	};
-
-	template <class T>
-	struct TAutoConsoleVariableData
-	{
-		// [0]: Main Thread | [1]: Render Thread
-		T ShadowedValue[2];
-
-		T& GetReferenceFromThread(bool InterpretAsInt = 0)
-		{
-			return ShadowedValue[InterpretAsInt];
-		}
-	};
-
-	struct alignas(0x8)FAutoConsoleObject
-	{
-		void* VFTable{nullptr};
-		IConsoleObject* Target;
-
-		FAutoConsoleObject(IConsoleObject* InTarget) : Target(InTarget) {}
-
-		IConsoleObject* GetConsoleObj() { return Target; }
-		
-	};
-
-	template <class T>
-	struct alignas(0x8) TAutoConsoleVariable : FAutoConsoleObject
-	{
-		TAutoConsoleVariableData<T>* Ref;
-	};
-
-	struct FGuid
-	{
-		int A; int B; int C; int D;
-	};
-
-	struct FGuidWrapper
-	{
-		FGuid GUID;
-
-		FGuid const& Get()
-		{
-			return this->GUID;
-		}
-
-		void Assign(FGuid& NewGUID) // Copies from the original
-		{
-			this->GUID.A = NewGUID.A;
-			this->GUID.B = NewGUID.B;
-			this->GUID.C = NewGUID.C;
-			this->GUID.D = NewGUID.D;
-		}
-
-		static bool IsEqual(const FGuid& A, const FGuid B)
-		{
-			return A.A == B.A && A.B == B.B && A.C == B.C && A.D == B.D;
-		}
-
-		template <class ForwardDeclare = SDK::FGuid>
-		inline operator FGuid ()
-		{
-			return reinterpret_cast<ForwardDeclare>(this->GUID);
-		}
-
-	};
+	bool IsOfType(SDK::UObject* Object, SDK::UClass* Type);	
 
 	// ===========================================
 	// **			 HELPER FUNCTIONS			**
@@ -408,15 +335,7 @@ namespace AJB
 
 	// Called externally by a callback timer, should not be manually called!
 	void CheckForInfiniteLoadingScreen();
-
-	// Called externally by a callback timer, should not be manually called!
-	void OnSynchronizeFail();	// I can't use my callback timers to do recursion so I must callback to a callback.
-	void SynchronizeClient();	// Called externally by a callback timer, should not be manually called!
 	
-	
-	/*void TEMP_OnPlayerLeave();
-	void TEMP_FixMatchingPlayers();*/
-
 	// ===========================================
 	// **		EXTERNAL HOOK FUNCTIONS			**
 	// ===========================================
@@ -428,105 +347,5 @@ namespace AJB
 	// Constructor Hooks
 	SDK::UAJBWindowWidget* __fastcall AJBWindowWidget(SDK::UAJBWindowWidget* This);
 	SDK::ALevelScriptActor* __fastcall ALevelScriptActor(SDK::AActor* This, void* ObjectInitializer);
-	
-
-
 }
-
-// -- FMemory
-
-struct FMemory
-{
-	class Decl
-	{
-	public:
-		typedef void*(__fastcall* Malloc)(unsigned long long Count, unsigned int Alignment);
-		typedef void*(__fastcall* Realloc)(void* Original, unsigned long long Count, unsigned int Alignment);
-		typedef void(__fastcall* Free)(void* Original);
-		typedef void(__fastcall* Trim)(bool bTrimThreadCaches);
-	};
-
-	enum AllocationHints
-	{
-		None = -1,
-		Default,
-		Temporary,
-		SmallPool,
-		Max
-	};
-
-	enum
-	{
-		// Default allocator alignment. If the default is specified, the allocator applies to engine rules.
-		// Blocks >= 16 bytes will be 16-byte-aligned, Blocks < 16 will be 8-byte aligned. 
-		// If the allocator does not support allocation alignment, the alignment will be ignored.
-		DEFAULT_ALIGNMENT = 0,
-
-		// Minimum allocator alignment
-		MIN_ALIGNMENT = 8,
-	};
-
-	// C-Style Memory Allocation (The most important part)
-
-	static void* Malloc(unsigned long long Count, unsigned int Alignment = DEFAULT_ALIGNMENT);
-	static void* Realloc(void* Original, unsigned long long Count, unsigned int Alignment = DEFAULT_ALIGNMENT);
-	static void Free(void* Original);
-};
-struct FName
-{
-	enum EFindName
-	{
-		FNAME_Find,	// Find a name, returns 0 if it doesn't exist.
-		FNAME_Add,	// Find a name or add it if it doesn't exist.
-
-		/** Finds a name and replaces it. Adds it if missing. This is only used by UHT and is generally not safe for threading.
-			* All this really is used for is correcting the case of names. In MT conditions you might get a half-changed name.
-			*/
-		FNAME_Replace_Not_Safe_For_Threading,
-	};
-
-	inline static SDK::FName NAME_FindOrAdd(SDK::FName* Obj, const char* StringName, EFindName FindNameRule = FNAME_Add);
-	static SDK::FName NAME_FindOrAdd(const char* StringName, EFindName FindNameRule = FNAME_Add);
-
-	inline static SDK::FName NAME_FindOrAdd(SDK::FName* Obj, const wchar_t* StringName, EFindName FindNameRule = FNAME_Add);
-	static SDK::FName NAME_FindOrAdd(const wchar_t* StringName, EFindName FindNameRule = FNAME_Add);
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }

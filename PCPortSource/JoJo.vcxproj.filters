@@ -371,6 +371,9 @@
     <ClCompile Include="Aeyth8\A8CL\Logger\Logger.cpp">
       <Filter>Aeyth8\A8CL\Logger</Filter>
     </ClCompile>
+    <ClCompile Include="Aeyth8\Tools\UnrealTypes.cpp">
+      <Filter>Aeyth8\Tools\CPP</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Aeyth8\Logger.hpp">
@@ -531,6 +534,9 @@
     </ClInclude>
     <ClInclude Include="Aeyth8\A8CL\Logger\Logger.h">
       <Filter>Aeyth8\A8CL\Logger</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\Tools\UnrealTypes.h">
+      <Filter>Aeyth8\Tools</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

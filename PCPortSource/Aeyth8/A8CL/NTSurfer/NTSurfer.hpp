@@ -809,6 +809,11 @@ struct NTSurfer
         return reinterpret_cast<IMAGE_EXPORT_DIRECTORY*>(ImageBase + GetDataDirectory(ImageBase, 0)->VirtualAddress);
     }
 
+    __forceinline static IMAGE_EXPORT_DIRECTORY* GetImportDirectory(maxword ImageBase)
+    {
+        return reinterpret_cast<IMAGE_EXPORT_DIRECTORY*>(ImageBase + GetDataDirectory(ImageBase, 1)->VirtualAddress);
+    }
+
     // Address To PEB
  
     __forceinline static PPEB UsePEB(maxword Address)

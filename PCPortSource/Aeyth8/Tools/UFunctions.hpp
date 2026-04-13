@@ -51,7 +51,7 @@ public:
 
 		// Overcomplicated function to check if the first 9 characters of the the wchar_t are equal to "../../../" or "..\..\..\"
 		// And the backslashes can be vice-versa there isn't logic that checks for that nor is it needed. (I hope)
-		static bool CheckForLocalDirectory(const wchar_t* Filename, unsigned char& Byte);
+		inline static bool CheckForLocalDirectory(const wchar_t* Filename);
 
 		
 		// TO DO : FWorldContext Parser :(
