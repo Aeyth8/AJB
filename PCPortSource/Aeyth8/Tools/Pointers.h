@@ -11,20 +11,6 @@ https://github.com/Aeyth8
 
 // This doesn't belong here but I don't have time to bother rearranging everything right now.
 
-struct FActorSpawnParameters
-{
-	SDK::FName Name;
-
-	SDK::AActor* Template;
-
-	SDK::AActor* Owner;
-
-	SDK::APawn* Instigator;
-
-	SDK::ULevel* OverrideLevel;
-
-	SDK::ESpawnActorCollisionHandlingMethod SpawnCollisionHandlingOverride;
-};
 
 namespace A8CL
 {
@@ -100,16 +86,26 @@ namespace A8CL
 
 namespace Pointers
 {
-	SDK::UEngine* const& UEngine(const bool bLog = true);
-	SDK::UWorld* UWorld(const bool bLog = true);
+	SDK::UEngine* UEngine();
+	SDK::UWorld* UWorld();
 	
 	// Returns Player0 by default.
 	// * * A replicated client only has access to their PlayerController. 
 	SDK::APlayerController* Player(const int Index = 0);
 
-	// Much more convenient class casted template for custom controller classes.  
+	// Converts an FString to an FName via UBlueprintFunctionLibrary.
+	SDK::FName FString2FName(const SDK::FString& String);
+
+	// Creates the UConsole via UBlueprintFunctionLibrary.
+	bool ConstructUConsole(const SDK::FName& ConsoleKey);
+
+	inline bool ObjectHasFlag(SDK::UObject* Object, EObjectFlags Flag);
+	
+	// ************************ TEMPLATES ************************ \\
+	
+	// Much more convenient class casted template for custom controller classes.
 	template <typename UClass>
-	UClass* const& Player(const int& Index = 0)
+	UClass* Player(const int Index = 0)
 	{
 		SDK::APlayerController* PlayerController = Player(Index);
 
@@ -121,13 +117,34 @@ namespace Pointers
 		return nullptr;
 	}
 
-	const SDK::FName& FString2FName(const SDK::FString& String);
+	template <typename UClass>
+	UClass* Pawn(const int PlayerIndex = 0)
+	{
+		SDK::APlayerController* PlayerController = Player(PlayerIndex);
 
-	bool ConstructUConsole(SDK::UEngine* EngineOverride, const SDK::FString ConsoleKey = L"Tilde");
-	bool ConstructUConsole(const SDK::FString ConsoleKey = L"Tilde");
+		if (PlayerController && PlayerController->Pawn && PlayerController->Pawn->IsA(UClass::StaticClass()))
+		{
+			return static_cast<UClass*>(PlayerController->Pawn);
+		}
+
+		return nullptr;
+	}
 
 	template <typename UClass>
-	std::vector<UClass*> FindObjects(bool IncludeDefaultObjects = true)
+	UClass* Character(const int PlayerIndex = 0)
+	{
+		SDK::APlayerController* PlayerController = Player(PlayerIndex);
+
+		if (PlayerController && PlayerController->Character && PlayerController->Character->IsA(UClass::StaticClass()))
+		{
+			return static_cast<UClass*>(PlayerController->Character);
+		}
+
+		return nullptr;
+	}
+
+	template <typename UClass>
+	std::vector<UClass*> FindObjects(bool IncludeDefaultObjects = true, EObjectFlags Flags = NoFlags)
 	{
 		// Iterates through all of the GObjects array and returns a vector containing all found objects that match types.
 
@@ -143,6 +160,14 @@ namespace Pointers
 			if (CurrentObject->IsA(UClass::StaticClass()))
 			{
 				if (!IncludeDefaultObjects && CurrentObject->IsDefaultObject()) continue;
+								
+				if (Flags != NoFlags) 
+				{
+					// Enum classes are so stupid I hate them so much
+					EObjectFlags ObjectFlags = *reinterpret_cast<EObjectFlags*>(&CurrentObject->Flags);
+					if (!(ObjectFlags & Flags)) continue;
+				}
+
 				ObjectsList.push_back((UClass*)CurrentObject);
 			}
 		}
@@ -151,44 +176,51 @@ namespace Pointers
 	}
 
 	template <typename UClass>
-	UClass* GetLastOf(bool IncludeDefaultObjects = true)
+	UClass* GetLastOf(bool IncludeDefaultObjects = true, EObjectFlags Flags = NoFlags)
 	{
-		return Pointers::FindObjects<UClass>(IncludeDefaultObjects).back();
-	}
-
-	std::vector<EObjectFlags> EGetObjectFlags(SDK::UObject* Object);
-	std::vector<const char*> sGetObjectFlags(SDK::UObject* Object);
-
-	bool ObjectHasFlag(SDK::UObject* Object, EObjectFlags Flag);
-
-	template <short ArraySize>
-	bool ObjectHasFlags(SDK::UObject* Object, const EObjectFlags(&Flags)[ArraySize])
-	{
-		for (short i{0}; i < ArraySize; ++i)
-		{
-			if (!ObjectHasFlag(Object, Flags[i])) return false;
-		}
-
-		return true;
+		return Pointers::FindObjects<UClass>(IncludeDefaultObjects, Flags).back();
 	}
 
 	__int64* SpawnActorInternal(SDK::UWorld* This, SDK::UClass* Class, const SDK::FVector& Location, const SDK::FRotator& Rotation, struct FActorSpawnParameters& SpawnParameters);
 
 	template <typename UClass>
-	UClass* SpawnActor(SDK::UWorld* World = UWorld(), SDK::UClass* Class = UClass::StaticClass(), SDK::FVector Location = SDK::FVector(), SDK::FRotator Rotation = SDK::FRotator(), FActorSpawnParameters SpawnParameters = FActorSpawnParameters{})
+	UClass* SpawnActor(SDK::UWorld* World = UWorld(), SDK::UClass* Class = UClass::StaticClass(), SDK::FVector Location = SDK::FVector(), SDK::FRotator Rotation = SDK::FRotator(), struct FActorSpawnParameters SpawnParameters = FActorSpawnParameters{})
 	{
 		return reinterpret_cast<UClass*>(SpawnActorInternal(World, Class, Location, Rotation, SpawnParameters));
 	}
 
 	template <typename UClass>
-	UClass* SpawnActor(struct FActorSpawnParameters& SpawnParameters)
+	UClass* SpawnActor(struct FActorSpawnParameters SpawnParameters)
 	{
 		return SpawnActor<UClass>(UWorld(), UClass::StaticClass(), SDK::FVector(), SDK::FRotator(), SpawnParameters);
 	}
 
 
+	struct FActorSpawnParameters
+	{
+		SDK::FName		Name;
+		SDK::AActor*	Template;
+		SDK::AActor*	Owner;
+		SDK::APawn*		Instigator;
+		SDK::ULevel*	OverrideLevel;
 
+		union {
+			SDK::ESpawnActorCollisionHandlingMethod eSpawnCollisionHandlingOverride;
+			unsigned char							SpawnCollisionHandlingOverride;
+		};
 
+		FActorSpawnParameters(SDK::FName Name, SDK::AActor* Template, SDK::AActor* Owner, SDK::APawn* Instigator, SDK::ULevel* OverrideLevel, unsigned char SpawnCollisionHandlingOverride)
+			: Name(Name), Template(Template), Owner(Owner), Instigator(Instigator), OverrideLevel(OverrideLevel), SpawnCollisionHandlingOverride(SpawnCollisionHandlingOverride)
+		{}
+
+		constexpr FActorSpawnParameters(unsigned char SpawnCollisionHandlingOverride)
+			: Name(0), Template(nullptr), Owner(nullptr), Instigator(nullptr), OverrideLevel(nullptr), SpawnCollisionHandlingOverride(SpawnCollisionHandlingOverride)
+		{}
+
+		constexpr FActorSpawnParameters()
+			: Name(0), Template(nullptr), Owner(nullptr), Instigator(nullptr), OverrideLevel(nullptr), SpawnCollisionHandlingOverride(0)
+		{}
+	};
 };
 
 	

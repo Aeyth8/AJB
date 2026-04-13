@@ -115,12 +115,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Aeyth8\A8CL\CPUReg\CPUReg.h" />
     <ClInclude Include="Aeyth8\A8CL\CTypes\IntegerTypes.h" />
     <ClInclude Include="Aeyth8\A8CL\CTypes\CArray.h" />
     <ClInclude Include="Aeyth8\A8CL\Filesystem\FileSystem.h" />
+    <ClInclude Include="Aeyth8\A8CL\Logger\Logger.h" />
     <ClInclude Include="Aeyth8\A8CL\NTSurfer\NTSurfer.hpp" />
-    <ClInclude Include="Aeyth8\A8CL\Strings\CStrings.h" />
     <ClInclude Include="Aeyth8\CmdArgs\CommandLineArgs.h" />
     <ClInclude Include="Aeyth8\CmdArgs\Core\CMLA.h" />
     <ClInclude Include="Aeyth8\Global.hpp" />
@@ -176,6 +175,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Aeyth8\A8CL\Filesystem\FileSystem.cpp" />
+    <ClCompile Include="Aeyth8\A8CL\Logger\Logger.cpp" />
     <ClCompile Include="Aeyth8\A8CL\NTSurfer\NTSurfer.cpp" />
     <ClCompile Include="Aeyth8\CmdArgs\CommandLineArgs.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
@@ -340,14 +340,12 @@
     <None Include="Dumper-7\NameCollisions.inl" />
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="Aeyth8\A8CL\CPUReg\CPUReg.asm">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">false</ExcludedFromBuild>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">$(OutDir)%(FileName).obj</ObjectFileName>
-      <MakeAllSymbolsPublic Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">
-      </MakeAllSymbolsPublic>
-    </MASM>
     <MASM Include="Aeyth8\Proxy8\Entry\Entry.asm">
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">/D B64 %(AdditionalOptions)</AdditionalOptions>
+    </MASM>
+    <MASM Include="Aeyth8\Tools\IsInLocalDirectory.asm">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">
+      </ExcludedFromBuild>
     </MASM>
   </ItemGroup>
   <ItemGroup>

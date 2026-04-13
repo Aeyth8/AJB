@@ -2,6 +2,8 @@
 #include <Windows.h>
 #include <string>
 
+#include "A8CL/Filesystem/FileSystem.h"
+
 #define A8CL_LOGGER_GLOBAL
 
 /*
@@ -33,6 +35,8 @@ namespace A8CL
 // Global variables and functions used almost everywhere within the program.
 namespace Global
 {
+	// Global FileSystem;
+	extern FileSystem* Sys;
 
 	// Global Base Address [GBA]
 	extern uintptr_t GBA;

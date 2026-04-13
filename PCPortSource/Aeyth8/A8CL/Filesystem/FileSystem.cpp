@@ -2,6 +2,16 @@
 #include "../NTSurfer/NTSurfer.hpp"
 
 /*
+
+Written by Aeyth8
+
+https://github.com/Aeyth8
+
+Copyright (C) 2026 Aeyth8
+
+*/
+
+/*
 		FSHandle
 */
 
@@ -70,22 +80,44 @@ namespace TD
     typedef A8CL::NT_STATUS(__stdcall* T_NtCreateFile)(void** FileHandle, dword DesiredAccess, NTS::OBJECT_ATTRIBUTES* ObjectAttributes, NTS::PIO_STATUS_BLOCK IoStatusBlock, NTS::LARGE_INTEGER* AllocationSize, dword FileAttributes, dword ShareAccess, dword CreateDisposition, dword CreateOptions, void* EaBuffer, dword EaLength);
 }
 
-A8CL::FSHandle A8CL::FileSystem::CreateDirectory(const wchar_t* FolderName, bool bUseIfAlreadyExists)
+A8CL::FSHandle A8CL::FileSystem::CreateDirectory(FSHandle* Handle, const wchar_t* FolderName, bool bUseIfAlreadyExists)
 {
+	const bool bHasParent = Handle != nullptr;
 	FSHandle Return{*this};
 
-	wchar_t CopyHostPath[260]{0};
+	NTS::IO_STATUS_BLOCK FileStatus{};
+	NTS::OBJECT_ATTRIBUTES FileAttributePath{};
+	FileAttributePath.Attributes = 64L;
+	
 	wchar_t FinalFilePath[260]{L"\\??\\"};
 
-	this->GetHostPath(CopyHostPath);
-	CStr::AppendString(FinalFilePath, CopyHostPath);
-	CStr::AppendString(FinalFilePath, FolderName);
+	if (bHasParent)
+	{
+		CStr::CopyString(FinalFilePath, FolderName);
+		FileAttributePath.RootDirectory = Handle->NTHandle;
+	}
+	else
+	{
+		CStr::AppendString(FinalFilePath, 260, this->HostPathRaw, this->HostName);
+		CStr::AppendString(FinalFilePath, FolderName);
+	}
 
 	NTS::NTSurfer::UNICODE_STRING U_FinalFilePath(FinalFilePath);
-	NTS::OBJECT_ATTRIBUTES FileAttributePath{(NTS::PUNICODE_STRING)&U_FinalFilePath, 64L};
-	NTS::IO_STATUS_BLOCK FileStatus{};
+	FileAttributePath.ObjectName = (NTS::PUNICODE_STRING)&U_FinalFilePath;
 
-	FSHandle::LAST_STATUS = NTS::Call<TD::T_NtCreateFile>(FSHandle::NT_CREATE_FILE)(&Return.NTHandle, NTS::GENERIC_READ | NTS::GENERIC_WRITE | NTS::SYNCHRONIZE, &FileAttributePath, &FileStatus, 0, 0x10, (0x1 | 0x2), 0x2, (0x1 | 0x20), 0, 0);
+	FSHandle::LAST_STATUS = NTS::Call<TD::T_NtCreateFile>(FSHandle::NT_CREATE_FILE)(&Return.NTHandle, NTS::GENERIC_READ | NTS::GENERIC_WRITE | NTS::SYNCHRONIZE, &FileAttributePath, &FileStatus, 0, 0x10, (0x1 | 0x2), (bUseIfAlreadyExists ? 0x3 : 0x2), (0x1 | 0x20), 0, 0);
 
 	return Return;
+}
+
+A8CL::FSHandle A8CL::FileSystem::CreateFile(FSHandle* Handle, const wchar_t* FileName, bool bOverwriteExisting)
+{
+
+
+	FSHandle::LAST_STATUS;
+}
+
+A8CL::FSHandle A8CL::FileSystem::CreateFile(const wchar_t* FileName, bool bOverwriteExisting)
+{
+	FSHandle Return{*this};
 }

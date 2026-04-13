@@ -13,7 +13,15 @@ typedef unsigned long maxword;
 typedef long smaxword;
 #endif
 
+/*
 
+Written by Aeyth8
+
+https://github.com/Aeyth8
+
+Copyright (C) 2026 Aeyth8
+
+*/
 
 #ifdef PROXY
 // If you are using Proxy8 it would only make sense to share variables. 
@@ -84,6 +92,23 @@ namespace A8CL
 
 		template <class Encoding, maxword Size0, maxword Size1>
 		static Encoding* AppendString(Encoding(&InputBuffer)[Size0], Encoding(&ToAppend)[Size1], bool bOverrideNullTerminator = false)
+		{
+			maxword i = StringLength<Encoding>(InputBuffer);
+			maxword j{0};
+		
+			// My brain is so fried right now I can't even tell what half the stuff I wrote does since I've been working on this for SO LONG WHAT AM I DOING
+			while ((bOverrideNullTerminator ? i < Size0 : i < Size0 - 1) && j < Size1 && ToAppend[j])
+			{
+				InputBuffer[i++] = ToAppend[j++];
+			}
+
+			if (!bOverrideNullTerminator) InputBuffer[i] = 0;
+
+			return InputBuffer;
+		}
+
+		template <class Encoding>
+		static Encoding* AppendString(Encoding* InputBuffer, const maxword Size0, Encoding* ToAppend, const maxword Size1, bool bOverrideNullTerminator = false)
 		{
 			maxword i = StringLength<Encoding>(InputBuffer);
 			maxword j{0};
@@ -266,7 +291,7 @@ namespace A8CL
 
 		static bool IsLastOperationSuccess()
 		{
-			long NonFailureCodes[] = {0xC0000035};
+			constexpr long NonFailureCodes[] = {0xC0000035};
 
 			for (long Code : NonFailureCodes)
 			{
@@ -302,7 +327,7 @@ namespace A8CL
 
 		friend class FSHandle;
 
-	protected:
+	private:
 
 		wchar_t HostPathRaw[FSBS()];	// Raw host path with host name
 		dword HostName;					// Integer index for the beginning of host name
@@ -384,10 +409,17 @@ namespace A8CL
 
 		};
 
+#undef CreateDirectory
+
 		// Creates a brand new directory in the host path.
-		FSHandle CreateDirectory(const wchar_t* FolderName, bool bUseIfAlreadyExists = true);
+		FSHandle CreateDirectory(FSHandle* Handle, const wchar_t* FolderName, bool bUseIfAlreadyExists = true);
+		inline FSHandle CreateDirectory(const wchar_t* FolderName, bool bUseIfAlreadyExists = true)
+		{
+			return CreateDirectory(0, FolderName, bUseIfAlreadyExists);
+		}
 
-
+		FSHandle CreateFile(FSHandle* Handle, const wchar_t* FileName, bool bOverwriteExisting = false);
+		FSHandle CreateFile(const wchar_t* FileName, bool bOverwriteExisting = false);
 	};
 
 

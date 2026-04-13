@@ -60,9 +60,6 @@
     <Filter Include="Aeyth8\A8CL">
       <UniqueIdentifier>{8a6fbd35-cdfe-4e4a-a4d5-43ee9a476116}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Aeyth8\A8CL\Strings">
-      <UniqueIdentifier>{aa85f891-9ded-4a4b-8bc5-05843a4cfe47}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Aeyth8\UConsole\Core">
       <UniqueIdentifier>{9cc847ca-635e-4c29-9ffc-51dd92074124}</UniqueIdentifier>
     </Filter>
@@ -92,9 +89,6 @@
     </Filter>
     <Filter Include="SDK\CPP\Audio">
       <UniqueIdentifier>{5e00c376-4359-493a-9df2-9077051bd620}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Aeyth8\A8CL\CPUReg">
-      <UniqueIdentifier>{205b1ce5-1a35-44dc-9614-b33fb5f55569}</UniqueIdentifier>
     </Filter>
     <Filter Include="SDK\Custom\TitleScreen\Versioning">
       <UniqueIdentifier>{57b49975-37ef-468d-988d-ad45ec96a05b}</UniqueIdentifier>
@@ -128,6 +122,9 @@
     </Filter>
     <Filter Include="Aeyth8\A8CL\NTSurfer">
       <UniqueIdentifier>{1f8eaef1-7f86-49d3-88f6-a40fb32ef07b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Aeyth8\A8CL\Logger">
+      <UniqueIdentifier>{b75cad39-4460-4536-83c5-e0c5d37cdbca}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -371,6 +368,9 @@
     <ClCompile Include="Aeyth8\A8CL\NTSurfer\NTSurfer.cpp">
       <Filter>Aeyth8\A8CL\NTSurfer</Filter>
     </ClCompile>
+    <ClCompile Include="Aeyth8\A8CL\Logger\Logger.cpp">
+      <Filter>Aeyth8\A8CL\Logger</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Aeyth8\Logger.hpp">
@@ -451,9 +451,6 @@
     <ClInclude Include="Aeyth8\OffsetBase.h">
       <Filter>Aeyth8</Filter>
     </ClInclude>
-    <ClInclude Include="Aeyth8\A8CL\Strings\CStrings.h">
-      <Filter>Aeyth8\A8CL\Strings</Filter>
-    </ClInclude>
     <ClInclude Include="Aeyth8\A8CL\CTypes\CArray.h">
       <Filter>Aeyth8\A8CL</Filter>
     </ClInclude>
@@ -477,9 +474,6 @@
     </ClInclude>
     <ClInclude Include="Dumper-7\CustomSDK\BP_GlobalPatcher_classes.hpp">
       <Filter>SDK\Custom\Global</Filter>
-    </ClInclude>
-    <ClInclude Include="Aeyth8\A8CL\CPUReg\CPUReg.h">
-      <Filter>Aeyth8\A8CL\CPUReg</Filter>
     </ClInclude>
     <ClInclude Include="Dumper-7\CustomSDK\WBP_TLVersionInfo_classes.hpp">
       <Filter>SDK\Custom\TitleScreen\Versioning</Filter>
@@ -535,6 +529,9 @@
     <ClInclude Include="Aeyth8\A8CL\NTSurfer\NTSurfer.hpp">
       <Filter>Aeyth8\A8CL\NTSurfer</Filter>
     </ClInclude>
+    <ClInclude Include="Aeyth8\A8CL\Logger\Logger.h">
+      <Filter>Aeyth8\A8CL\Logger</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Dumper-7\NameCollisions.inl">
@@ -547,11 +544,11 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="Aeyth8\A8CL\CPUReg\CPUReg.asm">
-      <Filter>Aeyth8\A8CL\CPUReg</Filter>
-    </MASM>
     <MASM Include="Aeyth8\Proxy8\Entry\Entry.asm">
       <Filter>Aeyth8\Proxy8\Entry</Filter>
+    </MASM>
+    <MASM Include="Aeyth8\Tools\IsInLocalDirectory.asm">
+      <Filter>Aeyth8\Tools\CPP</Filter>
     </MASM>
   </ItemGroup>
   <ItemGroup>

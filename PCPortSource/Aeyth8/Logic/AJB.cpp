@@ -136,7 +136,7 @@ std::vector<Hooks::HookStructure> StandaloneHooks =
 	{OFF::AJBPreLogin,						AJBPreLogin},
 	{OFF::InitListen,						UFunctions::InitListen},
 	{OFF::NotifyControlMessage,				UFunctions::NotifyControlMessage},
-	{OFF::InitLocalConnection,					UFunctions::InitLocalConnection},
+	{OFF::InitLocalConnection,				UFunctions::InitLocalConnection},
 	{OFF::AppPreExit,						UFunctions::AppPreExit},
 	{OFF::IsNonPakFileNameAllowed,			UFunctions::IsNonPakFilenameAllowed},
 	{OFF::FindFileInPakFiles,				UFunctions::FindFileInPakFiles},

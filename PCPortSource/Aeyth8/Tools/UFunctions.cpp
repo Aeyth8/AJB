@@ -103,9 +103,35 @@ void UFunctions::Helpers::ProcessEnd()
 	Global::CloseLog();
 }
 
+extern "C" bool IsInLocalDirectory(const wchar_t*);
+
 bool UFunctions::Helpers::CheckForLocalDirectory(const wchar_t* Filename, unsigned char& Byte)
 {
-	while ((Byte & 0b11) < 3)
+	//Old function written in bitflag hellscape C++ is 249 bytes
+	//New function in ASM is (IsInLocalDirectory 0x46) + (actual function 0x92) is 216 bytes, barely any difference looking back but the logic should be much faster
+
+	/*constexpr const wchar_t LocalPath[8] = {L'.', L'.', L'/', L'.', L'.', L'/', L'.', L'.'};
+	constexpr const wchar_t LocalPathBack[8] = {L'.', L'.', L'\\', L'.', L'.', L'\\', L'.', L'.'};*/
+
+	/*
+		0x2e 0x00 0x2e 0x00 0x2f 0x00 0x2e 0x00 | L "../." | 2e002f002e002e
+		0x2e 0x00 0x2f 0x00 0x2e 0x00 0x2e 0x00 | L "./.." | 2e002e002f002e
+		0x2e 0x00 0x5c 0x00 0x2e 0x00 0x2e 0x00 | L ".\.." | 2e005c002e002e
+		0x2e 0x00 0x2e 0x00 0x5c 0x00 0x2e 0x00 | L "..\." | 2e002e005c002e
+	*/
+ 
+	/* I think this would be easier to do in assembly.
+	const int64 LocalQuad1 = *reinterpret_cast<const int64*>(&LocalPath[0]);
+	const int64 LocalQuad2 = *reinterpret_cast<const int64*>(&LocalPath[4]);
+	const int64 LocalQuad1B = *reinterpret_cast<const int64*>(&LocalPathBack[0]);
+	const int64 LocalQuad2B = *reinterpret_cast<const int64*>(&LocalPathBack[4]);
+	std::wcout << "LocalQuad1 " << std::hex << LocalQuad1 << '\n';
+	std::wcout << "LocalQuad2 " << std::hex << LocalQuad2 << '\n';
+	std::wcout << "LocalQuad1B " << std::hex << LocalQuad1B << '\n';
+	std::wcout << "LocalQuad2B " << std::hex << LocalQuad2B << '\n';
+	*/
+
+	/*while ((Byte & 0b11) < 3)
 	{
 		// 1,3,6								  // 2,4,7
 		if (Filename[((Byte & 0b11) * 3) + 0] != '.' || Filename[((Byte & 0b11) * 3) + 1] != '.')
@@ -125,7 +151,7 @@ bool UFunctions::Helpers::CheckForLocalDirectory(const wchar_t* Filename, unsign
 	}
 
 	// This logic ensures that we are only allowing file overrides from within the game directory, and disallowing from externals such as AppData\Local
-	return ((Byte & 0b00011100) == 0b00011100);
+	return ((Byte & 0b00011100) == 0b00011100);*/
 }
 
 
@@ -1134,7 +1160,7 @@ bool UFunctions::PrepareMapChange(SDK::UEngine* This, SDK::FWorldContext& WorldC
 
 UFunctions::BrowseReturnVal UFunctions::Browse(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SDK::FURL URL, SDK::FString& Error)
 {
-	if (!Global::bConstructedUConsole) { Global::bConstructedUConsole = Pointers::ConstructUConsole(SDK::FString(CMLA::ConsoleKey.GetArgumentAsString()));
+	if (!Global::bConstructedUConsole) { Global::bConstructedUConsole = Pointers::ConstructUConsole(FName::NAME_FindOrAdd(CMLA::ConsoleKey.GetArgumentAsString()));
 		LogA("Browse", "Constructed UConsole early.");
 	}
 
@@ -1413,16 +1439,13 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 	return OFF::Login.VerifyFC<Decl::Login>()(This, NewPlayer, InRemoteRole, Portal, Options, UniqueId, ErrorMessage);
 }
 
-static FActorSpawnParameters ALWAYSSPAWN{};
 void UFunctions::PostLogin(SDK::AGameModeBase* This, SDK::APlayerController* Player)
 {
 	LogA("PostLogin", std::format("[AGameModeBase]: {} | [Player]: {}", This->GetFullName(), Player->GetFullName()));
 
 	if (AJB::IsServer())
-	{		
-		ALWAYSSPAWN.SpawnCollisionHandlingOverride = SDK::ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-		if (!AJB::MOD_Global_Synchronizer) AJB::MOD_Global_Synchronizer = (SDK::ABP_Synchronizer_C*)Pointers::SpawnActorInternal(GWorld.GetPointer(), AJB::MOD_SynchronizerClass, SDK::FVector{}, SDK::FRotator{}, ALWAYSSPAWN);
+	{
+		if (!AJB::MOD_Global_Synchronizer) AJB::MOD_Global_Synchronizer = Pointers::SpawnActor<SDK::ABP_Synchronizer_C>(Pointers::FActorSpawnParameters{SDK::ESpawnActorCollisionHandlingMethod::AlwaysSpawn});
 		if (AJB::MOD_Global_Synchronizer)
 		{
 			if (AJB::bDebugModeFromCMLA) LogA("GLOBAL SYNCHRONIZER", std::format("[Object]: {} | [Replicated PlayMode]: {}", AJB::MOD_Global_Synchronizer->GetFullName(), AJB::MOD_Global_Synchronizer->PlayMode));
@@ -1493,36 +1516,10 @@ void UFunctions::BeginPlay(SDK::UWorld* This)
 	OFF::BeginPlay.VerifyFC<Decl::BeginPlay>()(This);	
 }
 
-//struct TEMP_CachedPlayers
-//{
-//	UC::FString					PlayerName;
-//	SDK::FMatchingPlayerInfo	PlayerInfo;
-//};
-//extern std::vector<TEMP_CachedPlayers> CachedPlayerList;
-
 void UFunctions::CloseConnection(SDK::UNetConnection* This)
 {
-	// Clears the entry for the player who left
-	if (AJB::IsServer())
-	{
-		/*CachedPlayerList.clear();
-
-		for (int i{0}; i < AJB::Instance->MatchingPlayers.Num(); ++i)
-		{
-			TEMP_CachedPlayers Cache{};
-			AJB::CopyString(&Cache.PlayerName, &AJB::Instance->MatchingPlayers[i].First);
-			memcpy(&Cache.PlayerInfo, &AJB::Instance->MatchingPlayers[i].Second, sizeof(SDK::FMatchingPlayerInfo));
-
-			CachedPlayerList.push_back(Cache);
-		}*/
-
-		//AJB::CreateCallbackTimer(AJB::TEMP_FixMatchingPlayers, 0.7);
-	}
-
 	LogA(OFF::Close.GetName(), This->GetFullName());
 	OFF::Close.VerifyFC<void(__fastcall*)(SDK::UNetConnection*)>()(This);
-
-	
 }
 
 void UFunctions::AppPreExit()
@@ -1558,8 +1555,6 @@ void UFunctions::ProcessEvent(SDK::UObject* This, SDK::UFunction* Function, LPVO
 {
 	constexpr const int32 PEObjectBlacklist[] =
 	{
-
-
 		// Not UE Native
 
 		79194, // BP_CSMannequin_JSP_C
@@ -1963,43 +1958,24 @@ bool UFunctions::IsNonPakFilenameAllowed(__int64* This, SDK::FString& InFilename
 {
 	if (!InFilename) return false;
 
-	BYTE X{0};
-
-	X |= (OFF::IsNonPakFileNameAllowed.VerifyFC<Decl::IsNonPakFilenameAllowed>()(This, InFilename) << 5);
-
-	if (UFunctions::Helpers::CheckForLocalDirectory(InFilename.CStr(), X) && GetFileAttributesW(InFilename.CStr()) != INVALID_FILE_ATTRIBUTES)
+	if (IsInLocalDirectory(InFilename.Data) && GetFileAttributesW(InFilename.Data) != INVALID_FILE_ATTRIBUTES)
 	{
 		//LogA("IsNonPakFilenameAllowed OVERRIDE", InFilename.ToString());
 		return true;
 	}
-	
-	// Returns the result of the actual function which is stored in the 6th bit.
-	return X & 0b00100000;
+
+	return OFF::IsNonPakFileNameAllowed.VerifyFC<Decl::IsNonPakFilenameAllowed>()(This, InFilename);
 }
 
 bool UFunctions::FindFileInPakFiles(__int64* This, const wchar_t* Filename, __int64** OutPakFile, __int64* OutEntry)
 {
-	// 00000000
-	BYTE X{0};
-
-	// 00[0]00000
-	// The return result of the real function (bool) 0/1 will be crammed into the 6th bit.
-	X |= (OFF::FindFileInPakFiles.VerifyFC<Decl::FindFileInPakFiles>()(This, Filename, OutPakFile, OutEntry) << 5);
-
-	// This logic ensures that we are only allowing file overrides from within the game directory, and disallowing from externals such as AppData\Local
-	if (UFunctions::Helpers::CheckForLocalDirectory(Filename, X))
+	if (IsInLocalDirectory(Filename) && GetFileAttributesW(Filename) != INVALID_FILE_ATTRIBUTES)
 	{
-		// If the file already exists within the pak file
-		if (X & 0b00100000 && GetFileAttributesW(Filename) != INVALID_FILE_ATTRIBUTES)
-		{
-			//std::wstring WFile(Filename);
-			//LogA("FindFileInPakFiles OVERRIDE", std::string(WFile.begin(), WFile.end()));
-			return false;
-		}
+		/*std::wstring WFile(Filename);
+		LogA("FindFileInPakFiles OVERRIDE", std::string(WFile.begin(), WFile.end()));*/
+		return false;
 	}
-
-	// Returns the result of the actual function which is stored in the 6th bit.
-	return X & 0b00100000;
+	return OFF::FindFileInPakFiles.VerifyFC<Decl::FindFileInPakFiles>()(This, Filename, OutPakFile, OutEntry);
 }
 
 void __fastcall UFunctions::ProcessMulticastDelegate(__int64* This, void* Parameters)

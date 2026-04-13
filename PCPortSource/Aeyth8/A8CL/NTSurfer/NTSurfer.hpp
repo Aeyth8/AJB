@@ -611,6 +611,8 @@ struct OBJECT_ATTRIBUTES
 
     constexpr OBJECT_ATTRIBUTES(PUNICODE_STRING Name, dword Flags, void* RootHandle = nullptr, void* SecurityDescriptor = nullptr, void* SecurityQualityOfService = nullptr)
     :   Length(sizeof(OBJECT_ATTRIBUTES)), RootDirectory(RootHandle), ObjectName(Name), Attributes(Flags), SecurityDescriptor(SecurityDescriptor), SecurityQualityOfService(SecurityQualityOfService) {}
+
+    OBJECT_ATTRIBUTES() : Length(sizeof(OBJECT_ATTRIBUTES)), RootDirectory(nullptr), ObjectName(nullptr), Attributes(0), SecurityDescriptor(nullptr), SecurityQualityOfService(nullptr) {};
 };
 
 enum

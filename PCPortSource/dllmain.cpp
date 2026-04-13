@@ -9,7 +9,7 @@
 
 #include "Aeyth8/Offsets.h"
 #include "Aeyth8/Proxy8/Entry/ProxyEntry.hpp"
-//#include "Aeyth8/A8CL/NTSurfer/NTSurfer.hpp"
+#include "Aeyth8/A8CL/Logger/Logger.h"
 
 #include <intrin.h>
 #include <format>
@@ -38,8 +38,7 @@ static long __stdcall VEH_Filter(PEXCEPTION_POINTERS Error)
 static void PreInit()
 {
 	// Implementing a new system with an old one is going to take some time...
-	Global::GBA = Proxy8::GBA;
-	//Proxy8::NTDLL = NTS::NTSurfer::FindDLLAddress(Proxy8::PEB, L"ntdll.dll");
+	Global::GBA = Proxy8::GBA;	
 
 	CommandLineArguments::ParseCommandLine(GetCommandLineW(), CMLA::GlobalCommandLineArgs, CMLA::GlobalCommandLine);
 
@@ -61,7 +60,7 @@ static void Init() {
 
 	AJB::Init_Vars();
 
-	if (!bConstructedUConsole) bConstructedUConsole = ConstructUConsole(SDK::FString(CMLA::ConsoleKey.GetArgumentAsString()));
+	if (!bConstructedUConsole) bConstructedUConsole = ConstructUConsole(FName::NAME_FindOrAdd(CMLA::ConsoleKey.GetArgumentAsString()));
 }
 
 
@@ -78,6 +77,7 @@ int __stdcall DllMain(HMODULE hModule, DWORD ulReasonForCall, LPVOID lpReserved)
 		//AddVectoredExceptionHandler(1, VEH_Filter);
 
 		Global::InitLog();
+		Logger::Init();
 		PreInit();
 
 		if (AJB::bIsLemonPossessioned)
