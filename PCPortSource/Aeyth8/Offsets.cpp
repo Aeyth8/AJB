@@ -23,6 +23,9 @@ namespace OFF
 	OFFSET Invoke("UFunction::Invoke", 0x70DBF0);
 	OFFSET AppPreExit("FEngineLoop::AppPreExit", 0x1E3380);
 
+	OFFSET SetClientTravel("UEngine::SetClientTravel", 0x1781B80);
+	OFFSET ClientTravelInternal("APlayerController::ClientTravelInternal", 0x18C5FD0);
+	OFFSET StartLoadingDestination("FSeamlessTravelHandler::StartLoadingDestination", 0x17CF0A0);
 	OFFSET PreLogin("AGameModeBase::PreLogin", 0x13D7710);
 	OFFSET AJBPreLogin("AJBPreLogin", 0x04A4060);						// Used in the AJB GameMode(s)
 	OFFSET Login("AGameModeBase::Login", 0x13D2A20);

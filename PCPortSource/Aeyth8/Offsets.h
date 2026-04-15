@@ -29,6 +29,9 @@ namespace A8CL
 		extern OFFSET Invoke;
 		extern OFFSET AppPreExit;
 
+		extern OFFSET SetClientTravel;
+		extern OFFSET ClientTravelInternal;
+		extern OFFSET StartLoadingDestination;
 		extern OFFSET PreLogin;
 		extern OFFSET AJBPreLogin;
 		extern OFFSET Login;

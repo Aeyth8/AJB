@@ -144,7 +144,38 @@ public:
 		USOCK_Closed    = 1, // Connection permanently closed.
 		USOCK_Pending	= 2, // Connection is awaiting connection.
 		USOCK_Open      = 3, // Connection is open.
-	};
+	};	
+
+	// This one is for UE4.27.2, what moron wrote the original one in UE4.20.2??? Annoying waste of time.
+	/*struct FSeamlessTravelHandler
+	{
+		SDK::FURL		PendingTravelURL;
+		SDK::FGuid		PendingTravelGuid;
+		SDK::UObject*	LoadedPackage;
+		SDK::UWorld*	CurrentWorld;
+		SDK::UWorld*	LoadedWorld;
+		bool			bTransitionInProgress;
+		bool			bSwitchedToDefaultMap;
+		bool			bPauseAtMidpoint;
+		bool			bNeedCancelCleanUp;
+		SDK::FName		WorldContextHandle;
+		double			SeamlessTravelStartTime;
+	};*/
+
+	struct FSeamlessTravelHandler
+{
+	bool 			bTransitionInProgress;
+	SDK::FURL		PendingTravelURL;
+	SDK::FGuid		PendingTravelGuid;
+	bool 			bSwitchedToDefaultMap;	
+	SDK::UObject*	LoadedPackage;
+	void*			CurrentWorld;
+	void*			LoadedWorld;
+	bool			bPauseAtMidpoint;
+	bool			bNeedCancelCleanUp;
+	SDK::FName		WorldContextHandle;	
+	double			SeamlessTravelStartTime;
+};
 
 	class Decl
 	{
@@ -162,6 +193,12 @@ public:
 		typedef void(__thiscall* InitLocalConnection)(SDK::UNetConnection* This, SDK::UNetDriver* InDriver, void* InSocket, SDK::FURL& InURL, EConnectionState InState, int InMaxPacket, int InPacketOverhead);
 
 		typedef void(__thiscall* NotifyControlMessage)(SDK::UPendingNetGame* This, SDK::UNetConnection* Connection, unsigned char MessageType, void* InBunch);
+
+		typedef void(__thiscall* SetClientTravel)(SDK::UEngine* This, SDK::UWorld* InWorld, const wchar_t* NextURL, char TravelType);
+
+		typedef void(__thiscall* ClientTravel)(SDK::APlayerController* This, SDK::FString* URL, unsigned char TravelType, bool bSeamless, void* MapPackageGuid);
+
+		typedef void(__thiscall* StartLoadingDestination)(FSeamlessTravelHandler* This);
 
 		typedef void(__thiscall* PreLogin)(SDK::AGameModeBase* This, SDK::FString* Options, SDK::FString* Address, SDK::FUniqueNetIdRepl* UniqueId, SDK::FString* ErrorMessage);
 
@@ -248,6 +285,12 @@ public:
 	static void InitLocalConnection(SDK::UNetConnection* This, SDK::UNetDriver* InDriver, void* InSocket, SDK::FURL& InURL, EConnectionState InState, int InMaxPacket, int InPacketOverhead);
 
 	static void ClientTeamMessageImplementation(SDK::APlayerController* This, SDK::APlayerState* SenderPlayerState, SDK::FString* String, SDK::FName Type, float MsgLifeTime);
+
+	static void SetClientTravel(SDK::UEngine* This, SDK::UWorld* InWorld, const wchar_t* NextURL, unsigned char TravelType);
+
+	static void ClientTravelInternal(SDK::APlayerController* This, SDK::FString* URL, unsigned char TravelType, bool bSeamless, void* MapPackageGuid);
+
+	static void StartLoadingDestination(FSeamlessTravelHandler* This);
 
 	static void PreLogin(SDK::AGameModeBase* This, SDK::FString* Options, SDK::FString* Address, SDK::FUniqueNetIdRepl* UniqueId, SDK::FString* ErrorMessage);
 

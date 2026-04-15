@@ -168,7 +168,10 @@ std::vector<Hooks::HookStructure> StandaloneHooks =
 
 	{OFF::IsTenpoHost,						AJB::IsServer},
 	{OFF::IsAJBOfflineMode,					AJB::IsOfflineMode},
-	{OFF::IsOfflineMode,					AJB::IsOfflineMode},	
+	{OFF::IsOfflineMode,					AJB::IsOfflineMode},
+	//{OFF::SetClientTravel,				UFunctions::SetClientTravel},
+	//{OFF::ClientTravelInternal,			UFunctions::ClientTravelInternal},
+	{OFF::StartLoadingDestination,			UFunctions::StartLoadingDestination},
 };
 
 A8CL::OFFSET NetID("UAJBNetworkObserver::GetNetID", 0x4ECC80);
@@ -804,7 +807,7 @@ void AJB::ThreadLoop()
 
 SDK::ABP_PPV_VSFilter_C* AJB::GetPostProcessFilter(const SDK::ABP_AJBInGamePlayerController_C* Player, const bool bCreateIfNull)
 {
-	if (Player && Player->IsA(SDK::ABP_AJBInGamePlayerController_C::StaticClass()))
+	if (Player)
 	{
 		SDK::ABP_PPV_VSFilter_C* Filter = Player->PPVVSFilter;
 
@@ -1090,6 +1093,23 @@ void AJB::CheckForInfiniteLoadingScreen()
 	}
 }
 
+#pragma warning(disable: 4996)  // SHUTUP!
+
+void A8CL::AJB::DedicatedServerLoop()
+{
+	//static SDK::FString ServerTravel{L"servertravel /Game/AJB/Maps/SimpleStartLocationSelect_P"};
+	//constexpr const wchar_t* ServerTravelBase{L"servertravel /Game/Aeyth8/Maps/DedicatedServer/ReconnectLoop"};
+	//const int NumPlayers = GWorld.GetPointer()->NetDriver->ClientConnections.Num();
+	const int NumPlayers = GWorld.GetPointer()->AuthorityGameMode->GetNumPlayers();
+	wchar_t ServerTravelBuffer[260]{L"servertravel /Game/Aeyth8/Maps/DedicatedServer/DedicatedServerRestart"};
+	_ltow(NumPlayers, &ServerTravelBuffer[72], 10);
+
+	SDK::FString ServerTravel{ServerTravelBuffer};
+	UFunctions::UConsole(GEngine->GameViewport->ViewportConsole, ServerTravel);
+
+
+}
+
 bool __fastcall AJB::FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag)
 {
 	LogA("UFlowStateUtil", std::format("New FlowState: {}", NextStateTag.TagName.ToString()));
@@ -1137,10 +1157,19 @@ bool __fastcall AJB::FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, S
 		}
 
 		static SDK::FName InGameStandby = FName::NAME_FindOrAdd(L"InGame.Standby");
-		if (AJB::IsServer() && NextStateTag.TagName == InGameStandby)
+		static SDK::FName InGameResult = FName::NAME_FindOrAdd(L"InGame.Result");
+
+		if (AJB::IsServer())
 		{
-			static const float WaitFor = AJB::NUM_CPUCores >= 4 ? (16.0f / AJB::NUM_CPUCores) * 10.0f : 60.0f;
-			AJB::CreateCallbackTimer(AJB::CheckForInfiniteLoadingScreen, WaitFor);
+			if (NextStateTag.TagName == InGameStandby)
+			{
+				static const float WaitFor = AJB::NUM_CPUCores >= 4 ? (16.0f / AJB::NUM_CPUCores) * 10.0f : 60.0f;
+				AJB::CreateCallbackTimer(AJB::CheckForInfiniteLoadingScreen, WaitFor);
+			}
+			else if (NextStateTag.TagName == InGameResult)
+			{
+				AJB::CreateCallbackTimer(AJB::DedicatedServerLoop, 7.5f);
+			}
 		}
 	}
 	

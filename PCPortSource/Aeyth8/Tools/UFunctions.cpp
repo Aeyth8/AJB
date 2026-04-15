@@ -516,7 +516,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	else if (StrCommand.find("AJBExecInternalHost") == 0)
 	{
 		int PARM_Area{0};
-		int PARM_NPCCount{0};
+		int PARM_NPCCount = wcstol(CMLA::HardcodedNPCNum.GetArgumentAsString(), 0, 10);
 		int PARM_NPCDifficulty{0};
 		int PARM_PlayMode{0};
 		bool PARM_Respawn{false};
@@ -996,7 +996,16 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			Player->ServerCmd(RemoteCommand.c_str());
 		}
 	}
-	/*else if (StrCommand == "ajbdebug")
+	else if (StrCommand == "endgame")
+	{
+		SDK::AAJBInGamePlayerController* Player = Pointers::Player<SDK::AAJBInGamePlayerController>();
+		if (Player)
+		{
+			ConsoleOutput::Text(L"Ending game..");
+			Player->OnDebugLastSurvivor();
+		}
+	}
+	else if (StrCommand == "ajbdebug")
 	{
 		SDK::ABP_AJBInGameHUD_C* HUD = reinterpret_cast<SDK::ABP_AJBInGameHUD_C*>(Pointers::Player()->MyHUD);
 		if (HUD)
@@ -1005,6 +1014,15 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			bToggle = !bToggle;
 	
 			HUD->bIsDebugHUD = bToggle;
+		}
+	}
+	/*else if (StrCommand == "trymenu")
+	{
+		SDK::ABP_AJBInGameHUD_C* HUD = reinterpret_cast<SDK::ABP_AJBInGameHUD_C*>(Pointers::Player()->MyHUD);
+		if (HUD)
+		{
+			HUD->TryCreateDebugOnlyMenu();
+			HUD->OnShowDebugMenu();
 		}
 	}
 	else if (StrCommand == "camera")
@@ -1038,6 +1056,11 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 
 		bToggle ? ConsoleOutput::Text(L"Flying activated") : ConsoleOutput::Text(L"Flying deactivated.");
 		//LogA("PairId", static_cast<SDK::AAJBInGameCharacterBase*>(Pointers::Player()->Character)->PairID.ToString());
+	}
+	else if (StrCommand == "trydedicated")
+	{
+		AJB::DedicatedServerLoop();
+		//AJB::CreateCallbackTimer(AJB::DedicatedServerLoop, 0.0f);
 	}
 	else if (StrCommand == "partner")
 	{
@@ -1191,6 +1214,48 @@ void UFunctions::ClientTeamMessageImplementation(SDK::APlayerController* This, S
 {
 	LogA("ClientTeamMessageImplementation", std::format("[This]: {} | [SenderPlayerState]: {} | [String]: {} | [Type]: {} | [MsgLifeTime]: {}", This->GetFullName(), SenderPlayerState->GetFullName(), String->ToString(), Type.GetRawString(), std::to_string(MsgLifeTime)));
 	OFF::ClientTeamMessageImplementation.VerifyFC<Decl::ClientTeamMessageImplementation>()(This, SenderPlayerState, String, Type, MsgLifeTime);
+}
+
+void A8CL::UFunctions::SetClientTravel(SDK::UEngine* This, SDK::UWorld* InWorld, const wchar_t* NextURL, unsigned char TravelType)
+{
+	std::wstring TheURL(NextURL);
+	LogA(OFF::SetClientTravel.GetName(), std::format("[This]: {} | [InWorld]: {} | [NextURL]: {} | [ETravelType]: {}", This->GetFullName(), InWorld->GetFullName(), std::string(TheURL.begin(), TheURL.end()), (*reinterpret_cast<ETravelType*>(&TravelType)).ToString()));
+
+	if (!AJB::IsServer() && wcscmp(NextURL, L"/Game/Aeyth8/Maps/DedicatedServer/DedicatedServerRestart") == 0)
+	{
+		LogA(OFF::SetClientTravel.GetName(), "Preparing to reconnect...");
+		return OFF::SetClientTravel.VerifyFC<Decl::SetClientTravel>()(This, InWorld, L"/Game/Aeyth8/Maps/DedicatedServer/PendingReconnect", TravelType);
+	}
+
+	OFF::SetClientTravel.VerifyFC<Decl::SetClientTravel>()(This, InWorld, NextURL, TravelType);
+}
+
+void A8CL::UFunctions::ClientTravelInternal(SDK::APlayerController* This, SDK::FString* URL, unsigned char TravelType, bool bSeamless, void* MapPackageGuid)
+{
+	LogA(OFF::ClientTravelInternal.GetName(), std::format("[This]: {} | [URL]: {} | [TravelType]: {} | [bSeamless]: {}", This->GetFullName(), URL->ToString(), (*reinterpret_cast<ETravelType*>(&TravelType)).ToString(), bSeamless));
+
+	OFF::ClientTravelInternal.VerifyFC<Decl::ClientTravel>()(This, URL, TravelType, bSeamless, MapPackageGuid);
+}
+
+void A8CL::UFunctions::StartLoadingDestination(FSeamlessTravelHandler* This)
+{
+	LogA(OFF::StartLoadingDestination.GetName(), std::format("[FURL]: {}", Helpers::FURLParser(This->PendingTravelURL)));
+
+	if (!AJB::IsServer() && AJB::IsInSession())
+	{
+		constexpr const wchar_t* CatchMe{L"/Game/Aeyth8/Maps/DedicatedServer/DedicatedServerRestart"};
+		//static SDK::FString Redirector{L"/Game/Aeyth8/Maps/DedicatedServer/PendingReconnect"};
+		static SDK::FString Redirector{L"open /Game/Aeyth8/Maps/DedicatedServer/PendingReconnect"};
+		if (wcscmp(CatchMe, This->PendingTravelURL.Map.Data) == 0)
+		{
+			//AJB::CopyString(&This->PendingTravelURL.Map, &Redirector);
+			LogA(OFF::StartLoadingDestination.GetName(), "Redirecting to PendingReconnect...");
+			UFunctions::UConsole(GEngine->GameViewport->ViewportConsole, Redirector);
+			return;
+		}
+	}
+
+	OFF::StartLoadingDestination.VerifyFC<Decl::StartLoadingDestination>()(This);
 }
 
 bool UFunctions::InitListen(SDK::UIpNetDriver* This, SDK::UObject* InNotify, SDK::FURL& LocalURL, bool bReuseAddressAndPort, SDK::FString& Error)

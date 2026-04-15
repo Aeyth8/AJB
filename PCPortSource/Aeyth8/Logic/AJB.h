@@ -119,13 +119,12 @@ namespace SDK
 	class UBPF_AJBInGameSkillFunctionLibrary_C;
 	class UBPF_AJBOutGameHUD_C;
 	class UBPF_AJBOutGamePlayerController_C;
-	class ABP_PPV_VSFilter_C;
-
-	
-	struct FFlowStateHandler;	
+		
+	struct FFlowStateHandler;
 	class UAkAudioEvent;	
 	class AAJBCreadit_C;
 	class UWB_ModeSelect_C;
+	class ABP_PPV_VSFilter_C;
 	class UAJBWindowWidget;
 	
 	// Mod accessible only
@@ -335,7 +334,10 @@ namespace AJB
 
 	// Called externally by a callback timer, should not be manually called!
 	void CheckForInfiniteLoadingScreen();
-	
+
+	// Called externally by a callback timer, should not be manually called!
+	void DedicatedServerLoop();
+
 	// ===========================================
 	// **		EXTERNAL HOOK FUNCTIONS			**
 	// ===========================================

@@ -85,12 +85,21 @@ namespace A8CL
 			USOCK_Pending	= 2, // Connection is awaiting connection.
 			USOCK_Open      = 3, // Connection is open.
 		};
+
+		enum ETravelType : uint8
+		{
+			TRAVEL_Absolute,		// Absolute URL.
+			TRAVEL_Partial,			// Partial (carry name, reset server)
+			TRAVEL_Relative,		// Relative URL.
+			TRAVEL_MAX,
+		};
 	}
 	namespace SDT
 	{
 		static constexpr const char* ENetMode[5]{ "NM_Standalone", "NM_DedicatedServer", "NM_ListenServer", "NM_Client", "NM_MAX" };
 		static constexpr const char* ENetRole[5]{ "ROLE_None", "ROLE_SimulatedProxy", "ROLE_AutonomousProxy", "ROLE_Authority", "ROLE_MAX" };
 		static constexpr const char* EConnectionState[4]{ "USOCK_Invalid", "USOCK_Closed", "USOCK_Pending", "USOCK_Open" };
+		static constexpr const char* ETravelType[4]{ "TRAVEL_Absolute", "TRAVEL_Partial", "TRAVEL_Relative", "TRAVEL_MAX" };
 	}
 	
 	template <class Enum, const char* const* Array> 
@@ -116,6 +125,7 @@ namespace A8CL
 	using ENetMode = EnumWrapper<Enums::ENetMode, SDT::ENetMode>;
 	using ENetRole = EnumWrapper<Enums::ENetRole, SDT::ENetRole>;
 	using EConnectionState = EnumWrapper<Enums::EConnectionState, SDT::EConnectionState>;
+	using ETravelType = EnumWrapper<Enums::ETravelType, SDT::ETravelType>;
 
 	__forceinline ENetMode GetNetMode(SDK::UNetDriver* NetDriver, uint64 Offset = UEW::NetDriverGetNetMode)
 	{
