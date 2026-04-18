@@ -534,43 +534,15 @@ void AJB::Init_Hooks()
 		BytePatcher::ReplaceBytes(PB(0x223610), {MOV, 0, RETN, NOP, NOP}); // FDrive, I don't have a proper name but it creates a folder on your F:// drive if you have one, it saves data there.
 		BytePatcher::ReplaceBytes(PB(0x20FB00), ReturnZero); // Calls AMActivator_Update
 
-		BytePatcher::ReplaceBytes(PB(0x4840B0), Replacement); // UAJBGameInstance::ResetPP
-		BytePatcher::ReplaceBytes(PB(0x522CE0), Replacement); // UAJBGameInstance::StartConsumePP
-		//BytePatcher::ReplaceBytes(PB(0x507210), {MOV, 01, RETN, NOP, NOP}); // AAJBOutGameProxy::IsTenpoHost
-		
-		//BytePatcher::ReplaceBytes(PB(0x54D8CE), {MOV, 00, RETN, NOP, NOP, NOP}); // 
-
-		// Completely wipes out the HideCursorCaller and any trace (to be safe)
-		BYTE AntiAntiCursor[100]{RETN};
-		memset(&AntiAntiCursor[1], NOP, 99);
-
-		BytePatcher::ReplaceBytes(PB(0x4A04A0), AntiAntiCursor); // HideCursorCaller, I don't have a proper name but it spam-hides the cursor like 100 times a second
+		BytePatcher::ReplaceBytes(PB(OFF::ResetPP), Replacement);		// UAJBGameInstance::ResetPP
+		BytePatcher::ReplaceBytes(PB(OFF::StartConsumePP), Replacement); // UAJBGameInstance::StartConsumePP
 
 
-		//constexpr BYTE NOP5[5]{NOP};
-		//BytePatcher::ReplaceBytes(PB(0x13CCB43), NOP5); // AJBGetMaxTickRate, no proper name but it's a wrapper that calls UEngine::GetMaxTickRate and this function enforces a 60fps cap if you set it to uncapped (t.MaxFPS 0)
-		//BytePatcher::ReplaceBytes(PB(0x13CCBD8), {NOP, NOP}); ^ Actual patch is this line right here that I am commenting on <---- ; WRONG both need to be patched I think but I didnt look at the binary to actually verify I just tested it again today
-		
-		//BytePatcher::ReplaceBytes(PB(0x49DEC0), {MOV, 01, RETN, NOP}); // UAJBUtilityFunctionLibrary::IsEditorPreview
-		BytePatcher::ReplaceBytes(PB(0x49DF00), ReturnZero); // UAJBUtilityFunctionLibrary::IsEnableGachaSchedule
-		BytePatcher::ReplaceBytes(PB(0x4978B0), { 0xB8, 0x90, 0x90, 0x00, 0x00, 0xC3, 0x90, 0x90, 0x90, 0x90, 0x90}); // UAJBSettings::GetDefaultCredit
-		BytePatcher::ReplaceBytes(PB(0x499AA0), {MOV, 1, RETN, NOP}); // UAJBUtilityFunctionLibrary::CanAJBArcadeGamePlay
-		//BytePatcher::ReplaceByte(PB(0x47E422), 0x74); // UAJBGameInstance::GetNationalMatchSchedule JNZ -> JZ
+		BytePatcher::ReplaceBytes(PB(OFF::HideCursorCaller), ReturnZero); // HideCursorCaller, I don't have a proper name but it spam-hides the cursor like 100 times a second
 
-		//BytePatcher::ReplaceBytes(PB(0x500B20), {MOV, 1, RETN, NOP, NOP}); // AAJBOutGameProxy::CanTenpoBattle
-		
-		/*
-		BYTE ShippingOnlyLaunch[33]{};
-		memset(&ShippingOnlyLaunch[0], NOP, 31);
-		ShippingOnlyLaunch[31] = MOV, ShippingOnlyLaunch[32] = 01;
 
-		BytePatcher::ReplaceBytes(PB(0x2076362), ShippingOnlyLaunch); // [__scrt_initialize_crt] The game automatically closes if it isn't set to shipping.
-		BytePatcher::ReplaceByte(PB(0x1DE861), 00); // UAJBUtilityFunctionLibrary::IsShipping
-		*/
-		
-		//BytePatcher::ReplaceBytes(PB(0x49DE20), {MOV, 00, RETN, NOP, NOP}); // UAJBUtilityFunctionLibrary::IsAJBOfflineMode (useless)
-		//BytePatcher::ReplaceBytes(PB(0x4ED5D0), { MOV, 00, RETN, NOP, NOP }); // UAJBNetworkObserver::IsOfflineMode (useless)
-		//BytePatcher::ReplaceBytes(PB(0x54D8CE), {MOV, 00, RETN, NOP, NOP, NOP}); // AAJBHUDBase::execSetCreditWidgetInstance (Result: Kills the game)
+		//BytePatcher::ReplaceBytes(PB(OFF::AJBGetMaxTickRate), {NOP, NOP, NOP, NOP, NOP}); // AJBGetMaxTickRate, no proper name but it's a wrapper that calls UEngine::GetMaxTickRate and this function enforces a 60fps cap if you set it to uncapped (t.MaxFPS 0)
+		//BytePatcher::ReplaceBytes(PB(OFF::AJBGetMaxTickRateCap), {NOP, NOP}); ^ Actual patch is this line right here that I am commenting on <---- ; WRONG both need to be patched I think but I didnt look at the binary to actually verify I just tested it again today
 		
 		LogA("BytePatcher", "Applied all patches successfully. (Failing would crash)");
 	}
@@ -651,10 +623,9 @@ void AJB::Init_Engine()
 {
 	while (!GEngine) Sleep(25);
 
-	MRWT::Activate();
+	//MRWT::Activate();
 
-	byte* LogVerbosity = reinterpret_cast<byte*>(PB(0x300D3C8));
-	*LogVerbosity = 6u;
+	*reinterpret_cast<byte*>(PB(OFF::LogVerbosity)) = 6u;
 
 	AJB::CoreUObject = SDK::UObject::FindClass("Class CoreUObject.Object");
 

@@ -92,6 +92,18 @@ namespace A8CL
 		extern OFFSET IsTenpoHost;
 		extern OFFSET IsAJBOfflineMode;
 		extern OFFSET IsOfflineMode;
+
+		// Byte Patches
+
+		constexpr ull HideCursorCaller			= 0x04A04A0;
+		constexpr ull AJBGetMaxTickRate			= 0x13CCB43;
+		constexpr ull AJBGetMaxTickRateCap		= 0x13CCBD8;
+		constexpr ull ResetPP					= 0x04840B0;
+		constexpr ull StartConsumePP			= 0x0522CE0;
+		constexpr ull LogVerbosity				= 0x300D3C8;
+		constexpr ull NetDriverGetNetMode		= 0x14F90F0;
+		constexpr ull WorldInternalGetNetMode	= 0x17C4820;
+		constexpr ull ActorInternalGetNetMode	= 0x11BA5C0;
 	}
 
 

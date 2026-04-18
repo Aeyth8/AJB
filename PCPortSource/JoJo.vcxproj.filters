@@ -374,6 +374,9 @@
     <ClCompile Include="Aeyth8\Tools\UnrealTypes.cpp">
       <Filter>Aeyth8\Tools\CPP</Filter>
     </ClCompile>
+    <ClCompile Include="LogImports.cpp">
+      <Filter>Aeyth8\A8CL</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Aeyth8\Logger.hpp">

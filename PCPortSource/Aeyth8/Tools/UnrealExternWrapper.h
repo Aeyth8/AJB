@@ -1,5 +1,5 @@
 #pragma once
-
+#include "../Offsets.h"
 
 /*
 
@@ -22,13 +22,6 @@ typedef unsigned int		uint32;
 typedef unsigned long long	uint64;
 
 template <class Type> Type CallAs(const uint64 Address) { return reinterpret_cast<Type>(Address); }
-
-namespace UEW
-{
-	constexpr uint64 NetDriverGetNetMode		= 0x14F90F0;
-	constexpr uint64 WorldInternalGetNetMode	= 0x17C4820;
-	constexpr uint64 ActorInternalGetNetMode	= 0x11BA5C0;
-}
 
 namespace UC
 {
@@ -127,17 +120,17 @@ namespace A8CL
 	using EConnectionState = EnumWrapper<Enums::EConnectionState, SDT::EConnectionState>;
 	using ETravelType = EnumWrapper<Enums::ETravelType, SDT::ETravelType>;
 
-	__forceinline ENetMode GetNetMode(SDK::UNetDriver* NetDriver, uint64 Offset = UEW::NetDriverGetNetMode)
+	__forceinline ENetMode GetNetMode(SDK::UNetDriver* NetDriver, uint64 Offset = OFF::NetDriverGetNetMode)
 	{
 		return CallAs<ENetMode(__fastcall*)(SDK::UNetDriver*)>(Offset + Global::GBA)(NetDriver);
 	}
 
-	__forceinline ENetMode GetWorldNetMode(SDK::UWorld* World, uint64 Offset = UEW::WorldInternalGetNetMode)
+	__forceinline ENetMode GetWorldNetMode(SDK::UWorld* World, uint64 Offset = OFF::WorldInternalGetNetMode)
 	{
 		return CallAs<ENetMode(__fastcall*)(SDK::UWorld*)>(Offset + Global::GBA)(World);
 	}
 
-	__forceinline ENetMode GetActorNetMode(SDK::AActor* Actor, uint64 Offset = UEW::ActorInternalGetNetMode)
+	__forceinline ENetMode GetActorNetMode(SDK::AActor* Actor, uint64 Offset = OFF::ActorInternalGetNetMode)
 	{
 		return CallAs<ENetMode(__fastcall*)(SDK::AActor*)>(Offset + Global::GBA)(Actor);
 	}

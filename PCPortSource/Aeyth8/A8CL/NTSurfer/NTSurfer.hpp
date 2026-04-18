@@ -483,14 +483,49 @@ typedef struct _IMAGE_EXPORT_DIRECTORY {
     dword       AddressOfNameOrdinals;  // RVA from base of image
 } IMAGE_EXPORT_DIRECTORY, *PIMAGE_EXPORT_DIRECTORY;
 
+typedef struct _IMAGE_IMPORT_DESCRIPTOR
+{
+	union
+	{
+	dword Characteristics; // 0 for null Import Descriptor
+	dword OriginalFirstThunk;
+	};
+	dword TimeDateStamp; 	// Not bound == 0 || Bound == -1
+	dword ForwarderChain; 	// No forwarders == -1
+	dword Name;
+	dword FirstThunk;
+}	IMAGE_IMPORT_DESCRIPTOR, *PIMAGE_IMPORT_DESCRIPTOR;
+
+struct IMAGE_THUNK_DATA
+{
+	union
+    {
+	maxword ForwarderString;
+	maxword Function;
+	maxword Ordinal;
+	maxword AddressOfData;
+    };
+};
+
+typedef struct _IMAGE_IMPORT_BY_NAME
+{
+	word Hint;
+	byte Name[1];
+} IMAGE_IMPORT_BY_NAME, *PIMAGE_IMPORT_BY_NAME;
+
+constexpr maxword IMAGE_ORDINAL_FLAG64 = 0x8000000000000000;
+constexpr maxword IMAGE_ORDINAL_FLAG32 = 0x80000000;
+
 #if B64
 typedef IMAGE_NT_HEADERS64 IMAGE_NT_HEADERS;
 typedef IMAGE_OPTIONAL_HEADER64 IMAGE_OPTIONAL_HEADER;
 typedef PIMAGE_OPTIONAL_HEADER64 PIMAGE_OPTIONAL_HEADER;
+constexpr maxword IMAGE_ORDINAL_FLAG = IMAGE_ORDINAL_FLAG64;
 #else
 typedef IMAGE_NT_HEADERS32 IMAGE_NT_HEADERS;
 typedef IMAGE_OPTIONAL_HEADER32 IMAGE_OPTIONAL_HEADER;
 typedef PIMAGE_OPTIONAL_HEADER32 PIMAGE_OPTIONAL_HEADER;
+constexpr maxword IMAGE_ORDINAL_FLAG = IMAGE_ORDINAL_FLAG32;
 #endif
 
 // Required for NtQueryInformationProcess
@@ -809,9 +844,9 @@ struct NTSurfer
         return reinterpret_cast<IMAGE_EXPORT_DIRECTORY*>(ImageBase + GetDataDirectory(ImageBase, 0)->VirtualAddress);
     }
 
-    __forceinline static IMAGE_EXPORT_DIRECTORY* GetImportDirectory(maxword ImageBase)
+    __forceinline static IMAGE_DATA_DIRECTORY* GetImportDirectory(maxword ImageBase)
     {
-        return reinterpret_cast<IMAGE_EXPORT_DIRECTORY*>(ImageBase + GetDataDirectory(ImageBase, 1)->VirtualAddress);
+        return reinterpret_cast<IMAGE_DATA_DIRECTORY*>(ImageBase + GetDataDirectory(ImageBase, 1)->VirtualAddress);
     }
 
     // Address To PEB

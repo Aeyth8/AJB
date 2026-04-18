@@ -34,6 +34,9 @@ static long __stdcall VEH_Filter(PEXCEPTION_POINTERS Error)
 	return 0;//
 }
 
+extern void LogImports();
+
+
 // Called immediately before WinMainCRTStartup (entry), runs in-thread of entry to execute code before anything else begins.
 // 0x20773C4
 static void PreInit()
@@ -46,6 +49,8 @@ static void PreInit()
 	if (CMLA::WinCSOut.GetAsBool()) LogWin();
 	LogA("GetCommandLineA", GetCommandLineA());
 	LogA("INITIALIZED", "The Global Base Address [GBA] is " + HexToString(GBA));
+
+	LogImports();
 
 	AJB::Init_Hooks();
 }
@@ -78,7 +83,7 @@ int __stdcall DllMain(HMODULE hModule, DWORD ulReasonForCall, LPVOID lpReserved)
 		//AddVectoredExceptionHandler(1, VEH_Filter);
 
 		Global::InitLog();
-		Logger::Init();
+		//Logger::Init();
 		PreInit();
 
 		if (AJB::bIsLemonPossessioned)

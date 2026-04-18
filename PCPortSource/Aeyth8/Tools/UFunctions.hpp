@@ -163,19 +163,19 @@ public:
 	};*/
 
 	struct FSeamlessTravelHandler
-{
-	bool 			bTransitionInProgress;
-	SDK::FURL		PendingTravelURL;
-	SDK::FGuid		PendingTravelGuid;
-	bool 			bSwitchedToDefaultMap;	
-	SDK::UObject*	LoadedPackage;
-	void*			CurrentWorld;
-	void*			LoadedWorld;
-	bool			bPauseAtMidpoint;
-	bool			bNeedCancelCleanUp;
-	SDK::FName		WorldContextHandle;	
-	double			SeamlessTravelStartTime;
-};
+	{
+		bool 			bTransitionInProgress;
+		SDK::FURL		PendingTravelURL;
+		SDK::FGuid		PendingTravelGuid;
+		bool 			bSwitchedToDefaultMap;	
+		SDK::UObject*	LoadedPackage;
+		void*			CurrentWorld;
+		void*			LoadedWorld;
+		bool			bPauseAtMidpoint;
+		bool			bNeedCancelCleanUp;
+		SDK::FName		WorldContextHandle;	
+		double			SeamlessTravelStartTime;
+	};
 
 	class Decl
 	{
