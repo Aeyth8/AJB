@@ -397,6 +397,9 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			LogA("RCE Detected", std::format("{} has attempted to remotely execute a console command, they have been kicked. || The command they attempted to execute was {}", This->GetName(), StrCommand));
 
 			UFunctions::CloseConnection(This->NetConnection);
+
+			static SDK::FString AWholeLottaNothin{L""};
+			AJB::CopyString(Command, &AWholeLottaNothin);
 			return OFF::ConsoleCommand.VerifyFC<Decl::ConsoleCommand>()(This, Result, Command, bWriteToLog);
 		}
 	}
