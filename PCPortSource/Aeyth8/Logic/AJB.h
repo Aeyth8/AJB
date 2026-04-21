@@ -260,11 +260,17 @@ namespace AJB
 	extern UC::FString* StrInGameUserName;						// Temporary because it's 4am and my mind has shattered I AM SO TIRED TODAY
 
 	extern SDK::ALemonHelper_C* MOD_LemonHelper;				// Only exists as a singleton during in lemon possession mode.
-	extern bool bIsLemonPossessioned;							// Oh that's nice, I work as LP | LP? as in, Loss Prevention? | lemon possession
-	extern bool bDebugModeFromCMLA;								// Used to determine if extra/unnecessary logs for development purposes are enabled.
 
 	extern int TEMP_CachedCharacterID;
 	extern int NUM_CPUCores;
+
+	extern bool bIsDedicatedServer;
+	extern bool bDebugModeFromCMLA;								// Used to determine if extra/unnecessary logs for development purposes are enabled.
+	extern bool bIsLemonPossessioned;							// Oh that's nice, I work as LP | LP? as in, Loss Prevention? | lemon possession
+
+	
+	
+	
 
 	/* -- Windows External --
 	

@@ -86,10 +86,16 @@ __int32*							AJB::PlayerPoints{nullptr};
 bool*								AJB::bDebugInputMode{nullptr};
 
 SDK::ALemonHelper_C*				AJB::MOD_LemonHelper{nullptr};
-bool								AJB::bIsLemonPossessioned{false};
-bool								AJB::bDebugModeFromCMLA{false};
+
 int									AJB::TEMP_CachedCharacterID{1};
 int									AJB::NUM_CPUCores{0};
+
+
+bool								AJB::bIsDedicatedServer{false};
+bool								AJB::bDebugModeFromCMLA{false};
+bool								AJB::bIsLemonPossessioned{false};
+
+
 
 // -- MOD --
 
@@ -582,20 +588,18 @@ void AJB::Init_Hooks()
 		//Hooks::CreateAndEnableHook(oGetDefaultMaterial, GetDefaultMaterial);
 
 		//Hooks::CreateAndEnableHook(ExecCharacterNo, execSetCharNo);
-		if (CMLA::Debug.GetAsBool())
+		
+		if (AJB::bDebugModeFromCMLA = CMLA::Debug.GetAsBool())
 		{
-			AJB::bDebugModeFromCMLA = true;
-			
 			Hooks::CreateAndEnableHook(GSetString, SetString);			// Major problem that needs to be handled later.
 
 			Hooks::CreateAndEnableHook(PostEventByName, PostEventByNameHook);
 			Hooks::CreateAndEnableHook(oAddActionMapping, AddActionMapping);
 		}
-		
-		if (CMLA::LemonPossession.GetAsBool())
-		{
-			AJB::bIsLemonPossessioned = true;
-		}
+
+		AJB::bIsLemonPossessioned = CMLA::LemonPossession.GetAsBool();
+		AJB::bIsDedicatedServer = CMLA::DedicatedServer.GetAsBool();
+
 
 		//Hooks::CreateAndEnableHook(GetBaseMaterial, HGetBaseMaterial);
 

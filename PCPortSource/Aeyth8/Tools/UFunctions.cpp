@@ -388,6 +388,18 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 {
 	std::string StrCommand = Command->ToString();
 
+	if (AJB::IsServer())
+	{
+		SDK::APlayerController* Me = Pointers::Player();
+		if (Me && This != Me)
+		{
+			// In the future I plan to make it permission based, where certain individuals are allowed to use this, this will be useful for dedicated server maintenance and/or testing.
+			LogA("RCE Detected", std::format("{} has attempted to remotely execute a console command, they have been kicked. || The command they attempted to execute was {}", This->GetName(), StrCommand));
+
+			UFunctions::CloseConnection(This->NetConnection);
+			return OFF::ConsoleCommand.VerifyFC<Decl::ConsoleCommand>()(This, Result, Command, bWriteToLog);
+		}
+	}
 
 	using SetInputModeGameAndUI = decltype(&SDK::UWidgetBlueprintLibrary::SetInputMode_GameAndUIEx);
 	using SetInputModeGameOnly = decltype(&SDK::UWidgetBlueprintLibrary::SetInputMode_GameOnly);
@@ -396,8 +408,16 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	{
 		exit(0);
 	}
-
-	if (StrCommand.find("AJBExecInternal Callback") == 0)
+	else if (StrCommand.find("kick") && StrCommand.size() > 6)
+	{
+		const uint32 PlayerIndex = std::stoi(StrCommand.substr(5));
+		
+		if (SDK::UNetDriver* Driver = GWorld.GetPointer()->NetDriver)
+		{
+			if (Driver->ClientConnections.IsValidIndex(PlayerIndex)) UFunctions::CloseConnection(Driver->ClientConnections[PlayerIndex]);
+		}		
+	}
+	else if (StrCommand.find("AJBExecInternal Callback") == 0)
 	{
 		int Index = std::stoi(StrCommand.substr(25));
 		//LogA("Index", std::to_string(Index));
@@ -485,9 +505,11 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	{
 		SDK::ABP_AJBWwiseManager_C* Manager = Pointers::SpawnActor<SDK::ABP_AJBWwiseManager_C>();
 		
-		Manager->PostWwiseBGMEvent(SDK::FGameplayTag{FName::NAME_FindOrAdd(StrCommand.substr(23).c_str())}, true);
-		ConsoleOutput::Text(L"Playing soundtrack " + Command->ToWString().substr(23));
-		return OFF::ConsoleCommand.VerifyFC<Decl::ConsoleCommand>()(This, Result, Command, false);
+		if (Manager)
+		{
+			Manager->PostWwiseBGMEvent(SDK::FGameplayTag{ FName::NAME_FindOrAdd(StrCommand.substr(23).c_str()) }, true);
+			ConsoleOutput::Text(L"Playing soundtrack " + Command->ToWString().substr(23));
+		}
 	}	
 	else if (StrCommand.find("AJBExecInternal TempFix") == 0)
 	{
@@ -674,7 +696,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	{
 		SDK::ABP_AJBWwiseManager_C* Manager = Pointers::SpawnActor<SDK::ABP_AJBWwiseManager_C>();
 		
-		Manager->StopWwiseBGMEvent();
+		if (Manager) Manager->StopWwiseBGMEvent();
 		ConsoleOutput::Text(L"SHUTUP! SHUTUP CHUMLEE");
 	}
 	else if (StrCommand == "hidemouse")
@@ -998,11 +1020,11 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	}
 	else if (StrCommand == "endgame")
 	{
-		SDK::AAJBInGamePlayerController* Player = Pointers::Player<SDK::AAJBInGamePlayerController>();
+		SDK::ABP_AJBInGamePlayerController_C* Player = Pointers::Player<SDK::ABP_AJBInGamePlayerController_C>();
 		if (Player)
 		{
 			ConsoleOutput::Text(L"Ending game..");
-			Player->OnDebugLastSurvivor();
+			Player->ROS_DebugLastSurvivor();
 		}
 	}
 	else if (StrCommand == "ajbdebug")
@@ -1100,7 +1122,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		}
 	}*/
 
-	//LogA("ConsoleCommand", std::format("[Owning PlayerController]: {} | [Command]: {}", This->GetFullName(), StrCommand));
+	LogA("ConsoleCommand", std::format("[Owning PlayerController]: {} | [Command]: {}", This->GetFullName(), StrCommand));
 
 	return OFF::ConsoleCommand.VerifyFC<Decl::ConsoleCommand>()(This, Result, Command, bWriteToLog);
 }
@@ -1407,29 +1429,31 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 			}
 		}
 
-		AJB::MOD_OptionsMenuClass = UFunctions::StaticLoadClass(SDK::UUserWidget::StaticClass(), GEngine, OptionsMenuBlueprintPath, nullptr, 0, nullptr);
-		if (AJB::MOD_OptionsMenuClass)
+		if (!AJB::bIsDedicatedServer)
 		{
-			AJB::MOD_OptionsMenu = (SDK::UWBP_OptionsMenu_C*)Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(AJB::MOD_OptionsMenuClass, static_cast<SDK::UGameViewportClient*>(GEngine->GameViewport), FName::NAME_FindOrAdd(OptionsMenuBlueprintPath), 0, EInternalObjectFlags::RootSet, 0, 0, 0, 0);
-			//	OptionsMenu = static_cast<SDK::UWBP_OptionsMenu_C*>(AJB::GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->Create(AJB::GWorld(), PrototypeMenu, Pointers::Player()));
-			if (AJB::MOD_OptionsMenu)
+			AJB::MOD_OptionsMenuClass = UFunctions::StaticLoadClass(SDK::UUserWidget::StaticClass(), GEngine, OptionsMenuBlueprintPath, nullptr, 0, nullptr);
+			if (AJB::MOD_OptionsMenuClass)
 			{
-				LogA("OptionsMenu Success", AJB::MOD_OptionsMenu->GetFullName());
-
-				AJB::MOD_OptionsMenu->AddToViewport(1170);
-				AJB::MOD_OptionsMenu->SetVisibility(SDK::ESlateVisibility::Collapsed);
-
-				if (AJB::StrDLLCommitVersion)
+				AJB::MOD_OptionsMenu = (SDK::UWBP_OptionsMenu_C*)Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(AJB::MOD_OptionsMenuClass, static_cast<SDK::UGameViewportClient*>(GEngine->GameViewport), FName::NAME_FindOrAdd(OptionsMenuBlueprintPath), 0, EInternalObjectFlags::RootSet, 0, 0, 0, 0);
+				//	OptionsMenu = static_cast<SDK::UWBP_OptionsMenu_C*>(AJB::GetBlueprintClass<SDK::UWidgetBlueprintLibrary>()->Create(AJB::GWorld(), PrototypeMenu, Pointers::Player()));
+				if (AJB::MOD_OptionsMenu)
 				{
-					AJB::MOD_OptionsMenu->SetDLLCommitVersion(*AJB::StrDLLCommitVersion);
+					LogA("OptionsMenu Success", AJB::MOD_OptionsMenu->GetFullName());
+
+					AJB::MOD_OptionsMenu->AddToViewport(1170);
+					AJB::MOD_OptionsMenu->SetVisibility(SDK::ESlateVisibility::Collapsed);
+
+					if (AJB::StrDLLCommitVersion)
+					{
+						AJB::MOD_OptionsMenu->SetDLLCommitVersion(*AJB::StrDLLCommitVersion);
+					}
+
 				}
-					
 			}
 		}
-		
 
 
-		if (AJB::MOD_CallbackTimer && AJB::MOD_GlobalPatcher && (CMLA::Debug.GetAsBool() ? AJB::MOD_OptionsMenu != nullptr : true))
+		if (AJB::MOD_CallbackTimer && AJB::MOD_GlobalPatcher && (AJB::bIsDedicatedServer ? AJB::MOD_OptionsMenu != nullptr : true))
 		{
 			LogA("Login", "All mod object singletons have been successfully spawned.");
 			ONE = 1;

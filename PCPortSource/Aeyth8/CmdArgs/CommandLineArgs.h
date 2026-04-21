@@ -33,6 +33,7 @@ namespace CMLA
 	extern CommandLineParameter<wchar_t> HardcodedNPCNum;
 	extern CommandLineParameter<wchar_t> InjectDLL;
 	extern CommandLineParameter<wchar_t> LemonPossession;
+	extern CommandLineParameter<wchar_t> DedicatedServer;
 
 	// -- Global array for automated parsing, not generally needed for manual usage.
 	extern CArray<CommandLineParameter<wchar_t>*> GlobalCommandLineArgs;
