@@ -411,7 +411,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	{
 		exit(0);
 	}
-	else if (StrCommand.find("kick") && StrCommand.size() > 6)
+	else if (StrCommand.find("kick") != std::string::npos && StrCommand.size() > 6)
 	{
 		const uint32 PlayerIndex = std::stoi(StrCommand.substr(5));
 		
@@ -1385,7 +1385,7 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 	{
 		if (!AJB::MOD_CallbackTimer->IsInViewport()) AJB::MOD_CallbackTimer->AddToViewport(100);
 	}
-
+	
 	// Has to be reloaded per session because the class kills itself since no objects are created with RootSet.
 	//AJB::MOD_CallbackTimerClass = UFunctions::StaticLoadClass(AJB::CoreUObject, GEngine, L"/Game/Aeyth8/Blueprints/Global/WBP_CallbackTimerHandler.WBP_CallbackTimerHandler_C", nullptr, 0, nullptr);
 	
@@ -1456,12 +1456,12 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 		}
 
 
-		if (AJB::MOD_CallbackTimer && AJB::MOD_GlobalPatcher && (AJB::bIsDedicatedServer ? AJB::MOD_OptionsMenu != nullptr : true))
+		if (AJB::MOD_CallbackTimer && AJB::MOD_GlobalPatcher && (AJB::bIsDedicatedServer ? true : AJB::MOD_OptionsMenu != nullptr))
 		{
 			LogA("Login", "All mod object singletons have been successfully spawned.");
 			ONE = 1;
 
-			AJB::MOD_CallbackTimer->CacheMaterial(SDK::UObject::FindObject<SDK::UMaterial>("Material AM_LemonPossession.AM_LemonPossession"));
+			AJB::MOD_CallbackTimer->CacheMaterial(SDK::UObject::FindObject<SDK::UMaterial>("Material AM_LemonPossession.AM_LemonPossession"));			
 		}
 		else LogA("WARNING!", "MOD OBJECTS FAILED TO FULLY SPAWN!");
 	}
@@ -1492,7 +1492,7 @@ void UFunctions::PostLogin(SDK::AGameModeBase* This, SDK::APlayerController* Pla
 		if (AJB::MOD_Global_Synchronizer)
 		{
 			if (AJB::bDebugModeFromCMLA) LogA("GLOBAL SYNCHRONIZER", std::format("[Object]: {} | [Replicated PlayMode]: {}", AJB::MOD_Global_Synchronizer->GetFullName(), AJB::MOD_Global_Synchronizer->PlayMode));
-		}		
+		}
 	}
 
 

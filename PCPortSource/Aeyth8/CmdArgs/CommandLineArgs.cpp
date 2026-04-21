@@ -34,6 +34,7 @@ namespace CMLA
 	CommandLineParameter<wchar_t> InjectDLL(L"inject");
 	CommandLineParameter<wchar_t> LemonPossession(L"LemonPossession");
 	CommandLineParameter<wchar_t> DedicatedServer(L"dedicatedserver");
+	CommandLineParameter<wchar_t> DedicatedServerSleep(L"sleep", L"5");
 
 	// -- Global array for automated parsing, not generally needed for manual usage.
 	CArray<CommandLineParameter<wchar_t>*> GlobalCommandLineArgs = CommandLineParameter<wchar_t>::GCommands();

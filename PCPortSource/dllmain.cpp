@@ -68,7 +68,11 @@ static void Init() {
 
 	if (!bConstructedUConsole) bConstructedUConsole = ConstructUConsole(FName::NAME_FindOrAdd(CMLA::ConsoleKey.GetArgumentAsString()));
 
-	if (AJB::bIsDedicatedServer) AJB::CreateCallbackTimer(AJB::DedicatedServerLoop, AJB::NUM_CPUCores >= 4 ? (16.0f / AJB::NUM_CPUCores) * 3.7f : 16.0f);
+	if (AJB::bIsDedicatedServer)
+	{
+		const int SleepTimer = wcstol(CMLA::DedicatedServerSleep.GetArgumentAsString(), 0, 10);
+		AJB::CreateCallbackTimer(AJB::DedicatedServerLoop, SleepTimer);
+	}
 }
 
 
