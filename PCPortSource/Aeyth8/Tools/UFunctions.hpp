@@ -169,8 +169,8 @@ public:
 		SDK::FGuid		PendingTravelGuid;
 		bool 			bSwitchedToDefaultMap;	
 		SDK::UObject*	LoadedPackage;
-		void*			CurrentWorld;
-		void*			LoadedWorld;
+		SDK::UWorld*	CurrentWorld;
+		SDK::UWorld*	LoadedWorld;
 		bool			bPauseAtMidpoint;
 		bool			bNeedCancelCleanUp;
 		SDK::FName		WorldContextHandle;	

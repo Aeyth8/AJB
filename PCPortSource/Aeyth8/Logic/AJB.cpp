@@ -1133,9 +1133,23 @@ bool __fastcall AJB::FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, S
 
 		static SDK::FName InGameStandby = FName::NAME_FindOrAdd(L"InGame.Standby");
 		static SDK::FName InGameResult = FName::NAME_FindOrAdd(L"InGame.Result");
+		static SDK::FName SelectStartLocation = FName::NAME_FindOrAdd(L"OutGame.SelectStartLocation");
 
-		if (AJB::IsServer())
-		{
+		SDK::UWorld* CurrentWorld = GWorld.GetPointer();
+
+        if (AJB::IsServer())
+        {
+            if (AJB::bIsDedicatedServer)
+            {
+                if (NextStateTag.TagName == SelectStartLocation && CurrentWorld && CurrentWorld->NetDriver && CurrentWorld->NetDriver->ClientConnections.Num() < 1)
+                {
+					LogA(OFF::ChangeState.GetName(), "No players are connected to the dedicated server, redirecting to DedicatedServerRestart...");
+
+                    static SDK::FString Restart = L"open /Game/Aeyth8/Maps/DedicatedServer/DedicatedServerRestart";
+                    UFunctions::UConsole(GEngine->GameViewport->ViewportConsole, Restart);
+                }
+            }
+
 			if (NextStateTag.TagName == InGameStandby)
 			{
 				static const float WaitFor = AJB::NUM_CPUCores >= 4 ? (16.0f / AJB::NUM_CPUCores) * 10.0f : 60.0f;

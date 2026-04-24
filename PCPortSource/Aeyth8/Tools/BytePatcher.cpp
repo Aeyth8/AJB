@@ -56,7 +56,7 @@ void* __cdecl BytePatcher::MemCopy(void* _Dst, void const* _Src, size_t _Size)
 }
 
 
-bool BytePatcher::ReplaceByte(unsigned long long& StartingAddress, const unsigned char& ReplacementByte, bool bRestoreProtection)
+bool BytePatcher::ReplaceByte(unsigned long long StartingAddress, const unsigned char& ReplacementByte, bool bRestoreProtection)
 {
 	unsigned long OriginalProtection = GetProtectionStatus(StartingAddress);
 
@@ -76,7 +76,7 @@ bool BytePatcher::ReplaceByte(unsigned long long& StartingAddress, const unsigne
 }
 
 
-bool BytePatcher::ReplaceBytes(unsigned long long& StartingAddress, const unsigned char* ReplacementBytes, size_t Size, bool bRestoreProtection)
+bool BytePatcher::ReplaceBytes(unsigned long long StartingAddress, const unsigned char* ReplacementBytes, size_t Size, bool bRestoreProtection)
 {
 	unsigned long OriginalProtection = GetProtectionStatus(StartingAddress);
 

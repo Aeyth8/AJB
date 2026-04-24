@@ -62,12 +62,12 @@ public:
 			Byte Patching
 	*/
 
-	static bool ReplaceByte(unsigned long long& StartingAddress, const unsigned char& ReplacementByte, bool bRestoreProtection = true);
+	static bool ReplaceByte(unsigned long long StartingAddress, const unsigned char& ReplacementByte, bool bRestoreProtection = true);
 
-	static bool ReplaceBytes(unsigned long long& StartingAddress, const unsigned char* ReplacementBytes, size_t Size, bool bRestoreProtection = true);
+	static bool ReplaceBytes(unsigned long long StartingAddress, const unsigned char* ReplacementBytes, size_t Size, bool bRestoreProtection = true);
 
 	template <size_t Size>
-	inline static bool ReplaceBytes(unsigned long long& StartingAddress, const unsigned char(&ReplacementBytes)[Size], bool bRestoreProtection = true)
+	inline static bool ReplaceBytes(unsigned long long StartingAddress, const unsigned char(&ReplacementBytes)[Size], bool bRestoreProtection = true)
 	{
 		return (ReplaceBytes(StartingAddress, ReplacementBytes, Size, bRestoreProtection));
 	}

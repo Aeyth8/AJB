@@ -504,16 +504,21 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		}
 
 	}
-	else if (StrCommand.find("AJBExecInternal PlayBG") == 0) // Hardcoding this until I finish my console command parser (but this is a bad practice)
+	//else if (StrCommand.find("AJBExecInternal PlayBG") == 0 && StrCommand.size() > 23) // Deprecated, it works but either my compiler or the game has gone completely stupid because it suddenly wants to crash all of a sudden after using this, it's not the substring it's the stupid SpawnActor.
+	//{
+	//	SDK::ABP_AJBWwiseManager_C* Manager = Pointers::SpawnActor<SDK::ABP_AJBWwiseManager_C>();
+	//	
+	//	if (Manager)
+	//	{
+	//		Manager->PostWwiseBGMEvent(SDK::FGameplayTag{ FName::NAME_FindOrAdd(StrCommand.substr(23).c_str()) }, true);
+	//		ConsoleOutput::Text(L"Playing soundtrack " + Command->ToWString().substr(23));
+	//	}
+	//}	
+	else if (StrCommand.find("AJBExecInternal PlayBG") == 0 && StrCommand.size() > 23)
 	{
-		SDK::ABP_AJBWwiseManager_C* Manager = Pointers::SpawnActor<SDK::ABP_AJBWwiseManager_C>();
-		
-		if (Manager)
-		{
-			Manager->PostWwiseBGMEvent(SDK::FGameplayTag{ FName::NAME_FindOrAdd(StrCommand.substr(23).c_str()) }, true);
-			ConsoleOutput::Text(L"Playing soundtrack " + Command->ToWString().substr(23));
-		}
-	}	
+		Pointers::GetBlueprintClass<SDK::UBPF_AJBWwiseFunctionLibrary_C>()->RequestWwiseBGM_Event(SDK::FGameplayTag{FName::NAME_FindOrAdd(StrCommand.substr(23).c_str())}, true, GWorld.GetPointer());
+		ConsoleOutput::Text(L"Playing soundtrack " + Command->ToWString().substr(23));
+	}
 	else if (StrCommand.find("AJBExecInternal TempFix") == 0)
 	{
 		if (AJB::IsServer())
@@ -697,9 +702,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	}
 	else if (StrCommand == "mute")
 	{
-		SDK::ABP_AJBWwiseManager_C* Manager = Pointers::SpawnActor<SDK::ABP_AJBWwiseManager_C>();
-		
-		if (Manager) Manager->StopWwiseBGMEvent();
+		Pointers::GetBlueprintClass<SDK::UBPF_AJBWwiseFunctionLibrary_C>()->RequestWwiseBGM_StopEvent(GWorld.GetPointer());
 		ConsoleOutput::Text(L"SHUTUP! SHUTUP CHUMLEE");
 	}
 	else if (StrCommand == "hidemouse")
@@ -1124,6 +1127,18 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			}
 		}
 	}*/
+	else if (StrCommand == "ghost")
+	{
+		static bool bToggle{false};
+		bToggle = !bToggle;
+
+		SDK::ACharacter* Character = Pointers::Character<SDK::ACharacter>();
+		if (Character)
+		{
+			Character->CharacterMovement->MovementMode = bToggle ? SDK::EMovementMode::MOVE_Flying : SDK::EMovementMode::MOVE_Walking;
+			Character->bActorEnableCollision = !bToggle;
+		}
+	}
 
 	LogA("ConsoleCommand", std::format("[Owning PlayerController]: {} | [Command]: {}", This->GetFullName(), StrCommand));
 
@@ -1251,6 +1266,18 @@ void A8CL::UFunctions::SetClientTravel(SDK::UEngine* This, SDK::UWorld* InWorld,
 		LogA(OFF::SetClientTravel.GetName(), "Preparing to reconnect...");
 		return OFF::SetClientTravel.VerifyFC<Decl::SetClientTravel>()(This, InWorld, L"/Game/Aeyth8/Maps/DedicatedServer/PendingReconnect", TravelType);
 	}
+
+	/*if (AJB::bIsDedicatedServer)
+	{
+		if (InWorld && InWorld->NetDriver && InWorld->NetDriver->ClientConnections.Num() < 1)
+		{
+			static SDK::FString Redirector{L"open /Game/Aeyth8/Maps/DedicatedServer/DedicatedServerRestart"};
+
+			LogA(OFF::StartLoadingDestination.GetName(), "No players are connected to the dedicated server, redirecting to DedicatedServerRestart...");
+			UFunctions::UConsole(GEngine->GameViewport->ViewportConsole, Redirector);
+			return;
+		}
+	}*/
 
 	OFF::SetClientTravel.VerifyFC<Decl::SetClientTravel>()(This, InWorld, NextURL, TravelType);
 }
