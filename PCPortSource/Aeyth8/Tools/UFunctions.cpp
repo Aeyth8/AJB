@@ -384,6 +384,8 @@ void UFunctions::OutputText(SDK::UConsole* This, SDK::FString* Text)
 
 #include <sstream>
 
+static std::vector<SDK::UPlayer*> ServerAdmins{};
+
 SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FString* Result, SDK::FString* Command, bool bWriteToLog)
 {
 	std::string StrCommand = Command->ToString();
@@ -393,14 +395,27 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		SDK::APlayerController* Me = Pointers::Player();
 		if (Me && This != Me)
 		{
-			// In the future I plan to make it permission based, where certain individuals are allowed to use this, this will be useful for dedicated server maintenance and/or testing.
-			LogA("RCE Detected", std::format("{} has attempted to remotely execute a console command, they have been kicked. || The command they attempted to execute was {}", This->GetName(), StrCommand));
+			bool bIsUnauthorized{true};
 
-			UFunctions::CloseConnection(This->NetConnection);
+			for (SDK::UPlayer* Admin : ServerAdmins)
+			{
+				if (This->Player == Admin)
+				{
+					bIsUnauthorized = false;
+					break;
+				}
+			}
 
-			static SDK::FString AWholeLottaNothin{L""};
-			AJB::CopyString(Command, &AWholeLottaNothin);
-			return OFF::ConsoleCommand.VerifyFC<Decl::ConsoleCommand>()(This, Result, Command, bWriteToLog);
+			if (bIsUnauthorized)
+			{
+				LogA("RCE Detected", std::format("{} has attempted to remotely execute a console command, they have been kicked. || The command they attempted to execute was '{}'", This->GetName(), StrCommand));
+
+				UFunctions::CloseConnection(This->NetConnection);
+
+				static SDK::FString AWholeLottaNothin{L""};
+				AJB::CopyString(Command, &AWholeLottaNothin);
+				return OFF::ConsoleCommand.VerifyFC<Decl::ConsoleCommand>()(This, Result, Command, bWriteToLog);
+			}
 		}
 	}
 
@@ -411,7 +426,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	{
 		exit(0);
 	}
-	else if (StrCommand.find("kick") != std::string::npos && StrCommand.size() > 6)
+	else if (StrCommand.find("kick") != std::string::npos && StrCommand.size() > 5)
 	{
 		const uint32 PlayerIndex = std::stoi(StrCommand.substr(5));
 		
@@ -700,6 +715,12 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		SDK::FString NewUser = SDK::FString(std::wstring(Command->CStr()).substr(24).c_str());
 		AJB::CopyString(&Username, &NewUser);
 	}
+	else if (StrCommand.find("AJBExecInternal SpawnActor") == 0 && StrCommand.size() > 27)
+	{
+		Pointers::FActorSpawnParameters Parm{SDK::ESpawnActorCollisionHandlingMethod::AlwaysSpawn};
+		LogA("Spawning this", StrCommand.substr(27));
+		Pointers::SpawnActorInternal(GWorld.GetPointer(), SDK::UClass::FindClass(StrCommand.substr(27).c_str()), SDK::FVector{}, SDK::FRotator{}, Parm);
+	}
 	else if (StrCommand == "mute")
 	{
 		Pointers::GetBlueprintClass<SDK::UBPF_AJBWwiseFunctionLibrary_C>()->RequestWwiseBGM_StopEvent(GWorld.GetPointer());
@@ -739,10 +760,8 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			ConsoleOutput::Text(L"Using shader " + std::to_wstring((uint8)Filter->CurrentType));
 		}
 	}
-	else if (StrCommand == "shader")
+	else if (StrCommand == "shader")	// Soon to be deprecated..
 	{
-		
-		//SDK::ABP_PPV_VSFilter_C* Filter = AJB::GetPostProcessFilter(AJB::GetPlayer<SDK::ABP_AJBInGamePlayerController_C>()); Just randomly started crashing bruh I didn't CHANGE ANYTHING... WHAT!?!?! OH MY GOD! I CANT BELIEVE THIS! YO I CAN'T BELIEVE THIS! YO I CANNOT BELIEVE THIS!
 		SDK::APlayerController* Player = Pointers::Player();
 		SDK::ABP_PPV_VSFilter_C* Filter = AJB::GetPostProcessFilter((SDK::ABP_AJBInGamePlayerController_C*)Player);
 
@@ -751,6 +770,21 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			//Filter->SetFilter(SDK::E_VSFilterType::NewEnumerator0);
 			Filter->NextFilter();
 
+			std::wstring Log = L"Using shader " + std::to_wstring((uint8)Filter->CurrentType);
+			ConsoleOutput::Text(Log);
+		}
+	}
+	else if (StrCommand.find("AJBExecInternal Filter") == 0 && StrCommand.size() >= 23)
+	{
+		const int FilterIndex = std::stoi(StrCommand.substr(23));
+
+		SDK::ABP_PPV_VSFilter_C* Filter = AJB::GetPostProcessFilter(Pointers::Player<SDK::ABP_AJBInGamePlayerController_C>());
+
+		if (Filter)
+		{
+			Filter->CurrentType = (SDK::E_VSFilterType)FilterIndex;
+			Filter->SetFilter(Filter->CurrentType); // Sometimes there's a STUPID PIECE OF MODULO BY ZERO I HATE YOU I FECKING HATE YOU UNREAL ENGINE OR STUPID PIECE OF TRASH COMPILER>. HATE LET ME TELL YOU HOW MUCH IVE COME TO HATE YEOU SINCE I BEGAN TO LIVE
+			
 			std::wstring Log = L"Using shader " + std::to_wstring((uint8)Filter->CurrentType);
 			ConsoleOutput::Text(Log);
 		}
@@ -1366,16 +1400,38 @@ void AJBPreLogin(SDK::AGameModeBase* This, SDK::FString* Options, SDK::FString* 
 
 	static SDK::FString NOBLOCKLOGIN{L""};
 	static SDK::FString CLIENTINCOMPATIBLE{L"OUTDATED CLIENT | INCOMPATIBLE"};
+	static SDK::FString PASSWORDPROTECTED{L"PASSWORD PROTECTED | INVALID OR EMPTY PASSWORD"};
 
 	if (Options)
 	{
-		if (Options->ToWString().find(AJB::DLLCommitVersion) != std::string::npos)
+		bool bFailedPreLogin{false};
+		SDK::FString* FailureMessage{nullptr};
+
+		std::wstring OptionsW = Options->ToWString();
+
+		
+		if (AJB::bServerHasPassword)
 		{
-			AJB::CopyString(ErrorMessage, &NOBLOCKLOGIN);
+			if (OptionsW.find(CMLA::ServerPreLoginPassword.GetArgumentAsString()) == std::wstring::npos)
+			{
+				bFailedPreLogin = true;
+				FailureMessage = &PASSWORDPROTECTED;
+			}
+		}
+
+		if (OptionsW.find(AJB::DLLCommitVersion) == std::wstring::npos)
+		{
+			bFailedPreLogin = true;
+			FailureMessage = &CLIENTINCOMPATIBLE;			
+		}
+
+		if (bFailedPreLogin)
+		{
+			AJB::CopyString(ErrorMessage, FailureMessage);
 		}
 		else
 		{
-			AJB::CopyString(ErrorMessage, &CLIENTINCOMPATIBLE);
+			AJB::CopyString(ErrorMessage, &NOBLOCKLOGIN);
 		}
 	}
 }
@@ -1385,9 +1441,9 @@ void UFunctions::PreLogin(SDK::AGameModeBase* This, SDK::FString* Options, SDK::
 	LogA("PreLogin", std::format("[AGameModeBase]: {} | [Options]: {} | [Address]: {} | [ErrorMessage]: {}", This->GetFullName(), Options->ToString(), Address->ToString(), ErrorMessage->ToString()));
 }
 
-SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPlayer* NewPlayer, SDK::ENetRole InRemoteRole, SDK::FString& Portal, SDK::FString& Options, SDK::FUniqueNetIdRepl& UniqueId, SDK::FString& ErrorMessage)
+SDK::APlayerController* UFunctions::Login(SDK::AGameModeBase* This, SDK::UPlayer* NewPlayer, SDK::ENetRole InRemoteRole, SDK::FString& Portal, SDK::FString& Options, SDK::FUniqueNetIdRepl& UniqueId, SDK::FString& ErrorMessage)
 {
-	LogA("Login", std::format("[PlayerController]: {} | [NewPlayer]: {} | [InRemoteRole]: {} | [Options]: {} | [ErrorMessage]: {}", This->GetFullName(), NewPlayer->GetFullName(), std::string((*reinterpret_cast<ENetRole*>(&InRemoteRole)).ToString()), Portal.ToString(), ErrorMessage.ToString()));
+	LogA("Login", std::format("[AGameModeBase]: {} | [NewPlayer]: {} | [InRemoteRole]: {} | [Options]: {} | [ErrorMessage]: {}", This->GetFullName(), NewPlayer->GetFullName(), std::string((*reinterpret_cast<ENetRole*>(&InRemoteRole)).ToString()), Options.ToString(), ErrorMessage.ToString()));
 
 	/*if (Options.ToString().rfind("?Name") != std::string::npos)
 	{
@@ -1411,6 +1467,17 @@ SDK::APlayerController* UFunctions::Login(SDK::APlayerController* This, SDK::UPl
 	if (AJB::MOD_CallbackTimer)
 	{
 		if (!AJB::MOD_CallbackTimer->IsInViewport()) AJB::MOD_CallbackTimer->AddToViewport(100);
+	}
+
+	if (AJB::IsServer())
+	{
+		if (AJB::bServerAllowsAdmins)
+		{
+			if (Options.ToWString().find(CMLA::ServerAdminPassword.GetArgumentAsString()) != std::wstring::npos)
+			{
+				ServerAdmins.push_back(NewPlayer);
+			}
+		}
 	}
 	
 	// Has to be reloaded per session because the class kills itself since no objects are created with RootSet.
@@ -1579,6 +1646,15 @@ void UFunctions::BeginPlay(SDK::UWorld* This)
 
 void UFunctions::CloseConnection(SDK::UNetConnection* This)
 {
+	for (int32 i{0}; ServerAdmins.size(); ++i)
+	{
+		if (This->PlayerController && This->PlayerController->Player && This->PlayerController->Player == This)
+		{
+			ServerAdmins.erase(ServerAdmins.begin() + i);
+			break;
+		}
+	}
+
 	LogA(OFF::Close.GetName(), This->GetFullName());
 	OFF::Close.VerifyFC<void(__fastcall*)(SDK::UNetConnection*)>()(This);
 }

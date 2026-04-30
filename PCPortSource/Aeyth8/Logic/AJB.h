@@ -265,6 +265,9 @@ namespace AJB
 	extern int NUM_CPUCores;
 
 	extern bool bIsDedicatedServer;
+	extern bool bServerAllowsAdmins;
+	extern bool bServerHasPassword;
+
 	extern bool bDebugModeFromCMLA;								// Used to determine if extra/unnecessary logs for development purposes are enabled.
 	extern bool bIsLemonPossessioned;							// Oh that's nice, I work as LP | LP? as in, Loss Prevention? | lemon possession
 

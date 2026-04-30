@@ -92,6 +92,9 @@ int									AJB::NUM_CPUCores{0};
 
 
 bool								AJB::bIsDedicatedServer{false};
+bool								AJB::bServerAllowsAdmins{false};
+bool								AJB::bServerHasPassword{false};
+
 bool								AJB::bDebugModeFromCMLA{false};
 bool								AJB::bIsLemonPossessioned{false};
 
@@ -599,7 +602,8 @@ void AJB::Init_Hooks()
 
 		AJB::bIsLemonPossessioned = CMLA::LemonPossession.GetAsBool();
 		AJB::bIsDedicatedServer = CMLA::DedicatedServer.GetAsBool();
-
+		AJB::bServerAllowsAdmins = CMLA::ServerAdminPassword.HasChanged();
+		AJB::bServerHasPassword = CMLA::ServerPreLoginPassword.HasChanged();
 
 		//Hooks::CreateAndEnableHook(GetBaseMaterial, HGetBaseMaterial);
 

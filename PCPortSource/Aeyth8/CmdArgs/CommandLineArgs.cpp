@@ -35,6 +35,8 @@ namespace CMLA
 	CommandLineParameter<wchar_t> LemonPossession(L"LemonPossession");
 	CommandLineParameter<wchar_t> DedicatedServer(L"dedicatedserver");
 	CommandLineParameter<wchar_t> DedicatedServerSleep(L"sleep", L"5");
+	CommandLineParameter<wchar_t> ServerAdminPassword(L"setadminpassword", L"");
+	CommandLineParameter<wchar_t> ServerPreLoginPassword(L"setpassword", L"");
 
 	// -- Global array for automated parsing, not generally needed for manual usage.
 	CArray<CommandLineParameter<wchar_t>*> GlobalCommandLineArgs = CommandLineParameter<wchar_t>::GCommands();

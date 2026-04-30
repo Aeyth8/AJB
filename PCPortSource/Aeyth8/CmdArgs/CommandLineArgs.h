@@ -35,6 +35,8 @@ namespace CMLA
 	extern CommandLineParameter<wchar_t> LemonPossession;
 	extern CommandLineParameter<wchar_t> DedicatedServer;
 	extern CommandLineParameter<wchar_t> DedicatedServerSleep;
+	extern CommandLineParameter<wchar_t> ServerAdminPassword;
+	extern CommandLineParameter<wchar_t> ServerPreLoginPassword;
 
 	// -- Global array for automated parsing, not generally needed for manual usage.
 	extern CArray<CommandLineParameter<wchar_t>*> GlobalCommandLineArgs;
