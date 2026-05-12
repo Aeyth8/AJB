@@ -925,24 +925,30 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	else if (StrCommand == "showhud")
 	{
 		static bool bOne{0};
-		bOne = !bOne;
 		SDK::APlayerController* Player = Pointers::Player();
-		if (Player)
+		if (Player && Player->MyHUD)
 		{
-			SDK::AAJBInGameHUD* HUD = static_cast<SDK::AAJBInGameHUD*>(Player->GetHUD());
-			if (HUD)
+			SDK::AHUD* HUD = Player->MyHUD;
+
+			bOne = !bOne;
+			HUD->bHidden = bOne;
+			HUD->bShowHUD = bOne;
+
+			if (HUD->IsA(SDK::AAJBInGameHUD::StaticClass()))
 			{
-				HUD->SetupForceInvisibleAllWidgetsFlag(bOne);
+				static_cast<SDK::AAJBInGameHUD*>(HUD)->SetupForceInvisibleAllWidgetsFlag(bOne);
 			}
+
+			ConsoleOutput::Text(bOne ? L"HUD is hidden." : L"HUD is visible.");
 		}
-		ConsoleOutput::Text(bOne ? L"Hud is hidden." : L"Hud is visible.");
+		else ConsoleOutput::Text(L"Unable to toggle HUD.");
 	}
 	else if (StrCommand == "toggledebugmenu")
 	{
 		static SDK::UClass* Classes[4]{nullptr};
 		static SDK::UUserWidget* Menus[4]{nullptr};
 
-		constexpr static const wchar_t* WidgetsToLoad[] =
+		constexpr const wchar_t* WidgetsToLoad[] =
 		{
 			L"/Game/AJB/Debug/UI/WB_AJB_DebugMenuPage.WB_AJB_DebugMenuPage_C",
 			L"/Game/AJB/Debug/UI/WB_DebugMenu.WB_DebugMenu_C",
@@ -982,7 +988,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 					}*/
 				}
 
-				i++;
+				++i;
 			}
 		}
 
@@ -2208,12 +2214,6 @@ void UFunctions::Invoke(SDK::UFunction* This, SDK::UObject* Obj, void* FFrame_St
 				if (NetConnection)
 				{
 					bool bIsUnauthorized{true};
-
-					SDK::UPlayer* ConnectedPlayer{nullptr};
-					for (SDK::UNetConnection* Connection : GWorld.GetPointer()->NetDriver->ClientConnections)
-					{
-
-					}
 
 					for (SDK::UPlayer* Admin : ServerAdmins)
 					{
