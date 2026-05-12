@@ -132,5 +132,28 @@ void UBP_GlobalPatcher_C::AppendToFStringArray(TArray<class FString>& StringArra
 	StringArray = std::move(Parms.StringArray);
 }
 
+// Function BP_GlobalPatcher.BP_GlobalPatcher_C.AppendToObjectArray
+// (Public, HasOutParams, BlueprintCallable, BlueprintEvent)
+// Parameters:
+// TArray<class UObject*>&                 inArray                                                (BlueprintVisible, BlueprintReadOnly, Parm, OutParm, ZeroConstructor, ReferenceParm)
+// class UObject*                          ToAppend                                               (BlueprintVisible, BlueprintReadOnly, Parm, ZeroConstructor, IsPlainOldData, NoDestructor, HasGetValueTypeHash)
+
+void UBP_GlobalPatcher_C::AppendToObjectArray(TArray<class UObject*>& InArray, class UObject* ToAppend)
+{
+	static class UFunction* Func = nullptr;
+
+	if (Func == nullptr)
+		Func = Class->GetFunction("BP_GlobalPatcher_C", "AppendToObjectArray");
+
+	Params::BP_GlobalPatcher_C_AppendToObjectArray Parms{};
+
+	Parms.InArray = std::move(InArray);
+	Parms.ToAppend = ToAppend;
+
+	UObject::ProcessEvent(Func, &Parms);
+
+	InArray = std::move(Parms.InArray);
+}
+
 }
 

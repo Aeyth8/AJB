@@ -179,6 +179,7 @@ using namespace Global;
 #include "../../Dumper-7/CustomSDK/WBP_CallbackTimerHandler_classes.hpp"	// Custom SDK header (NOT GAME NATIVE)
 #include "../../Dumper-7/CustomSDK/BP_Synchronizer_classes.hpp"				// Custom SDK header (NOT GAME NATIVE)
 
+#include "../../Dumper-7/CustomSDK/BP_CallbackTimer_classes.hpp"			// Custom SDK header (NOT GAME NATIVE)
 
 #include "BytePatcher.h"
 #include "../../Dumper-7/SDK/WB_ModeSelect_Button_SOLO_classes.hpp"
@@ -206,6 +207,9 @@ using namespace Global;
 static bool* TOGGLEDEBUGBADGAMEDESIGN{nullptr};
 
 #include "../../Dumper-7/SDK/Engine_parameters.hpp"
+
+#include <sstream>
+#include "StringTables.inl"
 
 void LemonPossession()
 {
@@ -328,10 +332,7 @@ void UFunctions::UConsole(SDK::UConsole* This, SDK::FString& Command)
 	{
 		LogA("Owning GameMode", Pointers::GameMode()->GetFullName());
 	}
-	else if (StrCommand == "playmode")
-	{
-		LogA("Current PlayMode", std::to_string((uint8)AJB::Instance->PlayMode));
-	}
+	
 	else if (StrCommand == "matchingplayers")
 	{
 		
@@ -382,7 +383,7 @@ void UFunctions::OutputText(SDK::UConsole* This, SDK::FString* Text)
 	OFF::OutputText.VerifyFC<Decl::OutputText>()(This, Text);
 }
 
-#include <sstream>
+
 
 static std::vector<SDK::UPlayer*> ServerAdmins{};
 
@@ -426,6 +427,10 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	{
 		exit(0);
 	}
+	else if (StrCommand == "playmode")
+	{
+		ConsoleOutput::Text(std::format(L"Current PlayMode: {}", SDT::EPlayModeW[(byte)AJB::Instance->PlayMode]));
+	}
 	else if (StrCommand.find("kick") != std::string::npos && StrCommand.size() > 5)
 	{
 		const uint32 PlayerIndex = std::stoi(StrCommand.substr(5));
@@ -434,6 +439,25 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		{
 			if (Driver->ClientConnections.IsValidIndex(PlayerIndex)) UFunctions::CloseConnection(Driver->ClientConnections[PlayerIndex]);
 		}		
+	}
+	
+	else if (StrCommand.find("AJBExecInternalSwapCharacter") == 0)
+	{
+		SDK::ABP_AJBInGamePlayerController_C* Player = Pointers::Player<SDK::ABP_AJBInGamePlayerController_C>();
+		if (Player && Player->Character->IsA(SDK::AAJBInGameCharacterBase::StaticClass()))
+		{
+			int NewChar = std::stoi(StrCommand.substr(29));
+			if (NewChar)
+			{
+				//static_cast<SDK::AAJBInGameCharacterBase*>(Player->Character)->SetMatchingPlayerIndex(NewChar);
+				Player->ROS_DebugCharaChange(NewChar);
+				ConsoleOutput::Text(std::format(L"Changing character to [{}] --> {}", NewChar, SDT::ESelectedCharacterW[NewChar]));
+			}			
+		}
+		else
+		{
+			ConsoleOutput::Text(L"Unable to swap characters.");
+		}
 	}
 	else if (StrCommand.find("AJBExecInternal Callback") == 0)
 	{
@@ -455,24 +479,6 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			Stream << std::hex << std::uppercase << RecoveredAddress;
 			ConsoleOutput::Text(L"Callback " + Stream.str());
 		}		
-	}
-	else if (StrCommand.find("AJBExecInternalSwapCharacter") == 0)
-	{
-		SDK::ABP_AJBInGamePlayerController_C* Player = Pointers::Player<SDK::ABP_AJBInGamePlayerController_C>();
-		if (Player && Player->Character->IsA(SDK::AAJBInGameCharacterBase::StaticClass()))
-		{
-			int NewChar = std::stoi(StrCommand.substr(29));
-			if (NewChar)
-			{
-				//static_cast<SDK::AAJBInGameCharacterBase*>(Player->Character)->SetMatchingPlayerIndex(NewChar);
-				Player->ROS_DebugCharaChange(NewChar);
-				ConsoleOutput::Text(L"Changing character to " + std::to_wstring(NewChar));
-			}			
-		}
-		else
-		{
-			ConsoleOutput::Text(L"Unable to swap characters.");
-		}
 	}
 	else if (StrCommand == "char")
 	{
@@ -637,12 +643,16 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 
 		AJB::Instance->bIsLocalSessionMode = true;
 		AJB::Instance->CreateSession();
+
+		ConsoleOutput::Text(std::format(L"Creating a session with parameters === [Area]: {} || [Mode]: {} || [NPC Num]: {} || [NPC Difficulty]: {}", SDT::EDamageAreaType.Find(PARM_Area), SDT::EPlayModeW[PARM_PlayMode], PARM_NPCCount, PARM_NPCDifficulty));
 	}
 	else if (StrCommand.find("AJBExecInternalChar") == 0)
 	{
 		int NewChar = std::stoi(StrCommand.substr(20));
 		AJB::TEMP_CachedCharacterID = NewChar;
 		AJB::SetSelectedCharacter((AJB::ESelectedCharacter)NewChar);
+
+		ConsoleOutput::Text(std::format(L"Setting character number to [{}] --> {} || Requires level restart and may not reflect during online sessions, use AJBExecInternalSwapCharacter instead.", NewChar, SDT::ESelectedCharacterW[NewChar]));
 	}
 	else if (StrCommand.find("AJBExecInternalMode") == 0)
 	{
@@ -663,6 +673,25 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 
 		AJB::Instance->PlayMode = (SDK::EPlayMode)NewPlayMode;
 		if (AJB::MOD_Global_Synchronizer) AJB::MOD_Global_Synchronizer->PlayMode = NewPlayMode;
+	}
+	else if (StrCommand == "chartable")
+	{
+		for (int i{0}; i < AJB::Instance->CharacterInfoTable->RowMap.Num(); ++i)
+		{
+			SDK::TMap<SDK::FName, SDK::FAJBCharacterInfo*>& RowMap = (SDK::TMap<SDK::FName, SDK::FAJBCharacterInfo*>&)AJB::Instance->CharacterInfoTable->RowMap;
+			//if (RowMap[i].First.ToString() == "CharaParam.C28") RowMap[i].Second->CharaIndex = 31;
+			LogA(RowMap[i].First.ToString(), std::to_string(RowMap[i].Second->CharaIndex));
+		}
+	}
+	else if (StrCommand == "charmap")
+	{
+		SDK::FAJBCharacterInfo Out{};
+		Pointers::GetBlueprintClass<SDK::UAJBUtilityFunctionLibrary>()->GetCharacterInfoByCharaTag(GWorld.GetPointer(), SDK::FGameplayTag{FName::NAME_FindOrAdd("CharaParam.DBI")}, &Out);
+		LogA(Out.CharaTag.TagName.ToString(), std::format("[bSelectable]: {} | [bShipping]: {} | [CharaIndex]: {} | [CharaSelectIndex]: {}", Out.bSelectable, Out.bShipping, Out.CharaIndex, Out.CharaSelectIndex));
+	}
+	else if (StrCommand == "AJBExecInternal Skin")
+	{
+
 	}
 	else if (StrCommand == "AJBExecInternal Konami")
 	{
@@ -888,6 +917,10 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 
 		
 		*/
+	}
+	else if (StrCommand.find("setverbosity") == 0 && StrCommand.size() > 13)
+	{
+		*reinterpret_cast<byte*>(PB(OFF::LogVerbosity)) = std::stoi(StrCommand.substr(13));
 	}
 	else if (StrCommand == "showhud")
 	{
@@ -1491,8 +1524,51 @@ SDK::APlayerController* UFunctions::Login(SDK::AGameModeBase* This, SDK::UPlayer
 	{
 		constexpr const wchar_t* GlobalPatchObjectBlueprintPath{L"/Game/Aeyth8/Blueprints/Global/BP_GlobalPatcher.BP_GlobalPatcher_C"};
 		constexpr const wchar_t* OptionsMenuBlueprintPath{L"/Game/Aeyth8/Blueprints/UI/OptionsMenu/WBP_OptionsMenu.WBP_OptionsMenu_C"};
-		constexpr const wchar_t* CallbackTimerHandlerPath{L"/Game/Aeyth8/Blueprints/Global/WBP_CallbackTimerHandler.WBP_CallbackTimerHandler_C"};
+		constexpr const wchar_t* CallbackTimerHandlerPath{L"/Game/Aeyth8/Blueprints/Global/WBP_CallbackTimerHandler.WBP_CallbackTimerHandler_C"};	// TO BE DEPRECATED
+		constexpr const wchar_t* CallbackTimerPath{L"/Game/Aeyth8/Blueprints/Global/BP_CallbackTimer.BP_CallbackTimer_C"};
 		constexpr const wchar_t* SynchronizerPath{L"/Game/Aeyth8/Blueprints/Global/ServerReplicated/BP_Synchronizer.BP_Synchronizer_C"};
+
+		
+
+
+		//Call<void(__thiscall*)(SDK::AActor*, SDK::FTransform const&, SDK::AActor*, SDK::APawn*, bool, bool, bool)>(PB(0x11BEAB0))(NewTimer, SDK::FTransform{}, 0, 0, false, true, false); // PostSpawnInitialize
+
+		/*Call<void(__thiscall*)(void*, SDK::ULevel*)>(PB(0x177C710))(&NewTimer->PrimaryActorTick, GWorld.GetPointer()->CurrentLevel); // RegisterTickFunction
+		Call<void(__thiscall*)(void*, bool)>(PB(0x1782F30))(&NewTimer->PrimaryActorTick, true); // SetTickFunctionEnable*/
+
+		/*NewTimer->UserConstructionScript();
+		NewTimer->CreateTimer(0, 0, 5);
+		NewTimer->ReceiveTick(1 / 60.0f);*/
+
+		// Because it refuses to tick if I use StaticConstructObject_Internal BUT REFUSES TO BECOME ROOTSET IF I DIRECTLY SET IT TO ROOTSET IN GOBJECTS WHICH PISSES ME OFF BECAUSE THIS IS STUPID, I HAVE TO MAKE MY OWN FAKE TICK
+		/*static SDK::UClass* CallbackTimerNew = UFunctions::StaticLoadClass(AJB::CoreUObject, GEngine, CallbackTimerPath, nullptr, 0, nullptr);
+		Pointers::FActorSpawnParameters S{SDK::ESpawnActorCollisionHandlingMethod::AlwaysSpawn};
+		static SDK::ABP_CallbackTimer_C* NewTimer = (SDK::ABP_CallbackTimer_C*)Pointers::SpawnActorInternal(GWorld.GetPointer(), CallbackTimerNew, SDK::FVector{}, SDK::FRotator{}, S);*/
+		//NewTimer->Outer = GEngine->GameViewport;
+		/*LogA("GetItemByIndex", SDK::UObject::GObjects->GetItemByIndex(NewTimer->Index)->Object->GetFullName());
+		SDK::UObject::GObjects->GetItemByIndex(NewTimer->Index)->Flags |= EInternalObjectFlags::RootSet;
+		*reinterpret_cast<int32*>(&NewTimer->Flags) |= EInternalObjectFlags::RootSet;*/
+		/*
+		https://forums.unrealengine.com/t/keeping-actors-between-levels/3085/4
+		"Be aware, that you cannot do this with an AActor. I’ve worked around this though in the past by preserving the “guts” of an AActor in a UObject and restoring it on a newly spawned actor on the other side."
+
+		OH MY GOD!
+		*/
+
+		/*
+		SDK::ABP_CallbackTimer_C* NewTimer = (SDK::ABP_CallbackTimer_C*)Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(UFunctions::StaticLoadClass(AJB::CoreUObject, GEngine, CallbackTimerPath, nullptr, 0, nullptr), static_cast<SDK::UGameViewportClient*>(GEngine->GameViewport), FName::NAME_FindOrAdd(CallbackTimerPath), 0, EInternalObjectFlags::RootSet, 0, 0, 0, 0);
+		NewTimer->PrimaryActorTick.bCanEverTick = true;
+		NewTimer->PrimaryActorTick.bAllowTickOnDedicatedServer = true;
+		NewTimer->PrimaryActorTick.bStartWithTickEnabled = true;
+		NewTimer->PrimaryActorTick.bTickEvenWhenPaused = true;
+		NewTimer->BeginInternalTick();
+		float P = Pointers::GetBlueprintClass<SDK::UGameplayStatics>()->GetWorldDeltaSeconds(GWorld);
+		NewTimer->InternalTimerTick(P);
+
+		NewTimer->CreateTimer(0, 0, 5);
+		NewTimer->CreateTimer(0, 0, 5.5);
+		NewTimer->CreateTimer(0, 0, 1.5);
+		NewTimer->CreateTimer(0, 0, 3.7);*/
 
 		AJB::MOD_CallbackTimerClass = UFunctions::StaticLoadClass(AJB::CoreUObject, GEngine, CallbackTimerHandlerPath, nullptr, 0, nullptr);
 		if (AJB::MOD_CallbackTimerClass)
@@ -2088,6 +2164,76 @@ void UFunctions::Invoke(SDK::UFunction* This, SDK::UObject* Obj, void* FFrame_St
 		}
 	}
 
+	constexpr const wchar_t* SDT_CheatNames[] = 
+	{
+		L"ROS_DebugCharaChange", L"ROS_DebugLastSurvivor", L"DebugAutoFullMP_On", L"ROS_DebugEnableAirJump", L"ROS_DebugChangeSuperJump", L"ROS_DebugSPMax",
+		L"ROS_DebugSetNPCNum", L"ROS_DebugCPMax", L"ROS_DebugChangeCollisionEnable", L"ROS_DebugAPMax", L"ROS_DebugAddPassiveSkill", L"ROS_Debug_FinishMatching",
+		L"ROS_Debug_BitesTheDustForceActive", L"ROS_Debug_ChangeDamageArea", L"DebugChangeForceFireSkillCore", L"DebugForceFireSkill_On",
+	};
+	constexpr int32 SIZE_CheatNames = sizeof(SDT_CheatNames) / sizeof(SDT_CheatNames[0]);
+	static SDK::FName AdminOnlyCheats[SIZE_CheatNames]{};
+
+	static bool bCheatsInitialized{false};
+	if (!bCheatsInitialized)
+	{
+		bCheatsInitialized = true;
+		for (int i{0}; i < SIZE_CheatNames; ++i)
+		{
+			AdminOnlyCheats[i] = FName::NAME_FindOrAdd(SDT_CheatNames[i]);
+		}
+	}
+
+	// HAHAHA THIS WORKED FIRST TRY NO WAY
+
+	if (AJB::IsServer())
+	{
+		for (int i{0}; i < SIZE_CheatNames; ++i)
+		{
+			if (This->Name == AdminOnlyCheats[i])
+			{
+				SDK::UNetConnection* NetConnection{nullptr};
+
+				if (Obj->IsA(SDK::APlayerController::StaticClass()))
+				{
+					NetConnection = static_cast<SDK::APlayerController*>(Obj)->NetConnection;					
+				}
+				else if (Obj->IsA(SDK::ACharacter::StaticClass()))
+				{
+					if (SDK::APlayerController* Controller = static_cast<SDK::APlayerController*>(static_cast<SDK::ACharacter*>(Obj)->Owner))
+					{
+						if (Controller->IsA(SDK::APlayerController::StaticClass())) NetConnection = Controller->NetConnection;
+					}
+				}
+
+				if (NetConnection)
+				{
+					bool bIsUnauthorized{true};
+
+					SDK::UPlayer* ConnectedPlayer{nullptr};
+					for (SDK::UNetConnection* Connection : GWorld.GetPointer()->NetDriver->ClientConnections)
+					{
+
+					}
+
+					for (SDK::UPlayer* Admin : ServerAdmins)
+					{
+						if (Admin && Admin->PlayerController && Admin->PlayerController->NetConnection && Admin->PlayerController->NetConnection == NetConnection)
+						{
+							bIsUnauthorized = false;
+							break;
+						}
+					}
+
+					LogA("Kicked for cheating", Obj->GetFullName());
+					CloseConnection(NetConnection);
+					return;
+				}
+			
+			}
+
+			
+		}
+	}
 	OFF::Invoke.VerifyFC<Decl::Invoke>()(This, Obj, FFrame_Stack, Result);
 }
 
@@ -2159,4 +2305,16 @@ SDK::UObject* __fastcall UFunctions::StaticLoadObject(SDK::UClass* ObjectClass, 
 
 	LogA("StaticLoadObject", std::format("[ObjectClass]: {} {} | [InOuter]: {} | [Name]: {} | [Filename]: {} | [LoadFlags]: {} | [Sandbox]: {}", ObjectClass->GetFullName(), HexToString((uintptr_t)ObjectClass), InOuter->GetFullName(), AName.ToString(), AFilename.ToString(), LoadFlags, Sandbox->GetFullName()));
 	return OFF::StaticLoadObject.VerifyFC<Decl::StaticLoadObject>()(ObjectClass, InOuter, InName, Filename, LoadFlags, Sandbox, bAllowObjectReconciliation);
+}
+
+SDK::UObject* __fastcall A8CL::UFunctions::StaticConstructObject_Internal(SDK::UClass* InClass, SDK::UObject* InOuter, SDK::FName InName, unsigned int InFlags, EInternalObjectFlags InternalSetFlags, SDK::UObject* InTemplate, bool bCopyTransientsFromClassDefaults, void** InInstanceGraph, bool bAssumeTemplateIsArchetype)
+{
+	static SDK::FName CallbackTimer = FName::NAME_FindOrAdd("BP_CallbackTimer_C");
+	/*if (InternalSetFlags & EInternalObjectFlags::RootSet)*/if (InName == CallbackTimer)
+	{
+		LogA("StaticConstructObject_Internal", std::format("[InClass]: {} | [InOuter]: {} | [InName]: {} | [InFlags]: {} | [InternalSetFlags]: {} | [InTemplate]: {} | [bCopyTransientsFromClassDefaults]: {} | [bAssumeTemplateIsArchetype]: {}", InClass->GetFullName(), InOuter->GetFullName(), InName.ToString(), InFlags, (int32)InternalSetFlags, InTemplate->GetFullName(), bCopyTransientsFromClassDefaults, bAssumeTemplateIsArchetype));
+	
+		return OFF::StaticConstructObject.VerifyFC<Decl::StaticConstructObject_Internal>()(InClass, InOuter, InName, InFlags, EInternalObjectFlags::RootSet, 0, 0, 0, 0);
+	}
+	return OFF::StaticConstructObject.VerifyFC<Decl::StaticConstructObject_Internal>()(InClass, InOuter, InName, InFlags, InternalSetFlags, InTemplate, bCopyTransientsFromClassDefaults, InInstanceGraph, bAssumeTemplateIsArchetype);
 }

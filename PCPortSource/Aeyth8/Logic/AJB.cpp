@@ -115,7 +115,7 @@ SDK::UClass*						AJB::MOD_SynchronizerClass{nullptr};
 SDK::ABP_Synchronizer_C*			AJB::MOD_PROXY_Synchronizer{nullptr};
 SDK::ABP_Synchronizer_C*			AJB::MOD_Global_Synchronizer{nullptr};
 
-const wchar_t*						AJB::DLLCommitVersion{L"[v0.5.5]"};
+const wchar_t*						AJB::DLLCommitVersion{L"[v0.6.5]"};
 UC::FString*						AJB::StrDLLCommitVersion{nullptr};
 UC::FString*						AJB::StrInGameUserName{nullptr};
 
@@ -605,6 +605,8 @@ void AJB::Init_Hooks()
 		AJB::bServerAllowsAdmins = CMLA::ServerAdminPassword.HasChanged();
 		AJB::bServerHasPassword = CMLA::ServerPreLoginPassword.HasChanged();
 
+
+		Hooks::CreateAndEnableHook(OFF::StaticConstructObject, UFunctions::StaticConstructObject_Internal);
 		//Hooks::CreateAndEnableHook(GetBaseMaterial, HGetBaseMaterial);
 
 		/* If I remember correctly none of these hooks did anything.
@@ -633,7 +635,7 @@ void AJB::Init_Engine()
 
 	//MRWT::Activate();
 
-	*reinterpret_cast<byte*>(PB(OFF::LogVerbosity)) = 6u;
+	if (AJB::bIsDedicatedServer || AJB::bDebugModeFromCMLA) *reinterpret_cast<byte*>(PB(OFF::LogVerbosity)) = 6u;
 
 	AJB::CoreUObject = SDK::UObject::FindClass("Class CoreUObject.Object");
 

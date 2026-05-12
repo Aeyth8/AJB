@@ -35,7 +35,7 @@ static long __stdcall VEH_Filter(PEXCEPTION_POINTERS Error)
 }
 
 extern void LogImports();
-
+extern "C" void ParseIAT();
 
 // Called immediately before WinMainCRTStartup (entry), runs in-thread of entry to execute code before anything else begins.
 // 0x20773C4
@@ -50,6 +50,7 @@ static void PreInit()
 	LogA("GetCommandLineA", GetCommandLineA());
 	LogA("INITIALIZED", "The Global Base Address [GBA] is " + HexToString(GBA));
 
+	//ParseIAT();
 	//LogImports();
 
 	AJB::Init_Hooks();

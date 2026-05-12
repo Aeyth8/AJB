@@ -126,6 +126,9 @@
     <Filter Include="Aeyth8\A8CL\Logger">
       <UniqueIdentifier>{b75cad39-4460-4536-83c5-e0c5d37cdbca}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SDK\Custom\CallbackTimer">
+      <UniqueIdentifier>{7023cffe-497a-40d3-8ade-32719304cd64}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -377,6 +380,12 @@
     <ClCompile Include="LogImports.cpp">
       <Filter>Aeyth8\A8CL</Filter>
     </ClCompile>
+    <ClCompile Include="Dumper-7\CustomSDK\BP_CallbackTimer_functions.cpp">
+      <Filter>SDK\Custom\CallbackTimer</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\AJBIngameUtilFunctionLibrary_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Aeyth8\Logger.hpp">
@@ -541,10 +550,16 @@
     <ClInclude Include="Aeyth8\Tools\UnrealTypes.h">
       <Filter>Aeyth8\Tools</Filter>
     </ClInclude>
+    <ClInclude Include="Dumper-7\CustomSDK\BP_CallbackTimer_classes.hpp">
+      <Filter>SDK\Custom\CallbackTimer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Dumper-7\NameCollisions.inl">
       <Filter>SDK</Filter>
+    </None>
+    <None Include="Aeyth8\Tools\StringTables.inl">
+      <Filter>Aeyth8\Tools</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

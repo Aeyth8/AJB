@@ -86,7 +86,7 @@ public:
 	};
 
 	/** Objects flags for internal use (GC, low level UObject code) */
-	enum class EInternalObjectFlags : __int32
+	enum EInternalObjectFlags : __int32
 	{
 		None = 0,
 		//~ All the other bits are reserved, DO NOT ADD NEW FLAGS HERE!
@@ -326,7 +326,7 @@ public:
 
 	static SDK::UObject*__fastcall StaticLoadObject(SDK::UClass* ObjectClass, SDK::UObject* InOuter, const wchar_t* InName, const wchar_t* Filename, unsigned int Flags, SDK::UPackageMap* Sandbox, bool bAllowObjectReconciliation);
 
-
+	static SDK::UObject* __fastcall StaticConstructObject_Internal(SDK::UClass* InClass, SDK::UObject* InOuter, SDK::FName InName, unsigned int InFlags, EInternalObjectFlags InternalSetFlags, SDK::UObject* InTemplate, bool bCopyTransientsFromClassDefaults, void** InInstanceGraph, bool bAssumeTemplateIsArchetype);
 
 
 

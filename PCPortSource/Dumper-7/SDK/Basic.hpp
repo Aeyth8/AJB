@@ -179,7 +179,10 @@ struct FUObjectItem final
 {
 public:
 	class UObject*                                Object;                                            // 0x0000(0x0008)(NOT AUTO-GENERATED PROPERTY)
-	uint8                                         Pad_8[0x10];                                       // 0x0008(0x0010)(Fixing Struct Size After Last Property [ Dumper-7 ])
+	int32                                         Flags;                                             // 0x0008(0x0004)
+	int32                                         ClusterIndex;                                      // 0x000C(0x0004)
+	int32                                         SerialNumber;                                      // 0x0010(0x0004)
+	unsigned char                                 pad_ZM3F4CBDUC[0x04];                              // 0x0014(0x0004)
 };
 static_assert(alignof(FUObjectItem) == 0x000008, "Wrong alignment on FUObjectItem");
 static_assert(sizeof(FUObjectItem) == 0x000018, "Wrong size on FUObjectItem");
@@ -214,8 +217,8 @@ public:
 	{
 		return reinterpret_cast<FUObjectItem**>(DecryptPtr(Objects));
 	}
-	
-	inline class UObject* GetByIndex(const int32 Index) const
+
+	inline struct FUObjectItem* GetItemByIndex(const int32 Index) const
 	{
 		const int32 ChunkIndex = Index / ElementsPerChunk;
 		const int32 InChunkIdx = Index % ElementsPerChunk;
@@ -226,7 +229,12 @@ public:
 		FUObjectItem* ChunkPtr = GetDecrytedObjPtr()[ChunkIndex];
 		if (!ChunkPtr) return nullptr;
 		
-		return ChunkPtr[InChunkIdx].Object;
+		return &ChunkPtr[InChunkIdx];
+	}
+	
+	inline class UObject* GetByIndex(const int32 Index) const
+	{
+		return GetItemByIndex(Index)->Object;
 	}
 };
 static_assert(alignof(TUObjectArray) == 0x000008, "Wrong alignment on TUObjectArray");
@@ -698,7 +706,7 @@ inline bool operator&(EEnumClass Left, EEnumClass Right)																								
 	return (((std::underlying_type<EEnumClass>::type)(Left) & (std::underlying_type<EEnumClass>::type)(Right)) == (std::underlying_type<EEnumClass>::type)(Right));		\
 }																																										
 
-enum class EObjectFlags : int32
+enum EObjectFlags : int32
 {
 	NoFlags							= 0x00000000,
 

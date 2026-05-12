@@ -229,6 +229,11 @@ namespace A8CL
 			SDK::AActor*	Owner;
 			SDK::APawn*		Instigator;
 			SDK::ULevel*	OverrideLevel;
+			/*uint16			bRemoteOwned					: 1; // Is the actor remotely owned. This should only be set true by the package map when it is creating an actor on a client that was replicated from the server.
+			uint16			bNoFail							: 1; // Determines whether spawning will not fail if certain conditions are not met. If true, spawning will not fail because the class being spawned is `bStatic=true` or because the class of the template Actor is not the same as the class of the Actor being spawned.
+			uint16			bDeferConstruction				: 1; // Determines whether the construction script will be run. If true, the construction script will not be run on the spawned Actor. Only applicable if the Actor is being spawned from a Blueprint.
+			uint16			bAllowDuringConstructionScript	: 1; // Determines whether or not the actor may be spawned when running a construction script. If true spawning will fail if a construction script is being run.
+			EObjectFlags	ObjectFlags;*/
 
 			union {
 				SDK::ESpawnActorCollisionHandlingMethod eSpawnCollisionHandlingOverride;

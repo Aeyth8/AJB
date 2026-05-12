@@ -117,7 +117,7 @@ enum class EAJBLimitedBounusSign : uint8
 
 // Enum AJB.EPlayMode
 // NumValues: 0x000C
-enum class EPlayMode : uint8
+enum EPlayMode : uint8
 {
 	None                                     = 0,
 	Solo                                     = 1,
