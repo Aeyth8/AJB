@@ -2215,18 +2215,24 @@ void UFunctions::Invoke(SDK::UFunction* This, SDK::UObject* Obj, void* FFrame_St
 				{
 					bool bIsUnauthorized{true};
 
-					for (SDK::UPlayer* Admin : ServerAdmins)
+					if (AJB::bServerAllowsAdmins)
 					{
-						if (Admin && Admin->PlayerController && Admin->PlayerController->NetConnection && Admin->PlayerController->NetConnection == NetConnection)
+						for (SDK::UPlayer* Admin : ServerAdmins)
 						{
-							bIsUnauthorized = false;
-							break;
+							if (Admin && Admin->PlayerController && Admin->PlayerController->NetConnection && Admin->PlayerController->NetConnection == NetConnection)
+							{
+								bIsUnauthorized = false;
+								break;
+							}
 						}
 					}
 
-					LogA("Kicked for cheating", Obj->GetFullName());
-					CloseConnection(NetConnection);
-					return;
+					if (bIsUnauthorized)
+					{
+						LogA("Kicked for cheating", Obj->GetFullName());
+						CloseConnection(NetConnection);
+						return;
+					}
 				}
 			
 			}
