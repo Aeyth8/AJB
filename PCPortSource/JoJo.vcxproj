@@ -139,6 +139,7 @@
     </ClInclude>
     <ClInclude Include="Aeyth8\Tools\BytePatcher.h" />
     <ClInclude Include="Aeyth8\Tools\Pointers.h" />
+    <ClInclude Include="Aeyth8\Tools\TickHook\TickHook.h" />
     <ClInclude Include="Aeyth8\Tools\UFunctions.hpp" />
     <ClInclude Include="Aeyth8\Tools\UnrealExternWrapper.h" />
     <ClInclude Include="Aeyth8\Tools\UnrealTypes.h" />
@@ -221,6 +222,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Aeyth8\Tools\TickHook\TickHook.cpp" />
     <ClCompile Include="Aeyth8\Tools\UFunctions.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>

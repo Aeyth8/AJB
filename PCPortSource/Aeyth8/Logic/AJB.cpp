@@ -54,6 +54,9 @@
 // ......
 #include "Server/Temporary/MRWT.h"
 
+// New native and much more efficient callback timer using the native Engine Tick.
+#include "../Tools/TickHook/TickHook.h"
+
 /*
 
 Written by Aeyth8
@@ -115,7 +118,7 @@ SDK::UClass*						AJB::MOD_SynchronizerClass{nullptr};
 SDK::ABP_Synchronizer_C*			AJB::MOD_PROXY_Synchronizer{nullptr};
 SDK::ABP_Synchronizer_C*			AJB::MOD_Global_Synchronizer{nullptr};
 
-const wchar_t*						AJB::DLLCommitVersion{L"[v0.6.5]"};
+const wchar_t*						AJB::DLLCommitVersion{L"[v0.6.6]"};
 UC::FString*						AJB::StrDLLCommitVersion{nullptr};
 UC::FString*						AJB::StrInGameUserName{nullptr};
 
@@ -181,6 +184,9 @@ std::vector<Hooks::HookStructure> StandaloneHooks =
 	//{OFF::SetClientTravel,				UFunctions::SetClientTravel},
 	//{OFF::ClientTravelInternal,			UFunctions::ClientTravelInternal},
 	{OFF::StartLoadingDestination,			UFunctions::StartLoadingDestination},
+
+
+	{OFF::Tick,								TickHook::Tick},
 };
 
 A8CL::OFFSET NetID("UAJBNetworkObserver::GetNetID", 0x4ECC80);
@@ -875,7 +881,10 @@ bool A8CL::AJB::IsOfflineMode()
 
 void AJB::CreateCallbackTimer(void* FunctionCallback, float fTimer)
 {
-	if (AJB::MOD_CallbackTimer)
+	TickHook::FTimerHandlerEntry Entry{(ull)FunctionCallback, fTimer};
+	TickHook::CallbackTimers.push_back(Entry);
+
+	/*if (AJB::MOD_CallbackTimer)
 	{
 		uint64 Function = (uint64)FunctionCallback;
 
@@ -883,7 +892,7 @@ void AJB::CreateCallbackTimer(void* FunctionCallback, float fTimer)
 		uint32 Upper = static_cast<uint32>((Function >> 32) & 0xFFFFFFFF);
 
 		AJB::MOD_CallbackTimer->SetCallbackTimer(fTimer, Upper, Lower);
-	}
+	}*/
 }
 
 void AJB::TranslateSimpleMatch()
@@ -1185,7 +1194,7 @@ void __fastcall AJB::OnToggleFullMapVisibility(SDK::UObject* Object)
 		SDK::ABP_AJBInGameHUD_C* HUD = reinterpret_cast<SDK::ABP_AJBInGameHUD_C*>(Object);
 		HUD->PlayerOwner->bShowMouseCursor = bToggled;
 
-		OFFSET::VFTable<void(__thiscall*)(SDK::AAJBHUDBase*, SDK::UClass*, SDK::UAJBUserWidget**)>(HUD)[0xFE](HUD, SDK::UWB_FullMap_C::StaticClass(), (SDK::UAJBUserWidget**)&MapCache); // AAJBHUDBase::FindAJBWidgetOfClass
+		OFFSET::VFTable<void(__thiscall*)(SDK::AAJBHUDBase*, SDK::UClass*, SDK::UAJBUserWidget**)>(HUD)[OFF::VFT_FindWidgetOfClass](HUD, SDK::UWB_FullMap_C::StaticClass(), (SDK::UAJBUserWidget**)&MapCache); // AAJBHUDBase::FindAJBWidgetOfClass
 
 		if (MapCache)
 		{

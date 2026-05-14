@@ -8,6 +8,8 @@ namespace OFF
 {
 	// Basic UE Functions
 
+	OFFSET Tick("UGameEngine::Tick", 0x13E1E30);
+
 	OFFSET GEngine("GEngine", 0x32553B8);
 	OFFSET GWorld("GWorld", 0x3257AF0);
 

@@ -2324,3 +2324,8 @@ SDK::UObject* __fastcall A8CL::UFunctions::StaticConstructObject_Internal(SDK::U
 	}
 	return OFF::StaticConstructObject.VerifyFC<Decl::StaticConstructObject_Internal>()(InClass, InOuter, InName, InFlags, InternalSetFlags, InTemplate, bCopyTransientsFromClassDefaults, InInstanceGraph, bAssumeTemplateIsArchetype);
 }
+
+void UFunctions::Tick(SDK::UGameEngine* This, float DeltaSeconds, bool bIdleMode)
+{
+	return OFF::Tick.VerifyFC<Decl::Tick>()(This, DeltaSeconds, bIdleMode);
+}

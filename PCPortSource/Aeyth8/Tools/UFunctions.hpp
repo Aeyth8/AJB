@@ -180,6 +180,9 @@ public:
 	class Decl
 	{
 	public:
+
+		typedef void(__fastcall* Tick)(SDK::UGameEngine* This, float DeltaSeconds, bool bIdleMode);
+
 		typedef void(__thiscall* UConsole)(SDK::UConsole* This, SDK::FString& Command);
 
 		typedef void(__thiscall* OutputText)(SDK::UConsole* This, SDK::FString* Text);
@@ -248,7 +251,7 @@ public:
 
 		typedef bool (__thiscall* RequestLevel)(SDK::ULevelStreaming* This, SDK::UWorld* PersistentWorld, bool bAllowLevelLoadRequests, EReqLevelBlock BlockPolicy);
 
-		typedef void(__thiscall* ClientTeamMessageImplementation)(SDK::APlayerController* This, SDK::APlayerState* SenderPlayerState, SDK::FString* String, SDK::FName Type, float MsgLifeTime);		
+		typedef void(__thiscall* ClientTeamMessageImplementation)(SDK::APlayerController* This, SDK::APlayerState* SenderPlayerState, SDK::FString* String, SDK::FName Type, float MsgLifeTime);
 	};
 
 	
@@ -328,7 +331,7 @@ public:
 
 	static SDK::UObject* __fastcall StaticConstructObject_Internal(SDK::UClass* InClass, SDK::UObject* InOuter, SDK::FName InName, unsigned int InFlags, EInternalObjectFlags InternalSetFlags, SDK::UObject* InTemplate, bool bCopyTransientsFromClassDefaults, void** InInstanceGraph, bool bAssumeTemplateIsArchetype);
 
-
+	void __fastcall Tick(SDK::UGameEngine* This, float DeltaSeconds, bool bIdleMode);
 
 
 

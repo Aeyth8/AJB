@@ -14,6 +14,8 @@ namespace A8CL
 	{
 		// Basic UE Functions
 
+		extern OFFSET Tick;
+
 		extern OFFSET GEngine;
 		extern OFFSET GWorld;
 
@@ -104,6 +106,16 @@ namespace A8CL
 		constexpr ull NetDriverGetNetMode		= 0x14F90F0;
 		constexpr ull WorldInternalGetNetMode	= 0x17C4820;
 		constexpr ull ActorInternalGetNetMode	= 0x11BA5C0;
+		// VFTable Functions
+
+		/*
+		
+		#### NOTE!!! Until I add a proper object system for VFT Hooks I cannot use them unless I change the whole system, since I have to plus base separately.
+		
+		*/
+
+		constexpr ull VFT_GameEngineTick		= 0x4F;	// UGameEngine::Tick
+		constexpr ull VFT_FindWidgetOfClass		= 0xFE; // AAJBHUDBase::FindAJBWidgetOfClass
 	}
 
 
