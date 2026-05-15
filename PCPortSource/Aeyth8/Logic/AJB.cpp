@@ -26,7 +26,6 @@
 #include "../../Dumper-7/CustomSDK/WBP_OptionsMenu_classes.hpp"				// Custom SDK header (NOT GAME NATIVE)
 #include "../../Dumper-7/CustomSDK/BP_GlobalPatcher_classes.hpp"			// Custom SDK header (NOT GAME NATIVE)
 #include "../../Dumper-7/CustomSDK/LemonHelper_classes.hpp"					// Custom SDK header (NOT GAME NATIVE)
-#include "../../Dumper-7/CustomSDK/WBP_CallbackTimerHandler_classes.hpp"	// Custom SDK header (NOT GAME NATIVE)
 #include "../../Dumper-7/CustomSDK/BP_Synchronizer_classes.hpp"				// Custom SDK header (NOT GAME NATIVE)
 
 #include <intrin.h>
@@ -89,6 +88,8 @@ __int32*							AJB::PlayerPoints{nullptr};
 bool*								AJB::bDebugInputMode{nullptr};
 
 SDK::ALemonHelper_C*				AJB::MOD_LemonHelper{nullptr};
+SDK::UMaterial*						AJB::M_LemonPossession{nullptr};
+SDK::UMaterial*						AJB::AM_LemonPossession{nullptr};
 
 int									AJB::TEMP_CachedCharacterID{1};
 int									AJB::NUM_CPUCores{0};
@@ -111,14 +112,11 @@ SDK::UWBP_OptionsMenu_C*			AJB::MOD_OptionsMenu{nullptr};
 SDK::UClass*						AJB::MOD_GlobalPatcherClass{nullptr};
 SDK::UBP_GlobalPatcher_C*			AJB::MOD_GlobalPatcher{nullptr};
 
-SDK::UClass*						AJB::MOD_CallbackTimerClass{nullptr};
-SDK::UWBP_CallbackTimerHandler_C*	AJB::MOD_CallbackTimer{nullptr};
-
 SDK::UClass*						AJB::MOD_SynchronizerClass{nullptr};
 SDK::ABP_Synchronizer_C*			AJB::MOD_PROXY_Synchronizer{nullptr};
 SDK::ABP_Synchronizer_C*			AJB::MOD_Global_Synchronizer{nullptr};
 
-const wchar_t*						AJB::DLLCommitVersion{L"[v0.6.6]"};
+const wchar_t*						AJB::DLLCommitVersion{L"[v0.6.7]"};
 UC::FString*						AJB::StrDLLCommitVersion{nullptr};
 UC::FString*						AJB::StrInGameUserName{nullptr};
 
@@ -612,7 +610,7 @@ void AJB::Init_Hooks()
 		AJB::bServerHasPassword = CMLA::ServerPreLoginPassword.HasChanged();
 
 
-		Hooks::CreateAndEnableHook(OFF::StaticConstructObject, UFunctions::StaticConstructObject_Internal);
+		//Hooks::CreateAndEnableHook(OFF::StaticConstructObject, UFunctions::StaticConstructObject_Internal);
 		//Hooks::CreateAndEnableHook(GetBaseMaterial, HGetBaseMaterial);
 
 		/* If I remember correctly none of these hooks did anything.
@@ -1242,10 +1240,7 @@ SDK::UAJBWindowWidget* __fastcall AJB::AJBWindowWidget(SDK::UAJBWindowWidget* Th
 
 			AJB::SimpleMatchHUD = (SDK::UWB_ModeSelect_C*)This;
 
-			if (AJB::MOD_CallbackTimerClass && AJB::MOD_CallbackTimer)
-			{
-				AJB::CreateCallbackTimer(AJB::TranslateSimpleMatch, 0.0f);
-			}
+			AJB::CreateCallbackTimer(AJB::TranslateSimpleMatch, 0.0f);
 		}
 		/*else if (Result->IsA(SDK::UWB_GameOver_C::StaticClass()))
 		{

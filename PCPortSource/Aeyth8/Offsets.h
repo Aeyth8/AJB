@@ -106,6 +106,7 @@ namespace A8CL
 		constexpr ull NetDriverGetNetMode		= 0x14F90F0;
 		constexpr ull WorldInternalGetNetMode	= 0x17C4820;
 		constexpr ull ActorInternalGetNetMode	= 0x11BA5C0;
+
 		// VFTable Functions
 
 		/*
@@ -115,6 +116,7 @@ namespace A8CL
 		*/
 
 		constexpr ull VFT_GameEngineTick		= 0x4F;	// UGameEngine::Tick
+		constexpr ull VFT_GetMaxFPS				= 0x51;	// UEngine::GetMaxFPS
 		constexpr ull VFT_FindWidgetOfClass		= 0xFE; // AAJBHUDBase::FindAJBWidgetOfClass
 	}
 
@@ -123,26 +125,26 @@ namespace A8CL
 	template <class Class, OFFSET& Offset>
 	struct GPointerWrapper
 	{
-		inline static Class* GPointer{nullptr};
-
+		inline static Class** GAddress{nullptr};
+		
 		inline bool IsInitialized() const
 		{
-			return this->GPointer != nullptr;
+			return this->GAddress != nullptr;
 		}
 
 		inline Class* GetPointer() const
 		{
-			return this->GPointer = *reinterpret_cast<Class**>(Offset.PlusBase());
+			return IsInitialized() ? *this->GAddress : *(this->GAddress = reinterpret_cast<Class**>(Offset.PlusBase()));
 		}
 
 		inline Class* operator->() const
 		{
-			return this->IsInitialized() ? this->GPointer : this->GetPointer();
+			return this->GetPointer();
 		}
 
 		inline operator Class* () const
 		{
-			return this->IsInitialized() ? this->GPointer : this->GetPointer();
+			return this->GetPointer();
 		}
 
 		inline Class* operator&() const

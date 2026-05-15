@@ -41,6 +41,16 @@ public:
 	bool IsA(class UClass* TypeClass) const;
 	bool IsDefaultObject() const;
 
+	inline void AddToRootSet()
+	{
+		SDK::UObject::GObjects->GetItemByIndex(Index)->Flags |= 1073741824;
+	}
+
+	inline void RemoveFromRoot()
+	{
+		SDK::UObject::GObjects->GetItemByIndex(Index)->Flags &= ~1073741824;
+	}
+
 	void ExecuteUbergraph(int32 EntryPoint);
 
 public:

@@ -27,6 +27,7 @@ namespace SDK
 	class UGameMapsSettings;
 	class UBlueprintFunctionLibrary;
 	class UGameplayStatics;
+	class UMaterial;
 	class AGameModeBase;
 	class AGameMode;
 	class APlayerController;
@@ -245,7 +246,6 @@ namespace AJB
 
 	extern SDK::UClass* MOD_OptionsMenuClass;					// Options menu class, must be loaded to create an object.
 	extern SDK::UClass* MOD_GlobalPatcherClass;					// Global patcher class, must be loaded to create an object.
-	extern SDK::UClass* MOD_CallbackTimerClass;					// Callback timer class, must be loaded to create an object.
 
 	extern SDK::UClass* MOD_SynchronizerClass;					// Synchronizer class, contains replicated variables used to sync PlayModes across from server-client, may be used for more later.
 	extern SDK::ABP_Synchronizer_C* MOD_PROXY_Synchronizer;		// It's stupid but if I want the class to live I need an object instance, however this cannot be used because it's rootset and it's supposed to.. replicate? How is that gonna work..? If it works I'd use it forever. [EDIT: No it does not replicate, this is fine, it's worth it.]
@@ -253,13 +253,14 @@ namespace AJB
 
 	extern SDK::UWBP_OptionsMenu_C* MOD_OptionsMenu;			// Options menu, a self maintained Widget Blueprint that uses its own internal ticking system, communicates with this DLL internally by executing console commands that are parsed with a hook to (APlayerController::ConsoleCommand).
 	extern SDK::UBP_GlobalPatcher_C* MOD_GlobalPatcher;			// Global object used as a translation layer between my DLL logic and Unreal Engine blueprints.
-	extern SDK::UWBP_CallbackTimerHandler_C* MOD_CallbackTimer;	// Global persistent widget object used to create inter-gamethread timers.
 
 	extern const wchar_t* DLLCommitVersion;						// Global hardcoded string used for commit versioning.
 	extern UC::FString* StrDLLCommitVersion;					// FString Singleton for UI usage, not guaranteed to be a valid pointer.
 	extern UC::FString* StrInGameUserName;						// Temporary because it's 4am and my mind has shattered I AM SO TIRED TODAY
 
 	extern SDK::ALemonHelper_C* MOD_LemonHelper;				// Only exists as a singleton during in lemon possession mode.
+	extern SDK::UMaterial* M_LemonPossession;					// UI based material
+	extern SDK::UMaterial* AM_LemonPossession;					// All around surface/particle/etc material
 
 	extern int TEMP_CachedCharacterID;
 	extern int NUM_CPUCores;

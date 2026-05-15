@@ -207,7 +207,7 @@ namespace A8CL
 			return Object->IsA(Class::StaticClass()) ? (Class*)Object : (Class*)GetTypedOuter<Class>((T*)Object->Outer);
 		}
 
-		__int64* SpawnActorInternal(SDK::UWorld* This, SDK::UClass* Class, const SDK::FVector& Location, const SDK::FRotator& Rotation, struct FActorSpawnParameters& SpawnParameters);
+		__int64* SpawnActorInternal(SDK::UWorld* This, SDK::UClass* Class, const SDK::FVector& Location, const SDK::FRotator& Rotation, const struct FActorSpawnParameters& SpawnParameters);
 
 		template <class UClass>
 		UClass* SpawnActor(SDK::UWorld* World = UWorld(), SDK::UClass* Class = UClass::StaticClass(), SDK::FVector Location = SDK::FVector(), SDK::FRotator Rotation = SDK::FRotator(), struct FActorSpawnParameters SpawnParameters = FActorSpawnParameters{})

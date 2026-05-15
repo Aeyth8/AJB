@@ -99,9 +99,6 @@
     <Filter Include="SDK\Custom\LemonHelper">
       <UniqueIdentifier>{f5c7485d-9c21-4acf-9939-5bbb51241c28}</UniqueIdentifier>
     </Filter>
-    <Filter Include="SDK\Custom\Global\Timer">
-      <UniqueIdentifier>{133a4aa5-bc08-4763-8728-24448bf92202}</UniqueIdentifier>
-    </Filter>
     <Filter Include="SDK\CPP\Storm">
       <UniqueIdentifier>{098c85fc-5e17-4268-8554-15fe85b0a34c}</UniqueIdentifier>
     </Filter>
@@ -125,9 +122,6 @@
     </Filter>
     <Filter Include="Aeyth8\A8CL\Logger">
       <UniqueIdentifier>{b75cad39-4460-4536-83c5-e0c5d37cdbca}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="SDK\Custom\CallbackTimer">
-      <UniqueIdentifier>{7023cffe-497a-40d3-8ade-32719304cd64}</UniqueIdentifier>
     </Filter>
     <Filter Include="Aeyth8\Tools\TickHook">
       <UniqueIdentifier>{c4dc4f06-c967-4266-a6bb-e5fac34e4d8d}</UniqueIdentifier>
@@ -281,9 +275,6 @@
     <ClCompile Include="Dumper-7\SDK\WB_PpBuyWindow_functions.cpp">
       <Filter>SDK\CPP\Widgets</Filter>
     </ClCompile>
-    <ClCompile Include="Dumper-7\CustomSDK\WBP_AJBTitleScreen_functions.cpp">
-      <Filter>SDK\Custom\TitleScreen</Filter>
-    </ClCompile>
     <ClCompile Include="Dumper-7\CustomSDK\WBP_OptionsMenu_functions.cpp">
       <Filter>SDK\Custom\OptionsMenu</Filter>
     </ClCompile>
@@ -341,9 +332,6 @@
     <ClCompile Include="Dumper-7\SDK\MediaAssets_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
-    <ClCompile Include="Dumper-7\CustomSDK\WBP_CallbackTimerHandler_functions.cpp">
-      <Filter>SDK\Custom\Global\Timer</Filter>
-    </ClCompile>
     <ClCompile Include="Dumper-7\SDK\BP_AJBUIMapManager_functions.cpp">
       <Filter>SDK\CPP\Widgets</Filter>
     </ClCompile>
@@ -382,9 +370,6 @@
     </ClCompile>
     <ClCompile Include="LogImports.cpp">
       <Filter>Aeyth8\A8CL</Filter>
-    </ClCompile>
-    <ClCompile Include="Dumper-7\CustomSDK\BP_CallbackTimer_functions.cpp">
-      <Filter>SDK\Custom\CallbackTimer</Filter>
     </ClCompile>
     <ClCompile Include="Dumper-7\SDK\AJBIngameUtilFunctionLibrary_functions.cpp">
       <Filter>SDK\CPP</Filter>
@@ -478,12 +463,6 @@
     <ClInclude Include="Aeyth8\A8CL\CTypes\IntegerTypes.h">
       <Filter>Aeyth8\A8CL</Filter>
     </ClInclude>
-    <ClInclude Include="Dumper-7\CustomSDK\WBP_AJBTitleScreen_classes.hpp">
-      <Filter>SDK\Custom\TitleScreen</Filter>
-    </ClInclude>
-    <ClInclude Include="Dumper-7\CustomSDK\WBP_AJBTitleScreen_parameters.hpp">
-      <Filter>SDK\Custom\TitleScreen</Filter>
-    </ClInclude>
     <ClInclude Include="Dumper-7\CustomSDK\WBP_Cursor_classes.hpp">
       <Filter>SDK\Custom\Cursor</Filter>
     </ClInclude>
@@ -523,12 +502,6 @@
     <ClInclude Include="Dumper-7\CustomSDK\LemonHelper_parameters.hpp">
       <Filter>SDK\Custom\LemonHelper</Filter>
     </ClInclude>
-    <ClInclude Include="Dumper-7\CustomSDK\WBP_CallbackTimerHandler_classes.hpp">
-      <Filter>SDK\Custom\Global\Timer</Filter>
-    </ClInclude>
-    <ClInclude Include="Dumper-7\CustomSDK\WBP_CallbackTimerHandler_parameters.hpp">
-      <Filter>SDK\Custom\Global\Timer</Filter>
-    </ClInclude>
     <ClInclude Include="Aeyth8\UConsole\ExecInternalConfig.h">
       <Filter>Aeyth8\UConsole</Filter>
     </ClInclude>
@@ -555,9 +528,6 @@
     </ClInclude>
     <ClInclude Include="Aeyth8\Tools\UnrealTypes.h">
       <Filter>Aeyth8\Tools</Filter>
-    </ClInclude>
-    <ClInclude Include="Dumper-7\CustomSDK\BP_CallbackTimer_classes.hpp">
-      <Filter>SDK\Custom\CallbackTimer</Filter>
     </ClInclude>
     <ClInclude Include="Aeyth8\Tools\TickHook\TickHook.h">
       <Filter>Aeyth8\Tools\TickHook</Filter>
