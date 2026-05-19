@@ -37,6 +37,7 @@ namespace CMLA
 	extern CommandLineParameter<wchar_t> DedicatedServerSleep;
 	extern CommandLineParameter<wchar_t> ServerAdminPassword;
 	extern CommandLineParameter<wchar_t> ServerPreLoginPassword;
+	extern CommandLineParameter<wchar_t> TEMP_bOptionsMenuV2;
 
 	// -- Global array for automated parsing, not generally needed for manual usage.
 	extern CArray<CommandLineParameter<wchar_t>*> GlobalCommandLineArgs;

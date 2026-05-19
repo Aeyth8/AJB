@@ -56,6 +56,8 @@
 // New native and much more efficient callback timer using the native Engine Tick.
 #include "../Tools/TickHook/TickHook.h"
 
+#include "ServerLogic.h"
+
 /*
 
 Written by Aeyth8
@@ -94,11 +96,6 @@ SDK::UMaterial*						AJB::AM_LemonPossession{nullptr};
 int									AJB::TEMP_CachedCharacterID{1};
 int									AJB::NUM_CPUCores{0};
 
-
-bool								AJB::bIsDedicatedServer{false};
-bool								AJB::bServerAllowsAdmins{false};
-bool								AJB::bServerHasPassword{false};
-
 bool								AJB::bDebugModeFromCMLA{false};
 bool								AJB::bIsLemonPossessioned{false};
 
@@ -116,7 +113,7 @@ SDK::UClass*						AJB::MOD_SynchronizerClass{nullptr};
 SDK::ABP_Synchronizer_C*			AJB::MOD_PROXY_Synchronizer{nullptr};
 SDK::ABP_Synchronizer_C*			AJB::MOD_Global_Synchronizer{nullptr};
 
-const wchar_t*						AJB::DLLCommitVersion{L"[v0.6.7]"};
+const wchar_t*						AJB::DLLCommitVersion{L"[v0.6.8]"};
 UC::FString*						AJB::StrDLLCommitVersion{nullptr};
 UC::FString*						AJB::StrInGameUserName{nullptr};
 
@@ -135,8 +132,6 @@ constexpr BYTE NOP{0x90};
 
 void __fastcall GetNationalMatchSchedule(SDK::UAJBGameInstance*, bool*, bool*, SDK::FAJBMatchSchedule*, SDK::FAJBMatchScheduleDateTime*, SDK::FAJBMatchScheduleDateTime*);
 
-extern void AJBPreLogin(SDK::AGameModeBase* This, SDK::FString* Options, SDK::FString* Address, SDK::FUniqueNetIdRepl* UniqueId, SDK::FString* ErrorMessage);
-
 std::vector<Hooks::HookStructure> StandaloneHooks =
 {
 	{OFF::UConsole,							UFunctions::UConsole},
@@ -145,9 +140,9 @@ std::vector<Hooks::HookStructure> StandaloneHooks =
 	{OFF::Browse,							UFunctions::Browse},
 	{OFF::Login,							UFunctions::Login},
 	{OFF::PreLogin,							UFunctions::PreLogin},
-	{OFF::AJBPreLogin,						AJBPreLogin},
+	{OFF::AJBPreLogin,						AJB::Server::PreLogin},
 	{OFF::InitListen,						UFunctions::InitListen},
-	{OFF::NotifyControlMessage,				UFunctions::NotifyControlMessage},
+	//{OFF::NotifyControlMessage,			UFunctions::NotifyControlMessage},
 	{OFF::InitLocalConnection,				UFunctions::InitLocalConnection},
 	{OFF::AppPreExit,						UFunctions::AppPreExit},
 	{OFF::IsNonPakFileNameAllowed,			UFunctions::IsNonPakFilenameAllowed},
@@ -176,6 +171,8 @@ std::vector<Hooks::HookStructure> StandaloneHooks =
 	
 	// Server logic hooks
 
+	//{OFF::HandleClientPlayer,				UFunctions::HandleClientPlayer}, TRASH!
+	{OFF::AddClientConnection, 				UFunctions::AddClientConnection},
 	{OFF::IsTenpoHost,						AJB::IsServer},
 	{OFF::IsAJBOfflineMode,					AJB::IsOfflineMode},
 	{OFF::IsOfflineMode,					AJB::IsOfflineMode},

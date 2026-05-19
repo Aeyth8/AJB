@@ -46,13 +46,13 @@ namespace A8CL
 		extern OFFSET InitLocalConnection;
 		extern OFFSET NotifyControlMessage;
 
+		extern OFFSET AddClientConnection;
+		extern OFFSET HandleClientPlayer;
 		extern OFFSET Close;
 
 		extern OFFSET UConsole;	
 		extern OFFSET ConsoleCommand;
 		extern OFFSET Browse;
-		extern OFFSET RequestLevel;
-		extern OFFSET PrepareMapChange;
 		extern OFFSET IsTimeLimitedExceeded;
 		extern OFFSET AddToWorld;
 		extern OFFSET RemoveFromWorld;
@@ -118,6 +118,7 @@ namespace A8CL
 		constexpr ull VFT_GameEngineTick		= 0x4F;	// UGameEngine::Tick
 		constexpr ull VFT_GetMaxFPS				= 0x51;	// UEngine::GetMaxFPS
 		constexpr ull VFT_FindWidgetOfClass		= 0xFE; // AAJBHUDBase::FindAJBWidgetOfClass
+		constexpr ull VFT_HandleClientPlayer	= 0x55;	// UNetConnection::HandleClientPlayer
 	}
 
 

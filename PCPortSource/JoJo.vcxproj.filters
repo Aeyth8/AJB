@@ -551,7 +551,7 @@
       <Filter>Aeyth8\Proxy8\Entry</Filter>
     </MASM>
     <MASM Include="Aeyth8\Tools\IsInLocalDirectory.asm">
-      <Filter>Aeyth8\Tools\CPP</Filter>
+      <Filter>Aeyth8\Tools</Filter>
     </MASM>
   </ItemGroup>
   <ItemGroup>

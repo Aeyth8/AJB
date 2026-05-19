@@ -41,13 +41,13 @@ namespace OFF
 	OFFSET InitLocalConnection("UIpConnection::InitLocalConnection", 0x3FBFB0); 
 	OFFSET NotifyControlMessage("UPendingNetGame::NotifyControlMessage", 0x15BDFE0);
 
+	OFFSET AddClientConnection("UNetDriver::AddClientConnection", 0x14EEDF0);
+	OFFSET HandleClientPlayer("UNetConnection::HandleClientPlayer", 0x14FB010);	
 	OFFSET Close("UNetConnection::Close", 0x14F30C0);
 
 	OFFSET UConsole("UConsole::ConsoleCommand", 0x1796230);	
 	OFFSET ConsoleCommand("APlayerController::ConsoleCommand", 0x16077D0);
 	OFFSET Browse("UEngine::Browse", 0x175C530);
-	OFFSET RequestLevel("ULevelStreaming::RequestLevel", 0x1490820);
-	OFFSET PrepareMapChange("UEngine::PrepareMapChange", 0x177AA20);
 	OFFSET IsTimeLimitedExceeded("IsTimeLimitedExceeded", 0x17C4BB0);
 	OFFSET AddToWorld("UWorld::AddToWorld", 0x17BA220);
 	OFFSET RemoveFromWorld("UWorld::RemoveFromWorld", 0x17CAEA0);

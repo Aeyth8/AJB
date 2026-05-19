@@ -111,6 +111,21 @@ bool UFunctions::Helpers::CheckForLocalDirectory(const wchar_t* Filename)
 	//Old function written in bitflag hellscape C++ is 249 bytes
 	//New function in ASM is (IsInLocalDirectory 0x46) + (actual function 0x92) is 216 bytes, barely any difference looking back but the logic should be much faster
 
+	/*
+	stupid OCD
+
+	2 E 0 0 2 F 0 0 2 E 0 0 2 E
+	2 E 0 0 2 E 0 0 2 F 0 0 2 E
+
+	129480 50795167790
+	129480 46500266030
+
+	50795167790 - 46500266030
+
+	WHY CANT I SUB RAX, FFFF0000h
+	THIS IS SO STUPID
+
+	*/
 	return IsInLocalDirectory(Filename);
 	
 
@@ -207,6 +222,8 @@ static bool* TOGGLEDEBUGBADGAMEDESIGN{nullptr};
 
 #include <sstream>
 #include "StringTables.inl"
+
+#include "../Logic/ServerLogic.h"
 
 void LemonPossession()
 {
@@ -377,9 +394,6 @@ void UFunctions::OutputText(SDK::UConsole* This, SDK::FString* Text)
 }
 
 
-
-static std::vector<SDK::UPlayer*> ServerAdmins{};
-
 SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FString* Result, SDK::FString* Command, bool bWriteToLog)
 {
 	std::string StrCommand = Command->ToString();
@@ -387,29 +401,15 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	if (AJB::IsServer())
 	{
 		SDK::APlayerController* Me = Pointers::Player();
-		if (Me && This != Me)
+		if (Me && This != Me && !AJB::Server::IsAdmin(This))
 		{
-			bool bIsUnauthorized{true};
+			LogA("RCE Detected", std::format("{} has attempted to remotely execute a console command, they have been kicked. || The command they attempted to execute was '{}'", This->GetName(), StrCommand));
 
-			for (SDK::UPlayer* Admin : ServerAdmins)
-			{
-				if (This->Player == Admin)
-				{
-					bIsUnauthorized = false;
-					break;
-				}
-			}
+			UFunctions::CloseConnection(This->NetConnection);
 
-			if (bIsUnauthorized)
-			{
-				LogA("RCE Detected", std::format("{} has attempted to remotely execute a console command, they have been kicked. || The command they attempted to execute was '{}'", This->GetName(), StrCommand));
-
-				UFunctions::CloseConnection(This->NetConnection);
-
-				static SDK::FString AWholeLottaNothin{L""};
-				AJB::CopyString(Command, &AWholeLottaNothin);
-				return OFF::ConsoleCommand.VerifyFC<Decl::ConsoleCommand>()(This, Result, Command, bWriteToLog);
-			}
+			static SDK::FString AWholeLottaNothin{L""};
+			AJB::CopyString(Command, &AWholeLottaNothin);
+			return OFF::ConsoleCommand.VerifyFC<Decl::ConsoleCommand>()(This, Result, Command, bWriteToLog);
 		}
 	}
 
@@ -1148,6 +1148,13 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	{
 		//((SDK::AAJBInGameCharacter*)(Pointers::Player()->Player))->SetPairID(AJB::IsServer() ? AJB::Instance->MatchingPlayers[1].First : AJB::Instance->MatchingPlayers[0].First);
 	}
+	else if (StrCommand == "connections")
+	{
+		for (AJB::FAJBNetConnection& Connection : AJB::ClientConnections)
+		{
+			LogA("Connections", std::format("[Connection]: {} | [CharacterID]: {} | [CharacterSkin]:{} | [bIsAdmin]: {} ", Connection.Connection->GetFullName(), Connection.CharacterID, Connection.CharacterSkin, Connection.GetFlag(AJB::bIsAdmin)));
+		}
+	}
 	/*else if (StrCommand == "isserver")
 	{
 		if (AJB::Settings)
@@ -1197,64 +1204,6 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	LogA("ConsoleCommand", std::format("[Owning PlayerController]: {} | [Command]: {}", This->GetFullName(), StrCommand));
 
 	return OFF::ConsoleCommand.VerifyFC<Decl::ConsoleCommand>()(This, Result, Command, bWriteToLog);
-}
-
-bool UFunctions::RequestLevel(SDK::ULevelStreaming* This, SDK::UWorld* PersistentWorld, bool bAllowLevelLoadRequests, EReqLevelBlock BlockPolicy)
-{
-	SDK::FName WorldAssetPackageFName = This->GetWorldAssetPackageFName();
-
-	EFlushLevelStreamingType* StreamingType = reinterpret_cast<EFlushLevelStreamingType*>(PersistentWorld + 2008); // UWorld::FlushLevelStreamingType
-
-	static bool StupidLevelGoAway{false};
-	if (StupidLevelGoAway)
-	{
-		if (StreamingType && *StreamingType == EFlushLevelStreamingType::Visibility)
-		{
-			*StreamingType = EFlushLevelStreamingType::None;
-		}
-	}
-
-	if (!StupidLevelGoAway) LogA(OFF::RequestLevel.GetName(), std::format("[WorldAssetPackageFName]: {} | [bAllowLevelLoadRequests]: {} | [ComparisonIndex]: {}", WorldAssetPackageFName.ToString(), bAllowLevelLoadRequests, WorldAssetPackageFName.ComparisonIndex));
-
-	constexpr static int32 WorldBlacklist[]
-	{
-		23788,	// [AJBCreadit] Worthless level that displays the credit counter.
-	};
-
-	for (const int32& Entry : WorldBlacklist)
-	{
-		if (WorldAssetPackageFName.ComparisonIndex == Entry)
-		{
-			if (!StupidLevelGoAway) LogA(OFF::RequestLevel.GetName(), "Rejecting requested blacklisted level: " + WorldAssetPackageFName.ToString());
-
-			StupidLevelGoAway = true;
-
-			// It won't stop requesting unless UWorld::AllowLevelLoadRequests is false, however it's not a global variable, it's a function.
-			// So I could either patch it which would be extremely unoptimal and just garbage all around, or I could force the condition to be false by doing this.
-			*StreamingType = EFlushLevelStreamingType::Visibility;
-
-			*reinterpret_cast<ECurrentState*>(This + 180) = ECurrentState::FailedToLoad; // ULevelStreaming::CurrentState
-
-			return false;
-		}
-	}
-
-	StupidLevelGoAway = false;
-
-	return OFF::RequestLevel.VerifyFC<Decl::RequestLevel>()(This, PersistentWorld, bAllowLevelLoadRequests, BlockPolicy);
-}
-
-bool UFunctions::PrepareMapChange(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SDK::TArray<SDK::FName>& LevelNames)
-{
-	std::string Levels;
-
-	for (SDK::FName& Level : LevelNames)
-	{
-		Levels += Level.ToString() + " | ";
-	}
-	LogA(OFF::PrepareMapChange.GetName(), Levels);
-
-	return OFF::PrepareMapChange.VerifyFC<Decl::PrepareMapChange>()(This, WorldContext, LevelNames);
 }
 
 UFunctions::BrowseReturnVal UFunctions::Browse(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SDK::FURL URL, SDK::FString& Error)
@@ -1321,18 +1270,6 @@ void A8CL::UFunctions::SetClientTravel(SDK::UEngine* This, SDK::UWorld* InWorld,
 		return OFF::SetClientTravel.VerifyFC<Decl::SetClientTravel>()(This, InWorld, L"/Game/Aeyth8/Maps/DedicatedServer/PendingReconnect", TravelType);
 	}
 
-	/*if (AJB::bIsDedicatedServer)
-	{
-		if (InWorld && InWorld->NetDriver && InWorld->NetDriver->ClientConnections.Num() < 1)
-		{
-			static SDK::FString Redirector{L"open /Game/Aeyth8/Maps/DedicatedServer/DedicatedServerRestart"};
-
-			LogA(OFF::StartLoadingDestination.GetName(), "No players are connected to the dedicated server, redirecting to DedicatedServerRestart...");
-			UFunctions::UConsole(GEngine->GameViewport->ViewportConsole, Redirector);
-			return;
-		}
-	}*/
-
 	OFF::SetClientTravel.VerifyFC<Decl::SetClientTravel>()(This, InWorld, NextURL, TravelType);
 }
 
@@ -1374,15 +1311,9 @@ bool UFunctions::InitListen(SDK::UIpNetDriver* This, SDK::UObject* InNotify, SDK
 
 void UFunctions::NotifyControlMessage(SDK::UPendingNetGame* This, SDK::UNetConnection* Connection, uint8 MessageType, void* InBunch)
 {
-	/*if (!AJB::IsServer() && AJB::MOD_GlobalPatcher)
-	{
-		AJB::MOD_GlobalPatcher->AppendToFStringArray(This->URL.Op, AJB::DLLCommitVersion);
-	}*/
 	LogA(OFF::NotifyControlMessage.GetName(), std::format("[UPendingNetGame]: {} | [Connection]: {} | [MessageType]: {}", This->GetFullName(), Connection->GetFullName(), MessageType));
 	
 	OFF::NotifyControlMessage.VerifyFC<Decl::NotifyControlMessage>()(This, Connection, MessageType, InBunch);
-
-
 }
 
 void UFunctions::InitLocalConnection(SDK::UNetConnection* This, SDK::UNetDriver* InDriver, void* InSocket, SDK::FURL& InURL, EConnectionState InState, int InMaxPacket, int InPacketOverhead)
@@ -1402,58 +1333,11 @@ void UFunctions::InitLocalConnection(SDK::UNetConnection* This, SDK::UNetDriver*
 		}
 		if (bAppend && AJB::MOD_GlobalPatcher)
 		{
-
 			AJB::MOD_GlobalPatcher->AppendToFStringArray(InURL.Op, AJB::DLLCommitVersion);
 		}
 	}
 
 	OFF::InitLocalConnection.VerifyFC<Decl::InitLocalConnection>()(This, InDriver, InSocket, InURL, InState, InMaxPacket, InPacketOverhead);
-}
-
-
-
-void AJBPreLogin(SDK::AGameModeBase* This, SDK::FString* Options, SDK::FString* Address, SDK::FUniqueNetIdRepl* UniqueId, SDK::FString* ErrorMessage)
-{
-	LogA("AJB PreLogin", std::format("[AGameModeBase]: {} | [Options]: {} | [Address]: {} | [ErrorMessage]: {}", This->GetFullName(), Options->ToString(), Address->ToString(), ErrorMessage->ToString()));
-
-	OFF::AJBPreLogin.VerifyFC<UFunctions::Decl::PreLogin>()(This, Options, Address, UniqueId, ErrorMessage);
-
-	static SDK::FString NOBLOCKLOGIN{L""};
-	static SDK::FString CLIENTINCOMPATIBLE{L"OUTDATED CLIENT | INCOMPATIBLE"};
-	static SDK::FString PASSWORDPROTECTED{L"PASSWORD PROTECTED | INVALID OR EMPTY PASSWORD"};
-
-	if (Options)
-	{
-		bool bFailedPreLogin{false};
-		SDK::FString* FailureMessage{nullptr};
-
-		std::wstring OptionsW = Options->ToWString();
-
-		
-		if (AJB::bServerHasPassword)
-		{
-			if (OptionsW.find(CMLA::ServerPreLoginPassword.GetArgumentAsString()) == std::wstring::npos)
-			{
-				bFailedPreLogin = true;
-				FailureMessage = &PASSWORDPROTECTED;
-			}
-		}
-
-		if (OptionsW.find(AJB::DLLCommitVersion) == std::wstring::npos)
-		{
-			bFailedPreLogin = true;
-			FailureMessage = &CLIENTINCOMPATIBLE;			
-		}
-
-		if (bFailedPreLogin)
-		{
-			AJB::CopyString(ErrorMessage, FailureMessage);
-		}
-		else
-		{
-			AJB::CopyString(ErrorMessage, &NOBLOCKLOGIN);
-		}
-	}
 }
 
 void UFunctions::PreLogin(SDK::AGameModeBase* This, SDK::FString* Options, SDK::FString* Address, SDK::FUniqueNetIdRepl* UniqueId, SDK::FString* ErrorMessage)
@@ -1463,7 +1347,7 @@ void UFunctions::PreLogin(SDK::AGameModeBase* This, SDK::FString* Options, SDK::
 
 SDK::APlayerController* UFunctions::Login(SDK::AGameModeBase* This, SDK::UPlayer* NewPlayer, SDK::ENetRole InRemoteRole, SDK::FString& Portal, SDK::FString& Options, SDK::FUniqueNetIdRepl& UniqueId, SDK::FString& ErrorMessage)
 {
-	LogA("Login", std::format("[AGameModeBase]: {} | [NewPlayer]: {} | [InRemoteRole]: {} | [Options]: {} | [ErrorMessage]: {}", This->GetFullName(), NewPlayer->GetFullName(), std::string((*reinterpret_cast<ENetRole*>(&InRemoteRole)).ToString()), Options.ToString(), ErrorMessage.ToString()));
+	LogA(OFF::Login.GetName(), std::format("[AGameModeBase]: {} | [NewPlayer]: {} | [InRemoteRole]: {} | [Options]: {} | [ErrorMessage]: {}", This->GetFullName(), NewPlayer->GetFullName(), std::string((*reinterpret_cast<ENetRole*>(&InRemoteRole)).ToString()), Options.ToString(), ErrorMessage.ToString()));
 
 	/*if (Options.ToString().rfind("?Name") != std::string::npos)
 	{
@@ -1485,15 +1369,11 @@ SDK::APlayerController* UFunctions::Login(SDK::AGameModeBase* This, SDK::UPlayer
 		if (!AJB::MOD_OptionsMenu->IsInViewport()) AJB::MOD_OptionsMenu->AddToViewport(111);
 	}
 
+	
+
 	if (AJB::IsServer())
 	{
-		if (AJB::bServerAllowsAdmins)
-		{
-			if (Options.ToWString().find(CMLA::ServerAdminPassword.GetArgumentAsString()) != std::wstring::npos)
-			{
-				ServerAdmins.push_back(NewPlayer);
-			}
-		}
+		AJB::Server::Login(This, NewPlayer, InRemoteRole, Portal, Options, UniqueId, ErrorMessage);		
 	}
 	
 	// Has to be reloaded per session because the class kills itself since no objects are created with RootSet.
@@ -1589,31 +1469,12 @@ SDK::APlayerController* UFunctions::Login(SDK::AGameModeBase* This, SDK::UPlayer
 
 void UFunctions::PostLogin(SDK::AGameModeBase* This, SDK::APlayerController* Player)
 {
-	LogA("PostLogin", std::format("[AGameModeBase]: {} | [Player]: {}", This->GetFullName(), Player->GetFullName()));
+	LogA(OFF::PostLogin.GetName(), std::format("[AGameModeBase]: {} | [Player]: {}", This->GetFullName(), Player->GetFullName()));
 
 	if (AJB::IsServer())
 	{
-		if (!AJB::MOD_Global_Synchronizer) AJB::MOD_Global_Synchronizer = Pointers::SpawnActor<SDK::ABP_Synchronizer_C>(Pointers::FActorSpawnParameters{SDK::ESpawnActorCollisionHandlingMethod::AlwaysSpawn});
-		if (AJB::MOD_Global_Synchronizer)
-		{
-			if (AJB::bDebugModeFromCMLA) LogA("GLOBAL SYNCHRONIZER", std::format("[Object]: {} | [Replicated PlayMode]: {}", AJB::MOD_Global_Synchronizer->GetFullName(), AJB::MOD_Global_Synchronizer->PlayMode));
-		}
+		AJB::Server::PostLogin(This, Player);
 	}
-
-
-	/*	This actually reflects on both the server and client but it needs some adjusting and needs to run ONLY when it's the server.
-	
-	if (Player->IsA(SDK::AAJBPlayerControllerBase::StaticClass()))
-	{
-		const int PlayerCount = This->GameState->PlayerArray.Num();
-
-		std::wstring Id = L"AJB-Player-";
-		Id += std::to_wstring(PlayerCount);
-		
-		SDK::FString NewUniqueId{Id.c_str()};
-
-		AJB::CopyString(&static_cast<SDK::AAJBPlayerControllerBase*>(Player)->GameServerUniqueID, &NewUniqueId);
-	}*/
 
 	OFF::PostLogin.VerifyFC<Decl::PostLogin>()(This, Player);	
 }
@@ -1634,7 +1495,7 @@ void UFunctions::PostLogin(SDK::AGameModeBase* This, SDK::APlayerController* Pla
 
 void UFunctions::HandleStartingNewPlayer(SDK::AGameModeBase* This, SDK::APlayerController* Player)
 {
-	LogA("HandleStartingNewPlayer", std::format("[AGameModeBase]: {} | [Player]: {}", This->GetFullName(), Player->GetFullName()));
+	LogA(OFF::HandleStartingNewPlayer.GetName(), std::format("[AGameModeBase]: {} | [Player]: {}", This->GetFullName(), Player->GetFullName()));
 
 	if (AJB::bIsLemonPossessioned)
 	{
@@ -1647,21 +1508,31 @@ void UFunctions::HandleStartingNewPlayer(SDK::AGameModeBase* This, SDK::APlayerC
 
 void UFunctions::BeginPlay(SDK::UWorld* This)
 {	
-	LogA("BeginPlay", This->GetFullName());
+	LogA(OFF::BeginPlay.GetName(), This->GetFullName());
 
 	OFF::BeginPlay.VerifyFC<Decl::BeginPlay>()(This);	
 }
 
+//void UFunctions::HandleClientPlayer(SDK::UNetConnection* This, SDK::APlayerController* PC, SDK::UNetConnection* NetConnection)
+//{
+//	LogA(OFF::HandleClientPlayer.GetName(), std::format("[This]: | [PlayerController]: {} | [NetConnection]: {}", This->GetFullName(), PC->GetFullName(), NetConnection->GetFullName()));
+//
+//	if (AJB::IsServer()) AJB::Server::HandleClientPlayer(This, PC, NetConnection);
+//
+//	OFF::HandleClientPlayer.VerifyFC<Decl::HandleClientPlayer>()(This, PC, NetConnection);
+//}
+
+void UFunctions::AddClientConnection(SDK::UNetDriver* This, SDK::UNetConnection* Connection)
+{
+	LogA(OFF::AddClientConnection.GetName(), std::format("[This]: {} | [Connection]: {}", This->GetFullName(), Connection->GetFullName()));
+	if (AJB::IsServer()) AJB::Server::AddClientConnection(This, Connection);
+
+	OFF::AddClientConnection.VerifyFC<void(__thiscall*)(SDK::UNetDriver*, SDK::UNetConnection*)>()(This, Connection);
+}
+
 void UFunctions::CloseConnection(SDK::UNetConnection* This)
 {
-	for (int32 i{0}; ServerAdmins.size(); ++i)
-	{
-		if (This->PlayerController && This->PlayerController->Player && This->PlayerController->Player == This)
-		{
-			ServerAdmins.erase(ServerAdmins.begin() + i);
-			break;
-		}
-	}
+	if (AJB::IsServer()) AJB::Server::CloseConnection(This);
 
 	LogA(OFF::Close.GetName(), This->GetFullName());
 	OFF::Close.VerifyFC<void(__fastcall*)(SDK::UNetConnection*)>()(This);
@@ -2096,75 +1967,12 @@ void UFunctions::Invoke(SDK::UFunction* This, SDK::UObject* Obj, void* FFrame_St
 		}
 	}
 
-	constexpr const wchar_t* SDT_CheatNames[] = 
-	{
-		L"ROS_DebugCharaChange", L"ROS_DebugLastSurvivor", L"DebugAutoFullMP_On", L"ROS_DebugEnableAirJump", L"ROS_DebugChangeSuperJump", L"ROS_DebugSPMax",
-		L"ROS_DebugSetNPCNum", L"ROS_DebugCPMax", L"ROS_DebugChangeCollisionEnable", L"ROS_DebugAPMax", L"ROS_DebugAddPassiveSkill", L"ROS_Debug_FinishMatching",
-		L"ROS_Debug_BitesTheDustForceActive", L"ROS_Debug_ChangeDamageArea", L"DebugChangeForceFireSkillCore", L"DebugForceFireSkill_On",
-	};
-	constexpr int32 SIZE_CheatNames = sizeof(SDT_CheatNames) / sizeof(SDT_CheatNames[0]);
-	static SDK::FName AdminOnlyCheats[SIZE_CheatNames]{};
-
-	static bool bCheatsInitialized{false};
-	if (!bCheatsInitialized)
-	{
-		bCheatsInitialized = true;
-		for (int i{0}; i < SIZE_CheatNames; ++i)
-		{
-			AdminOnlyCheats[i] = FName::NAME_FindOrAdd(SDT_CheatNames[i]);
-		}
-	}
-
+	
 	// HAHAHA THIS WORKED FIRST TRY NO WAY
 
 	if (AJB::IsServer())
 	{
-		for (int i{0}; i < SIZE_CheatNames; ++i)
-		{
-			if (This->Name == AdminOnlyCheats[i])
-			{
-				SDK::UNetConnection* NetConnection{nullptr};
-
-				if (Obj->IsA(SDK::APlayerController::StaticClass()))
-				{
-					NetConnection = static_cast<SDK::APlayerController*>(Obj)->NetConnection;					
-				}
-				else if (Obj->IsA(SDK::ACharacter::StaticClass()))
-				{
-					if (SDK::APlayerController* Controller = static_cast<SDK::APlayerController*>(static_cast<SDK::ACharacter*>(Obj)->Owner))
-					{
-						if (Controller->IsA(SDK::APlayerController::StaticClass())) NetConnection = Controller->NetConnection;
-					}
-				}
-
-				if (NetConnection)
-				{
-					bool bIsUnauthorized{true};
-
-					if (AJB::bServerAllowsAdmins)
-					{
-						for (SDK::UPlayer* Admin : ServerAdmins)
-						{
-							if (Admin && Admin->PlayerController && Admin->PlayerController->NetConnection && Admin->PlayerController->NetConnection == NetConnection)
-							{
-								bIsUnauthorized = false;
-								break;
-							}
-						}
-					}
-
-					if (bIsUnauthorized)
-					{
-						LogA("Kicked for cheating", Obj->GetFullName());
-						CloseConnection(NetConnection);
-						return;
-					}
-				}
-			
-			}
-
-			
-		}
+		if (!AJB::Server::Invoke(This, Obj, FFrame_Stack, Result)) return;
 	}
 	OFF::Invoke.VerifyFC<Decl::Invoke>()(This, Obj, FFrame_Stack, Result);
 }

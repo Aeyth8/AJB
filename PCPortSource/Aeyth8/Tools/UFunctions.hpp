@@ -209,6 +209,8 @@ public:
 
 		typedef void(__thiscall* PostLogin)(SDK::AGameModeBase* This, SDK::APlayerController* Player);
 
+		typedef void(__thiscall* HandleClientPlayer)(SDK::UNetConnection* This, SDK::APlayerController* PC, SDK::UNetConnection* NetConnection);
+
 		typedef void(__thiscall* Logout)(SDK::AGameModeBase* This, SDK::AController* ExitingController);
 
 		typedef void(__thiscall* HandleStartingNewPlayer)(SDK::AGameModeBase* This, SDK::APlayerController* Player);
@@ -276,9 +278,9 @@ public:
 
 	static BrowseReturnVal Browse(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SDK::FURL URL, SDK::FString& Error);
 
-	static bool RequestLevel(SDK::ULevelStreaming* This, SDK::UWorld* PersistentWorld, bool bAllowLevelLoadRequests, EReqLevelBlock BlockPolicy);
+	//static bool RequestLevel(SDK::ULevelStreaming* This, SDK::UWorld* PersistentWorld, bool bAllowLevelLoadRequests, EReqLevelBlock BlockPolicy);
 
-	static bool PrepareMapChange(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SDK::TArray<SDK::FName>& LevelNames);
+	//static bool PrepareMapChange(SDK::UEngine* This, SDK::FWorldContext& WorldContext, SDK::TArray<SDK::FName>& LevelNames);
 
 	static bool InitListen(SDK::UIpNetDriver* This, SDK::UObject* InNotify, SDK::FURL& LocalURL, bool bReuseAddressAndPort, SDK::FString& Error);
 
@@ -306,6 +308,10 @@ public:
 	static void HandleStartingNewPlayer(SDK::AGameModeBase* This, SDK::APlayerController* Player);
 
 	static void BeginPlay(SDK::UWorld* This);
+
+	//static void HandleClientPlayer(SDK::UNetConnection* This, SDK::APlayerController* PC, SDK::UNetConnection* NetConnection);
+
+	static void AddClientConnection(SDK::UNetDriver* This, SDK::UNetConnection* Connection);
 
 	static void CloseConnection(SDK::UNetConnection* This);
 
