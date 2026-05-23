@@ -216,6 +216,8 @@ using namespace Global;
 #include "../../Dumper-7/SDK/BP_AJBDamageAreaLocal_classes.hpp"
 #include "../../Dumper-7/SDK/WB_DBISequencerSkipper_classes.hpp"
 
+#include "TickHook/TickHook.h"
+
 static bool* TOGGLEDEBUGBADGAMEDESIGN{nullptr};
 
 #include "../../Dumper-7/SDK/Engine_parameters.hpp"
@@ -224,6 +226,18 @@ static bool* TOGGLEDEBUGBADGAMEDESIGN{nullptr};
 #include "StringTables.inl"
 
 #include "../Logic/ServerLogic.h"
+
+extern "C" void GodMode()
+{
+	SDK::ABP_AJBInGameCharacter_C* Character = Pointers::Character<SDK::ABP_AJBInGameCharacter_C>();
+	if (Character)
+	{
+		Character->DebugSPMax();
+		Character->DebugAPMax();
+		Character->DebugCPMax();
+		Character->DebugForceFireSkill_On();
+	}
+}
 
 void LemonPossession()
 {
@@ -610,6 +624,41 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 				PARM_NPCDifficulty = std::stoi(StrCommand.substr(NPCDifficultyIdx, NPCDifficultyEndIdx - NPCDifficultyIdx));
 			}
 		}
+		size PasswordIdx = StrCommand.find("?Password=");
+		if (PasswordIdx != std::string::npos)
+		{
+			PasswordIdx += 10;
+			size PasswordIdxEnd = StrCommand.find("?", PasswordIdx);
+			if (PasswordIdxEnd == std::string::npos)
+			{
+				PasswordIdxEnd = StrCommand.length();
+			}
+
+			AJB::bServerHasPassword = true;
+			FName::NAME_FindOrAdd(&AJB::NAME_ServerPassword, StrCommand.substr(PasswordIdx, PasswordIdxEnd - PasswordIdx).c_str());
+		}
+		else
+		{
+			AJB::bServerHasPassword = false;
+		}
+
+		size AdminPasswordIdx = StrCommand.find("?AdminPassword=");
+		if (AdminPasswordIdx != std::string::npos)
+		{
+			AdminPasswordIdx += 15;
+			size AdminPasswordIdxEnd = StrCommand.find("?", AdminPasswordIdx);
+			if (AdminPasswordIdxEnd == std::string::npos)
+			{
+				AdminPasswordIdxEnd = StrCommand.length();
+			}
+
+			AJB::bServerAllowsAdmins = true;
+			FName::NAME_FindOrAdd(&AJB::NAME_AdminPassword, StrCommand.substr(AdminPasswordIdx, AdminPasswordIdxEnd - AdminPasswordIdx).c_str());
+		}
+		else
+		{
+			AJB::bServerAllowsAdmins = false;
+		}
 
 		PARM_Respawn = StrCommand.find("?Respawn") != std::string::npos;
 
@@ -628,7 +677,10 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		AJB::Instance->bIsLocalSessionMode = true;
 		AJB::Instance->CreateSession();
 
-		ConsoleOutput::Text(std::format(L"Creating a session with parameters === [Area]: {} || [Mode]: {} || [NPC Num]: {} || [NPC Difficulty]: {}", SDT::EDamageAreaType.Find(PARM_Area), SDT::EPlayModeW[PARM_PlayMode], PARM_NPCCount, PARM_NPCDifficulty));
+		std::string ServerPasswordStr = (AJB::bServerHasPassword ? AJB::NAME_ServerPassword.ToString() : "None");
+		std::string AdminPasswordStr = (AJB::bServerAllowsAdmins ? AJB::NAME_AdminPassword.ToString() : "None");
+
+		ConsoleOutput::Text(std::format(L"Creating a session with parameters === [Area]: {} || [Mode]: {} || [NPC Num]: {} || [NPC Difficulty]: {} || [Password]: {} || [[Admin Password]: {}", SDT::EDamageAreaType.Find(PARM_Area), SDT::EPlayModeW[PARM_PlayMode], PARM_NPCCount, PARM_NPCDifficulty, std::wstring(ServerPasswordStr.begin(), ServerPasswordStr.end()), std::wstring(AdminPasswordStr.begin(), AdminPasswordStr.end())));
 	}
 	else if (StrCommand.find("AJBExecInternalChar") == 0)
 	{
@@ -867,6 +919,33 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			}
 		}
 	}
+	else if (StrCommand.find("AJBExecInternal AppendOp") == 0 && StrCommand.size() > 25)
+	{
+		AJB::CLIENT_JoinOptions.clear();
+		StrCommand = StrCommand.substr(25);
+
+		size OptionIdx = 0;
+
+		while ((OptionIdx = StrCommand.find('?', OptionIdx)) != std::string::npos)
+		{
+			size NextOptionIdx = StrCommand.find('?', OptionIdx + 1);
+
+			std::string PushBack = StrCommand.substr(OptionIdx, NextOptionIdx == std::string::npos ? std::string::npos : NextOptionIdx - OptionIdx);
+			SDK::FString PushBackF = SDK::FString{std::wstring(PushBack.begin(), PushBack.end()).c_str()};
+			LogA("CLIENT JOIN OPTION", PushBackF.ToString());
+			AJB::CLIENT_JoinOptions.push_back(PushBackF);
+
+			if (NextOptionIdx == std::string::npos)
+				break;
+
+			OptionIdx = NextOptionIdx;
+		}
+
+		for (SDK::FString& String : AJB::CLIENT_JoinOptions)
+		{
+			LogA("CLIENT JOIN OPTIONS", String.ToString());
+		}
+	}
 	else if (StrCommand == "oss")
 	{
 		static bool bOnline{false};
@@ -1098,6 +1177,34 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			HUD->bIsDebugHUD = bToggle;
 		}
 	}
+	else if (StrCommand == "god")
+	{
+		static bool bOne{false};
+		if (bOne)
+		{
+			for (TickHook::FTimerHandlerEntry& Entry : TickHook::CallbackTimers)
+			{
+				if (Entry.pFunctionAddress == (ull)GodMode)
+				{
+					Entry.bInfiniteLoop = false;
+					ConsoleOutput::Text(L"God mode deactivated.");
+					if (auto Char = Pointers::Character<SDK::ABP_AJBInGameCharacter_C>()) Char->DebugForceFireSkill_Off(); 
+					bOne = false;
+					break;
+				}
+			}
+		}
+		else
+		{
+			bOne = true;
+			
+			TickHook::FTimerHandlerEntry Entry{(ull)GodMode, 0.25f, 0, 0, true, 0};
+			TickHook::CallbackTimers.push_back(Entry);
+
+			ConsoleOutput::Text(L"God mode activated.");			
+		}
+		
+	}
 	/*else if (StrCommand == "trymenu")
 	{
 		SDK::ABP_AJBInGameHUD_C* HUD = reinterpret_cast<SDK::ABP_AJBInGameHUD_C*>(Pointers::Player()->MyHUD);
@@ -1155,39 +1262,6 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			LogA("Connections", std::format("[Connection]: {} | [CharacterID]: {} | [CharacterSkin]:{} | [bIsAdmin]: {} ", Connection.Connection->GetFullName(), Connection.CharacterID, Connection.CharacterSkin, Connection.GetFlag(AJB::bIsAdmin)));
 		}
 	}
-	/*else if (StrCommand == "isserver")
-	{
-		if (AJB::Settings)
-		{			
-			bool bToggle = AJB::Settings->UpdateSettings.bIsServerMode;
-			AJB::Settings->SetUpdateServerMode(GWorld.GetPointer(), !bToggle);
-			ConsoleOutput::Text(L"Toggling IsServer, the output is: " + std::to_wstring(!bToggle));
-		}		
-	}
-	else if (StrCommand == "storm")
-	{
-
-		SDK::UBP_AJBDamageAreaLocal_C* Storm = Pointers::SpawnActor<SDK::UBP_AJBDamageAreaLocal_C>();
-		if (Storm)
-		{
-			LogA("Storm Actor", Storm->GetFullName());
-		}
-		
-		SDK::ABP_AJBBattleGameMode_C* GameMode = AJB::GetGameMode<SDK::ABP_AJBBattleGameMode_C>();
-		if (GameMode)
-		{
-
-			SDK::ABP_AJBBattleGameState_C* GameState = static_cast<SDK::ABP_AJBBattleGameState_C*>(GameMode->GameState);
-			if (!GameState->BP_AJBDamageAreaLocal)
-			{
-				SDK::UBP_AJBDamageAreaLocal_C* Storm = Pointers::SpawnActor<SDK::UBP_AJBDamageAreaLocal_C>();
-				if (Storm)
-				{
-					GameState->BP_AJBDamageAreaLocal = Storm;
-				}
-			}
-		}
-	}*/
 	else if (StrCommand == "ghost")
 	{
 		static bool bToggle{false};
@@ -1199,6 +1273,15 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			Character->CharacterMovement->MovementMode = bToggle ? SDK::EMovementMode::MOVE_Flying : SDK::EMovementMode::MOVE_Walking;
 			Character->bActorEnableCollision = !bToggle;
 		}
+	}
+	else if (StrCommand.find("AJBExecInternal PostAkEventByName") == 0 && StrCommand.size() > 34)
+	{
+		SDK::UAkComponent* Component = Pointers::GetLastOf<SDK::UAkComponent>();
+		if (Component) Component->PostAkEventByName(SDK::FString(std::wstring(Command->CStr()).substr(34).c_str()));
+	}
+	else if (StrCommand == "skin")
+	{
+		AJB::Instance->RequestLoadSkinData(FName::NAME_FindOrAdd(L"C28_7"));
 	}
 
 	LogA("ConsoleCommand", std::format("[Owning PlayerController]: {} | [Command]: {}", This->GetFullName(), StrCommand));
@@ -1216,6 +1299,25 @@ UFunctions::BrowseReturnVal UFunctions::Browse(SDK::UEngine* This, SDK::FWorldCo
 	{
 		AJB::MOD_OptionsMenu->ToggleVisibility();
 	}
+
+	{
+		bool bAppend{true};
+		for (SDK::FString& String : URL.Op)
+		{
+			if (String.ToString().find("listen") != std::string::npos)
+			{
+				bAppend = false;
+			}
+		}
+		if (bAppend && AJB::MOD_GlobalPatcher && !AJB::CLIENT_JoinOptions.empty())
+		{
+			for (SDK::FString& OpEntry : AJB::CLIENT_JoinOptions)
+			{
+				AJB::MOD_GlobalPatcher->AppendToFStringArray(URL.Op, OpEntry);
+			}			
+		}
+	}
+
 	AJB::MOD_Global_Synchronizer = nullptr;
 
 	if (wcscmp(URL.Map.CStr(), L"/Game/AJB/Maps/AJBStartUp_P") == 0 || wcscmp(URL.Map.CStr(), L"/Game/AJB/Maps/AJBTitle_P") == 0)
@@ -1334,6 +1436,16 @@ void UFunctions::InitLocalConnection(SDK::UNetConnection* This, SDK::UNetDriver*
 		if (bAppend && AJB::MOD_GlobalPatcher)
 		{
 			AJB::MOD_GlobalPatcher->AppendToFStringArray(InURL.Op, AJB::DLLCommitVersion);
+
+			// Needs to be here for server reconnection to a password protected server since the connection is lost completely and is only gained via reconnect.
+			// Actually thinking about that, reconnect should be caching all options so I'll leave this commented for now.
+			/*if (!AJB::CLIENT_JoinOptions.empty())
+			{
+				for (SDK::FString& OpEntry : AJB::CLIENT_JoinOptions)
+				{
+					AJB::MOD_GlobalPatcher->AppendToFStringArray(InURL.Op, OpEntry);
+				}
+			}*/
 		}
 	}
 
@@ -1343,6 +1455,11 @@ void UFunctions::InitLocalConnection(SDK::UNetConnection* This, SDK::UNetDriver*
 void UFunctions::PreLogin(SDK::AGameModeBase* This, SDK::FString* Options, SDK::FString* Address, SDK::FUniqueNetIdRepl* UniqueId, SDK::FString* ErrorMessage)
 {
 	LogA("PreLogin", std::format("[AGameModeBase]: {} | [Options]: {} | [Address]: {} | [ErrorMessage]: {}", This->GetFullName(), Options->ToString(), Address->ToString(), ErrorMessage->ToString()));
+
+	if (AJB::IsServer()) 
+	{
+		AJB::Server::PreLogin(This, Options, Address, UniqueId, ErrorMessage);
+	}
 }
 
 SDK::APlayerController* UFunctions::Login(SDK::AGameModeBase* This, SDK::UPlayer* NewPlayer, SDK::ENetRole InRemoteRole, SDK::FString& Portal, SDK::FString& Options, SDK::FUniqueNetIdRepl& UniqueId, SDK::FString& ErrorMessage)

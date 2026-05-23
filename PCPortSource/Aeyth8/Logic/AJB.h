@@ -320,7 +320,7 @@ namespace AJB
 	// The system relies solely on inter-gamethread communication with a persistent blueprint object that sets the timer and executes a console command indicating the callback.
 	// We access the blueprint object from the DLL, inside the object is two int32s which contain the split address of this callback function which is executed in the hook for APlayerController::ConsoleCommand.
 	// You don't have to worry about any of that stuff since this wrapper simply requires the callback function.
-	void CreateCallbackTimer(void* FunctionCallback, float fTimer);
+	void CreateCallbackTimer(void* FunctionCallback, float fTimer, unsigned nLoopFor = 0, bool bInfinite = false);
 
 	// Called externally by a callback timer, should not be manually called!
 	void TranslateSimpleMatch();

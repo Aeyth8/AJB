@@ -17,9 +17,17 @@ void A8CL::TickHook::Tick(SDK::UGameEngine* This, float DeltaSeconds, bool bIdle
 		{
 			reinterpret_cast<void(*)()>(Entry.pFunctionAddress)();
 
-			CallbackTimers.erase(CallbackTimers.begin() + i);
-
-			--i;
+			if (Entry.bInfiniteLoop) Entry.fTimeElapsed = 0.0f;
+			else if (Entry.nLoopFor > 0)
+			{
+				--Entry.nLoopFor;
+				Entry.fTimeElapsed = 0.0f;
+			}
+			else
+			{
+				CallbackTimers.erase(CallbackTimers.begin() + i);
+				--i;
+			}
 
 			continue;
 		}

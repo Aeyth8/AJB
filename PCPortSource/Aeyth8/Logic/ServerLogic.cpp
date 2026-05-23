@@ -24,7 +24,10 @@ using namespace A8CL; using namespace Global;
 bool								AJB::bIsDedicatedServer{false};
 bool								AJB::bServerAllowsAdmins{false};
 bool								AJB::bServerHasPassword{false};
+SDK::FName							AJB::NAME_ServerPassword{0};
+SDK::FName							AJB::NAME_AdminPassword{0};
 
+std::vector<SDK::FString>			AJB::CLIENT_JoinOptions{};
 std::vector<AJB::FAJBNetConnection>	AJB::ClientConnections{};
 
 
@@ -76,11 +79,8 @@ bool AJB::Server::IsAdmin(SDK::UNetConnection* Connection)
 
 void AJB::Server::PreLogin(SDK::AGameModeBase* This, UC::FString* Options, UC::FString* Address, SDK::FUniqueNetIdRepl* UniqueId, UC::FString* ErrorMessage)
 {
-	LogA(OFF::AJBPreLogin.GetName(), std::format("[AGameModeBase]: {} | [Options]: {} | [Address]: {} | [ErrorMessage]: {}", This->GetFullName(), Options->ToString(), Address->ToString(), ErrorMessage->ToString()));
+	LogA(OFF::PreLogin.GetName(), std::format("[AGameModeBase]: {} | [Options]: {} | [Address]: {} | [ErrorMessage]: {}", This->GetFullName(), Options->ToString(), Address->ToString(), ErrorMessage->ToString()));
 
-	OFF::AJBPreLogin.VerifyFC<UFunctions::Decl::PreLogin>()(This, Options, Address, UniqueId, ErrorMessage);
-
-	static SDK::FString NOBLOCKLOGIN{L""};
 	static SDK::FString CLIENTINCOMPATIBLE{L"OUTDATED CLIENT | INCOMPATIBLE"};
 	static SDK::FString PASSWORDPROTECTED{L"PASSWORD PROTECTED | INVALID OR EMPTY PASSWORD"};
 
@@ -89,19 +89,19 @@ void AJB::Server::PreLogin(SDK::AGameModeBase* This, UC::FString* Options, UC::F
 		bool bFailedPreLogin{false};
 		SDK::FString* FailureMessage{nullptr};
 
-		std::wstring OptionsW = Options->ToWString();
-
+		std::string OptionsStr = Options->ToString();
 		
 		if (AJB::bServerHasPassword)
 		{
-			if (OptionsW.find(CMLA::ServerPreLoginPassword.GetArgumentAsString()) == std::wstring::npos)
+			std::string ServerPasswordStr = AJB::NAME_ServerPassword.ToString();
+			if (OptionsStr.find(ServerPasswordStr) == std::string::npos)
 			{
 				bFailedPreLogin = true;
 				FailureMessage = &PASSWORDPROTECTED;
 			}
 		}
 
-		if (OptionsW.find(AJB::DLLCommitVersion) == std::wstring::npos)
+		if (Options->ToWString().find(AJB::DLLCommitVersion) == std::wstring::npos)
 		{
 			bFailedPreLogin = true;
 			FailureMessage = &CLIENTINCOMPATIBLE;			
@@ -110,19 +110,18 @@ void AJB::Server::PreLogin(SDK::AGameModeBase* This, UC::FString* Options, UC::F
 		if (bFailedPreLogin)
 		{
 			AJB::CopyString(ErrorMessage, FailureMessage);
-		}
-		else
-		{
-			AJB::CopyString(ErrorMessage, &NOBLOCKLOGIN);
+			LogA("PreLogin Failure", FailureMessage->ToString());
 		}
 	}
 }
 
 void AJB::Server::Login(SDK::AGameModeBase* This, SDK::UPlayer* NewPlayer, SDK::ENetRole InRemoteRole, UC::FString& Portal, UC::FString& Options, SDK::FUniqueNetIdRepl& UniqueId, UC::FString& ErrorMessage)
 {
+	const std::string Op = Options.ToString();
+
 	if (AJB::bServerAllowsAdmins)
 	{
-		if (Options.ToWString().find(CMLA::ServerAdminPassword.GetArgumentAsString()) != std::wstring::npos)
+		if (Op.find(AJB::NAME_AdminPassword.ToString()) != std::string::npos)
 		{
 			LogA("Admin", NewPlayer->GetFullName());
 
@@ -135,9 +134,16 @@ void AJB::Server::Login(SDK::AGameModeBase* This, SDK::UPlayer* NewPlayer, SDK::
 
 void AJB::Server::PostLogin(SDK::AGameModeBase* This, SDK::APlayerController* Player)
 {
-	if (!AJB::MOD_Global_Synchronizer) AJB::MOD_Global_Synchronizer = Pointers::SpawnActor<SDK::ABP_Synchronizer_C>(Pointers::FActorSpawnParameters{SDK::ESpawnActorCollisionHandlingMethod::AlwaysSpawn});
+	if (!AJB::MOD_Global_Synchronizer)
+	{
+		SDK::UWorld* World = GWorld;
+		if (World && World->NetDriver && World->NetDriver->ClientConnections.Num() > 0) {
+			AJB::MOD_Global_Synchronizer = (SDK::ABP_Synchronizer_C*)Pointers::SpawnActorInternal(GWorld.GetPointer(), SDK::UClass::FindClass("BlueprintGeneratedClass BP_Synchronizer.BP_Synchronizer_C"), SDK::FVector{}, SDK::FRotator{}, Pointers::FActorSpawnParameters{ SDK::ESpawnActorCollisionHandlingMethod::AlwaysSpawn });
+		}
+	}
 	if (AJB::MOD_Global_Synchronizer)
 	{
+		AJB::MOD_Global_Synchronizer->OnRep_ReplicateMovement();
 		if (AJB::bDebugModeFromCMLA) LogA("GLOBAL SYNCHRONIZER", std::format("[Object]: {} | [Replicated PlayMode]: {}", AJB::MOD_Global_Synchronizer->GetFullName(), AJB::MOD_Global_Synchronizer->PlayMode));
 	}
 

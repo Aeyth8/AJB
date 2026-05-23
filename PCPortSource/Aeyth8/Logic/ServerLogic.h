@@ -61,6 +61,10 @@ namespace AJB
 	extern bool bServerAllowsAdmins;
 	extern bool bServerHasPassword;
 
+	extern SDK::FName NAME_ServerPassword;
+	extern SDK::FName NAME_AdminPassword;
+
+	extern std::vector<UC::FString> CLIENT_JoinOptions;
 	extern std::vector<FAJBNetConnection> ClientConnections;
 
 	namespace Server

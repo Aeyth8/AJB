@@ -15,6 +15,8 @@ namespace A8CL
 			float			   fWaitFor;
 			float			   fTimeElapsed;
 			bool			   bSetForCallback;
+			bool			   bInfiniteLoop;
+			unsigned		   nLoopFor;
 		};
 		
 		namespace Decl

@@ -113,7 +113,7 @@ SDK::UClass*						AJB::MOD_SynchronizerClass{nullptr};
 SDK::ABP_Synchronizer_C*			AJB::MOD_PROXY_Synchronizer{nullptr};
 SDK::ABP_Synchronizer_C*			AJB::MOD_Global_Synchronizer{nullptr};
 
-const wchar_t*						AJB::DLLCommitVersion{L"[v0.6.8]"};
+const wchar_t*						AJB::DLLCommitVersion{L"[v0.6.9]"};
 UC::FString*						AJB::StrDLLCommitVersion{nullptr};
 UC::FString*						AJB::StrInGameUserName{nullptr};
 
@@ -553,7 +553,8 @@ void AJB::Init_Hooks()
 
 		//BytePatcher::ReplaceBytes(PB(OFF::AJBGetMaxTickRate), {NOP, NOP, NOP, NOP, NOP}); // AJBGetMaxTickRate, no proper name but it's a wrapper that calls UEngine::GetMaxTickRate and this function enforces a 60fps cap if you set it to uncapped (t.MaxFPS 0)
 		//BytePatcher::ReplaceBytes(PB(OFF::AJBGetMaxTickRateCap), {NOP, NOP}); ^ Actual patch is this line right here that I am commenting on <---- ; WRONG both need to be patched I think but I didnt look at the binary to actually verify I just tested it again today
-		
+		//BytePatcher::ReplaceBytes(PB(0x522530), {MOV, 0, RETN, NOP, NOP, NOP, NOP}); // UAJBAMSystemObject::IsActiveAJBError
+
 		LogA("BytePatcher", "Applied all patches successfully. (Failing would crash)");
 	}
 
@@ -607,6 +608,9 @@ void AJB::Init_Hooks()
 		AJB::bServerHasPassword = CMLA::ServerPreLoginPassword.HasChanged();
 
 
+		//BytePatcher::ReplaceBytes(OFF::IsAJBOfflineMode.PlusBase(), {MOV, 0, RETN, NOP, NOP});
+		//BytePatcher::ReplaceBytes(OFF::IsOfflineMode.PlusBase(), {MOV, 0, RETN, NOP, NOP});
+
 		//Hooks::CreateAndEnableHook(OFF::StaticConstructObject, UFunctions::StaticConstructObject_Internal);
 		//Hooks::CreateAndEnableHook(GetBaseMaterial, HGetBaseMaterial);
 
@@ -634,7 +638,7 @@ void AJB::Init_Engine()
 {
 	while (!GEngine) Sleep(25);
 
-	//MRWT::Activate();
+	MRWT::Activate();
 
 	if (AJB::bIsDedicatedServer || AJB::bDebugModeFromCMLA) *reinterpret_cast<byte*>(PB(OFF::LogVerbosity)) = 6u;
 
@@ -664,6 +668,10 @@ void AJB::Init_Engine()
 		FName::NAME_FindOrAdd(&MapSettings->TransitionMap.AssetPathName, CMLA::TransitionMap.GetArgumentAsString());
 		FName::NAME_FindOrAdd(&MapSettings->GlobalDefaultGameMode.AssetPathName, CMLA::GlobalDefaultGameMode.GetArgumentAsString());
 	}
+
+	if (CMLA::ServerPreLoginPassword.HasChanged()) FName::NAME_FindOrAdd(&AJB::NAME_ServerPassword, CMLA::ServerPreLoginPassword.GetArgumentAsString());
+	if (CMLA::ServerAdminPassword.HasChanged()) FName::NAME_FindOrAdd(&AJB::NAME_AdminPassword, CMLA::ServerAdminPassword.GetArgumentAsString());
+	
 
 	if (!IsNull(AJB::Version = SDK::UAJBVersion::GetDefaultObj()))
 	{
@@ -732,6 +740,30 @@ void AJB::Init_Vars()
 			Emote.emoteId = 11;
 		}
 	}*/
+
+	//Instance->TryCreateOfflinePlayerInfo();
+	for (SDK::FCustomData& Data : Instance->PlayerLoginInfo.CustomData)
+	{
+		Data.charaSkinId = 2;
+
+	}
+	
+	SDK::FString ElSev{L"1170"};
+	CopyString(&Instance->PlayerLoginInfo.MatchingPlayerInfo.PlayerName, &ElSev);
+	CopyString(&Instance->PlayerLoginInfo.MatchingPlayerInfo.GameServerUserID, &ElSev);
+	CopyString(&Instance->PlayerLoginInfo.MatchingPlayerInfo.PlayerTitle, &ElSev);
+	CopyString(&Instance->PlayerLoginInfo.UserDataID, &ElSev);
+	Instance->PlayerLoginInfo.bIsBNCard = true;
+	Instance->PlayerLoginInfo.bIsGuest = false;
+	CopyString(&Instance->PlayerLoginInfo.MatchingID, &ElSev);
+	CopyString(&Instance->PlayerLoginInfo.SyncServerHostName, &ElSev);
+	Instance->PlayerLoginInfo.SyncServerPort = wcstol(CMLA::ServerPort.GetArgumentAsString(), 0, 10);
+
+	for (int i{0}; i < Instance->OfflineDefaultCustomData.Num(); ++i)
+	{
+		LogA("OfflineDefaultCustomData", std::format("[{}] {}", Instance->OfflineDefaultCustomData[i].First, Instance->OfflineDefaultCustomData[i].Second.charaSkinId));
+		Instance->OfflineDefaultCustomData[i].First = 2;
+	}
 
 	/**(int*)&Instance->Pad_3A0[8] = 2; UAJBGameInstance::GetNationalMatchSchedule Modifies this*/
 
@@ -874,9 +906,9 @@ bool A8CL::AJB::IsOfflineMode()
 	return !IsInSession();
 }
 
-void AJB::CreateCallbackTimer(void* FunctionCallback, float fTimer)
+void AJB::CreateCallbackTimer(void* FunctionCallback, float fTimer, unsigned nLoopFor, bool bInfinite)
 {
-	TickHook::FTimerHandlerEntry Entry{(ull)FunctionCallback, fTimer};
+	TickHook::FTimerHandlerEntry Entry{(ull)FunctionCallback, fTimer, 0, 0, bInfinite};	
 	TickHook::CallbackTimers.push_back(Entry);
 
 	/*if (AJB::MOD_CallbackTimer)
@@ -1182,7 +1214,7 @@ void __fastcall AJB::OnToggleFullMapVisibility(SDK::UObject* Object)
 
 	bToggled = !bToggled;
 
-	//LogA("OnToggleFullMapVisibility", Object->GetFullName());
+	LogA("OnToggleFullMapVisibility", Object->GetFullName());
 
 	if (Object->IsA(SDK::ABP_AJBInGameHUD_C::StaticClass()))
 	{
@@ -1209,6 +1241,10 @@ void __fastcall AJB::OnToggleFullMapVisibility(SDK::UObject* Object)
 int __fastcall AJB::PostEventAtLocation(SDK::UAkAudioEvent* AkEvent, SDK::FVector& Location, SDK::FRotator& Orientation, SDK::FString& EventName, SDK::UObject* WorldContextObject)
 {
 	if (AJB::bDebugModeFromCMLA) LogA(OFF::PostEventAtLocation.GetName(), EventName.ToString());
+
+	const SDK::UKismetStringLibrary* Kismet = Pointers::GetBlueprintClass<SDK::UKismetStringLibrary>();
+	
+	LogA(OFF::PostEventAtLocation.GetName(), std::format("[AkEvent]: {} | [Location]: {} | [Orientation]: {} | [EventName]: {}", AkEvent->GetFullName(), Kismet->Conv_VectorToString(Location).ToString(), Kismet->Conv_RotatorToString(Orientation).ToString(), EventName.ToString()));
 
 	// Play_BGM03_Menu2 is the song played for the stupid "GameOver" sequence whenever you run out of time in AJBSimpleMatch_P (which I patched long ago) but also when you click to "exit" the game.
 	// Normally doing so would play the annoying and pointlessly delayed song and then eventually try to go to AJBStartUp_P.
