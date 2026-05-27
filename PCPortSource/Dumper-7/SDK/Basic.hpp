@@ -356,6 +356,11 @@ public:
 	
 		return OutputString.substr(pos + 1);
 	}
+
+	void Clear()
+	{
+		this->Number = 0, this->ComparisonIndex = 0;
+	}
 	
 	bool operator==(const FName& Other) const
 	{

@@ -215,8 +215,11 @@ using namespace Global;
 #include "../../Dumper-7/SDK/Landscape_classes.hpp"
 #include "../../Dumper-7/SDK/BP_AJBDamageAreaLocal_classes.hpp"
 #include "../../Dumper-7/SDK/WB_DBISequencerSkipper_classes.hpp"
+#include "../../Dumper-7/SDK/BP_AJBInteractAction_classes.hpp"
+#include "../../Dumper-7/SDK/BP_AJBPlacementSkill_classes.hpp"
 
 #include "TickHook/TickHook.h"
+#include "FNamePool.hpp"
 
 static bool* TOGGLEDEBUGBADGAMEDESIGN{nullptr};
 
@@ -236,6 +239,8 @@ extern "C" void GodMode()
 		Character->DebugAPMax();
 		Character->DebugCPMax();
 		Character->DebugForceFireSkill_On();
+		Character->DebugAutoFullMP_On();
+		
 	}
 }
 
@@ -447,6 +452,30 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			for (SDK::UNetConnection*& Connection : Driver->ClientConnections)
 			{
 				if (Connection->PlayerController && Connection->PlayerController->PlayerState && Connection->PlayerController->PlayerState->PlayerID == PlayerIndex) UFunctions::CloseConnection(Connection);
+			}
+		}	
+	}
+	else if (StrCommand.find("AJBExecInternal GrantAdmin") != std::string::npos && StrCommand.size() > 27)
+	{
+		const uint32 PlayerIndex = std::stoi(StrCommand.substr(27));
+		
+		if (SDK::UNetDriver* Driver = GWorld.GetPointer()->NetDriver)
+		{
+			for (SDK::UNetConnection*& Connection : Driver->ClientConnections)
+			{
+				if (Connection->PlayerController && Connection->PlayerController->PlayerState && Connection->PlayerController->PlayerState->PlayerID == PlayerIndex) AJB::Server::SetAdmin(AJB::Server::GetConnection(Connection), true);
+			}
+		}	
+	}
+	else if (StrCommand.find("AJBExecInternal RevokeAdmin") != std::string::npos && StrCommand.size() > 28)
+	{
+		const uint32 PlayerIndex = std::stoi(StrCommand.substr(27));
+		
+		if (SDK::UNetDriver* Driver = GWorld.GetPointer()->NetDriver)
+		{
+			for (SDK::UNetConnection*& Connection : Driver->ClientConnections)
+			{
+				if (Connection->PlayerController && Connection->PlayerController->PlayerState && Connection->PlayerController->PlayerState->PlayerID == PlayerIndex) AJB::Server::SetAdmin(AJB::Server::GetConnection(Connection), false);
 			}
 		}	
 	}
@@ -921,8 +950,11 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	}
 	else if (StrCommand.find("AJBExecInternal AppendOp") == 0 && StrCommand.size() > 25)
 	{
-		AJB::CLIENT_JoinOptions.clear();
-		StrCommand = StrCommand.substr(25);
+		AJB::NAME_ClientJoinOptions = FName::NAME_FindOrAdd(StrCommand.substr(25).c_str());
+		/*AJB::CLIENT_JoinOptions.clear();
+		SDK::FName Option{FName::NAME_FindOrAdd(StrCommand.substr(25).c_str())};
+		AJB::CLIENT_JoinOptions.push_back(Option);*/
+		/*StrCommand = StrCommand.substr(25);
 
 		size OptionIdx = 0;
 
@@ -944,7 +976,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		for (SDK::FString& String : AJB::CLIENT_JoinOptions)
 		{
 			LogA("CLIENT JOIN OPTIONS", String.ToString());
-		}
+		}*/
 	}
 	else if (StrCommand == "oss")
 	{
@@ -1283,6 +1315,18 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	{
 		AJB::Instance->RequestLoadSkinData(FName::NAME_FindOrAdd(L"C28_7"));
 	}
+	else if (StrCommand == "invisible")
+	{
+		SDK::ABP_AJBInGameCharacter_C* Character = Pointers::Character<SDK::ABP_AJBInGameCharacter_C>();
+		if (Character && Character->BP_AJBInteractSkill)
+		{
+			static bool bToggle{false};
+			bToggle = !bToggle;
+			bToggle ? Character->BP_AJBInteractSkill->ROS_OnStartHiding() : Character->BP_AJBInteractSkill->ROS_OnFinishHiding();
+			//bToggle ? Character->BP_AJBInteractSkill->RestoreToHiding() : Character->BP_AJBInteractSkill->RestoreFromHiding();
+			//bToggle ? Character->BP_AJBInteractSkill->ChangeCharaStateToStartHiding(true) : Character->BP_AJBInteractSkill->ChangeCharaStateToFinishHiding(true);
+		}
+	}
 
 	LogA("ConsoleCommand", std::format("[Owning PlayerController]: {} | [Command]: {}", This->GetFullName(), StrCommand));
 
@@ -1298,24 +1342,6 @@ UFunctions::BrowseReturnVal UFunctions::Browse(SDK::UEngine* This, SDK::FWorldCo
 	if (AJB::MOD_OptionsMenu && AJB::MOD_OptionsMenu->bPauseMenuIsVisible)
 	{
 		AJB::MOD_OptionsMenu->ToggleVisibility();
-	}
-
-	{
-		bool bAppend{true};
-		for (SDK::FString& String : URL.Op)
-		{
-			if (String.ToString().find("listen") != std::string::npos)
-			{
-				bAppend = false;
-			}
-		}
-		if (bAppend && AJB::MOD_GlobalPatcher && !AJB::CLIENT_JoinOptions.empty())
-		{
-			for (SDK::FString& OpEntry : AJB::CLIENT_JoinOptions)
-			{
-				AJB::MOD_GlobalPatcher->AppendToFStringArray(URL.Op, OpEntry);
-			}			
-		}
 	}
 
 	AJB::MOD_Global_Synchronizer = nullptr;
@@ -1420,8 +1446,6 @@ void UFunctions::NotifyControlMessage(SDK::UPendingNetGame* This, SDK::UNetConne
 
 void UFunctions::InitLocalConnection(SDK::UNetConnection* This, SDK::UNetDriver* InDriver, void* InSocket, SDK::FURL& InURL, EConnectionState InState, int InMaxPacket, int InPacketOverhead)
 {
-	LogA(OFF::InitLocalConnection.GetName(), std::format("[This]: {} | [InDriver]: {} | [InURL]: {} | [InState]: {} | [InMaxPacket]: {} | [InPacketOverhead]: {}", This->GetFullName(), InDriver->GetFullName(), Helpers::FURLParser(InURL), (*(A8CL::EConnectionState*)(&InState)).ToString(), InMaxPacket, InPacketOverhead));
-
 	if (!AJB::IsServer())
 	{
 		bool bAppend{true};
@@ -1437,6 +1461,25 @@ void UFunctions::InitLocalConnection(SDK::UNetConnection* This, SDK::UNetDriver*
 		{
 			AJB::MOD_GlobalPatcher->AppendToFStringArray(InURL.Op, AJB::DLLCommitVersion);
 
+			static SDK::FName None{FName::NAME_FindOrAdd(L"None", FName::FNAME_Find)};
+			if (AJB::NAME_ClientJoinOptions != None)
+			{
+				//Call<SDK::FString(__thiscall*)(SDK::FName*, SDK::FString&)>(PB(0x6837F0))(&AJB::NAME_ClientJoinOptions, Temp);
+				SDK::FString Temp{};
+				OFF::FNameTS.Call<void(__thiscall*)(SDK::FName*, SDK::FString&)>()(&AJB::NAME_ClientJoinOptions, Temp);
+				
+				AJB::MOD_GlobalPatcher->AppendToFStringArray(InURL.Op, Temp);
+				AJB::NAME_ClientJoinOptions.Clear();
+			}
+
+			/*if (AJB::NAME_ClientJoinOptions.IsValid())
+			{
+				std::string BS{AJB::NAME_ClientJoinOptions.ToString()};
+				SDK::FString Temp{std::wstring(BS.begin(), BS.end()).c_str()};
+				AJB::MOD_GlobalPatcher->AppendToFStringArray(InURL.Op, Temp);		
+				AJB::NAME_ClientJoinOptions.Clear();
+			}*/
+
 			// Needs to be here for server reconnection to a password protected server since the connection is lost completely and is only gained via reconnect.
 			// Actually thinking about that, reconnect should be caching all options so I'll leave this commented for now.
 			/*if (!AJB::CLIENT_JoinOptions.empty())
@@ -1448,6 +1491,8 @@ void UFunctions::InitLocalConnection(SDK::UNetConnection* This, SDK::UNetDriver*
 			}*/
 		}
 	}
+
+	LogA(OFF::InitLocalConnection.GetName(), std::format("[This]: {} | [InDriver]: {} | [InURL]: {} | [InState]: {} | [InMaxPacket]: {} | [InPacketOverhead]: {}", This->GetFullName(), InDriver->GetFullName(), Helpers::FURLParser(InURL), (*(A8CL::EConnectionState*)(&InState)).ToString(), InMaxPacket, InPacketOverhead));
 
 	OFF::InitLocalConnection.VerifyFC<Decl::InitLocalConnection>()(This, InDriver, InSocket, InURL, InState, InMaxPacket, InPacketOverhead);
 }

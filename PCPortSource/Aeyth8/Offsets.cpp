@@ -18,6 +18,7 @@ namespace OFF
 	OFFSET FFree("FMemory::Free", 0x5BC5E0);
 	OFFSET FNameW("FName::FName wchar_t", 0x681ED0);
 	OFFSET FNameA("FName::FName char", 0x681E50);
+	OFFSET FNameTS("FName::ToString", 0x692ED0); // void FName::ToString(FString& Out)
 	//OFFSET Logf("FOutputDevice::Logf", 0x64D570);
 	OFFSET OutputText("UConsole::OutputText", 0x17A8BF0);
 

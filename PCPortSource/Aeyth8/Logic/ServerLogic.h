@@ -30,7 +30,7 @@ namespace SDK
 
 	enum class ENetRole : unsigned char;
 
-
+	struct FName;
 	struct FUniqueNetIdRepl;
 }
 namespace A8CL
@@ -64,17 +64,20 @@ namespace AJB
 	extern SDK::FName NAME_ServerPassword;
 	extern SDK::FName NAME_AdminPassword;
 
-	extern std::vector<UC::FString> CLIENT_JoinOptions;
+	extern SDK::FName NAME_ClientJoinOptions;
 	extern std::vector<FAJBNetConnection> ClientConnections;
 
 	namespace Server
 	{
 		// Helpers
 
+		FAJBNetConnection& GetConnection(SDK::UNetConnection* Connection);
 		int32 FindConnectionIndex(SDK::UNetConnection* Connection);
 		bool CheckAdmin(FAJBNetConnection& NetConnection);
 		bool IsAdmin(SDK::APlayerController* Controller);
 		bool IsAdmin(SDK::UNetConnection* Connection);
+
+		void SetAdmin(FAJBNetConnection& Connection, bool bIsAdmin);
 
 
 		// Hook Wrappers

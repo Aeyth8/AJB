@@ -138,6 +138,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="Aeyth8\Tools\BytePatcher.h" />
+    <ClInclude Include="Aeyth8\Tools\FNamePool.hpp" />
     <ClInclude Include="Aeyth8\Tools\Pointers.h" />
     <ClInclude Include="Aeyth8\Tools\TickHook\TickHook.h" />
     <ClInclude Include="Aeyth8\Tools\UFunctions.hpp" />
@@ -159,6 +160,7 @@
     <ClInclude Include="Dumper-7\CustomSDK\WBP_TLVersionInfo_parameters.hpp" />
     <ClInclude Include="Dumper-7\PropertyFixup.hpp" />
     <ClInclude Include="Dumper-7\SDK.hpp" />
+    <ClInclude Include="Dumper-7\SDK\BP_AJBInteractAction_classes.hpp" />
     <ClInclude Include="Dumper-7\UnrealContainers.hpp" />
     <ClInclude Include="Dumper-7\UtfN.hpp" />
     <ClInclude Include="MinHook\MinHook.h" />
@@ -242,9 +244,11 @@
     <ClCompile Include="Dumper-7\SDK\BP_AJBInGameHUD_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\BP_AJBInGameItemSpawnerMaster_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\BP_AJBInGamePlayerController_functions.cpp" />
+    <ClCompile Include="Dumper-7\SDK\BP_AJBInteractAction_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\BP_AJBOutGameHUD_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\BP_AJBOutGamePlayerController_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\BP_AJBOutGameProxy_functions.cpp" />
+    <ClCompile Include="Dumper-7\SDK\BP_AJBPlacementSkill_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\BP_AJBSimpleMatchHUD_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\BP_AJBSimpleMatchPlayerController_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\BP_AJBUIMapManager_functions.cpp" />

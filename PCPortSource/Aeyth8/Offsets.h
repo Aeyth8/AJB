@@ -24,6 +24,7 @@ namespace A8CL
 		extern OFFSET FFree;
 		extern OFFSET FNameW;
 		extern OFFSET FNameA;
+		extern OFFSET FNameTS;
 		//extern OFFSET Logf;
 		extern OFFSET OutputText;
 

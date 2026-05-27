@@ -27,10 +27,19 @@ bool								AJB::bServerHasPassword{false};
 SDK::FName							AJB::NAME_ServerPassword{0};
 SDK::FName							AJB::NAME_AdminPassword{0};
 
-std::vector<SDK::FString>			AJB::CLIENT_JoinOptions{};
+SDK::FName							AJB::NAME_ClientJoinOptions{0};
 std::vector<AJB::FAJBNetConnection>	AJB::ClientConnections{};
 
 
+
+AJB::FAJBNetConnection& AJB::Server::GetConnection(SDK::UNetConnection* Connection)
+{
+	int32 i = FindConnectionIndex(Connection);
+	if (i != -1)
+	{
+		return ClientConnections[i];
+	}
+}
 
 int32 AJB::Server::FindConnectionIndex(SDK::UNetConnection* Connection)
 {
@@ -75,6 +84,13 @@ bool AJB::Server::IsAdmin(SDK::UNetConnection* Connection)
 	}
 
 	return false;
+}
+
+void AJB::Server::SetAdmin(FAJBNetConnection& Connection, bool bIsAdmin)
+{	
+	if (bIsAdmin && !bServerAllowsAdmins)  bServerAllowsAdmins = true;
+	Connection.SetFlag(EAJBNetConnectionFlags::bIsAdmin, bIsAdmin);
+	
 }
 
 void AJB::Server::PreLogin(SDK::AGameModeBase* This, UC::FString* Options, UC::FString* Address, SDK::FUniqueNetIdRepl* UniqueId, UC::FString* ErrorMessage)

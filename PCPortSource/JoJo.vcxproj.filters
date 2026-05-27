@@ -377,6 +377,12 @@
     <ClCompile Include="Aeyth8\Tools\TickHook\TickHook.cpp">
       <Filter>Aeyth8\Tools\TickHook</Filter>
     </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\BP_AJBInteractAction_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\BP_AJBPlacementSkill_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Aeyth8\Logger.hpp">
@@ -531,6 +537,12 @@
     </ClInclude>
     <ClInclude Include="Aeyth8\Tools\TickHook\TickHook.h">
       <Filter>Aeyth8\Tools\TickHook</Filter>
+    </ClInclude>
+    <ClInclude Include="Dumper-7\SDK\BP_AJBInteractAction_classes.hpp">
+      <Filter>SDK\CPP</Filter>
+    </ClInclude>
+    <ClInclude Include="Aeyth8\Tools\FNamePool.hpp">
+      <Filter>Aeyth8\Tools</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -113,7 +113,7 @@ SDK::UClass*						AJB::MOD_SynchronizerClass{nullptr};
 SDK::ABP_Synchronizer_C*			AJB::MOD_PROXY_Synchronizer{nullptr};
 SDK::ABP_Synchronizer_C*			AJB::MOD_Global_Synchronizer{nullptr};
 
-const wchar_t*						AJB::DLLCommitVersion{L"[v0.6.9]"};
+const wchar_t*						AJB::DLLCommitVersion{L"[v0.7.0]"};
 UC::FString*						AJB::StrDLLCommitVersion{nullptr};
 UC::FString*						AJB::StrInGameUserName{nullptr};
 
@@ -638,7 +638,7 @@ void AJB::Init_Engine()
 {
 	while (!GEngine) Sleep(25);
 
-	MRWT::Activate();
+	//MRWT::Activate();
 
 	if (AJB::bIsDedicatedServer || AJB::bDebugModeFromCMLA) *reinterpret_cast<byte*>(PB(OFF::LogVerbosity)) = 6u;
 
