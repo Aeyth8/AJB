@@ -82,6 +82,12 @@ namespace A8CL
 		extern OFFSET SetInputGameOnly;
 		extern OFFSET SetInputMode_GameAndUIEx;
 
+		// Essential for Lemon Possession
+
+		extern OFFSET ImageSetBrushFromMaterial;
+		extern OFFSET BorderSetBrushFromMaterial;
+		extern OFFSET MediaPlayer;
+
 		// Native Game Functions
 
 		extern OFFSET PostEventAtLocation;
@@ -120,6 +126,7 @@ namespace A8CL
 		constexpr ull VFT_GetMaxFPS				= 0x51;	// UEngine::GetMaxFPS
 		constexpr ull VFT_FindWidgetOfClass		= 0xFE; // AAJBHUDBase::FindAJBWidgetOfClass
 		constexpr ull VFT_HandleClientPlayer	= 0x55;	// UNetConnection::HandleClientPlayer
+		constexpr ull VFT_GetMaterial			= 0x49; // UMaterialInterface::GetMaterial
 	}
 
 

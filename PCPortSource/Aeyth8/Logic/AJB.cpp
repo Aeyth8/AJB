@@ -50,11 +50,17 @@
 // Needed for temporarily fixing the infinite loading screen.
 #include "../../Dumper-7/SDK/BP_AJBBattleGameMode_classes.hpp"
 
+// Needed for MediaPlayer constructor hook.
+#include "../../Dumper-7/SDK/MediaAssets_classes.hpp"
+
 // ......
 #include "Server/Temporary/MRWT.h"
 
 // New native and much more efficient callback timer using the native Engine Tick.
 #include "../Tools/TickHook/TickHook.h"
+
+// External callbacks
+#include "Callbacks/AJBCallbacks.h"
 
 #include "ServerLogic.h"
 
@@ -89,7 +95,7 @@ SDK::FGameplayTag*					AJB::CurrentFlowstate{nullptr};
 __int32*							AJB::PlayerPoints{nullptr};
 bool*								AJB::bDebugInputMode{nullptr};
 
-SDK::ALemonHelper_C*				AJB::MOD_LemonHelper{nullptr};
+SDK::UMediaPlayer*					AJB::LemonPlayer{nullptr};
 SDK::UMaterial*						AJB::M_LemonPossession{nullptr};
 SDK::UMaterial*						AJB::AM_LemonPossession{nullptr};
 
@@ -166,7 +172,8 @@ std::vector<Hooks::HookStructure> StandaloneHooks =
 
 	{OFF::ALevelScriptActorConstructor,		AJB::ALevelScriptActor},
 	{OFF::AJBWindowWidget,					AJB::AJBWindowWidget},
-	{OFF::PostEventAtLocation,				AJB::PostEventAtLocation}, // RANDOMLY CRASHES INGAME NEEDS FIXED FOR NULLPTR DEREFERENCE
+	{OFF::MediaPlayer,						AJB::UMediaPlayer},
+	{OFF::PostEventAtLocation,				AJB::PostEventAtLocation},
 	{OFF::ChangeState,						AJB::FlowUtilChangeState},
 	
 	// Server logic hooks
@@ -922,79 +929,6 @@ void AJB::CreateCallbackTimer(void* FunctionCallback, float fTimer, unsigned nLo
 	}*/
 }
 
-void AJB::TranslateSimpleMatch()
-{
-	//LogA("TranslateSimpleMatch", "START");
-	
-	struct RetainerBoxSubclass : SDK::UWB_ModeSelectTextBase_C { SDK::URetainerBox* RetainerBox; };
-
-	struct WidgetSubclassIndexer
-	{
-		// This may seem confusing atfirst but all this really does is prevent me from having to include every single pointless header for each widget.
-		// It simply adds the offsets to memory starting from UWB_ModeSelect_C and the offsets lead to each widget pointer and then retainer box within.
-		static RetainerBoxSubclass* GetRetainerBox(uint64 MainModeSelectWidget, uint32 OffsetToClass, uint32 OffsetToRetainerBox)
-		{
-			uint64 Subclass = reinterpret_cast<uint64>(*reinterpret_cast<uint64**>(MainModeSelectWidget + OffsetToClass));
-			uint64 RetainerBox = reinterpret_cast<uint64>(*reinterpret_cast<uint64**>(Subclass + OffsetToRetainerBox));
-
-			return reinterpret_cast<RetainerBoxSubclass*>(RetainerBox);
-		}
-	};
-
-	struct ModeSelectWidget
-	{
-		uint32			OffsetToClass;
-		uint32			OffsetToRetainerBox;
-		const wchar_t*  TranslationString;
-		byte			BestPlacementIndex;
-		bool			bSubwidget = false;
-	};
-
-	constexpr const ModeSelectWidget WidgetsToTranslate[] =
-	{		
-		{0x02E8, 0x0370, L"ONLINE",					0},			// WB_ModeSelect_Button_PAIR		// WB_ModeSelect_Txt_PAIR
-		{0x0300, 0x0398, L"GAMBLING",				2},			// WB_ModeSelect_Button_Reward		// WB_ModeSelect_Txt_Reward
-		{0x02F0, 0x0378, L"MORE GAMBLING",			1},			// WB_ModeSelect_Button_PremiumDraw // WB_ModeSelect_Txt_PremiumDraw_C_0
-		{0x02F8, 0x0330, L"DEALER'S CHALLENGE",		4},			// WB_ModeSelect_Button_PvE			// WB_ModeSelect_Txt_PvE_C_1		
-		{0x0310, 0x0368, L"STORE BATTLE",			1},			// WB_ModeSelect_Button_Shop		// WB_ModeSelect_Txt_Shop
-		{0x0318, 0x0370, L"ONLINE",					0},			// WB_ModeSelect_Button_SOLO		// WB_ModeSelect_Txt_SOLO
-		{0x0320, 0x0330, L"TRAINING",				1},			// WB_ModeSelect_Button_Training	// WB_ModeSelect_Txt_Training
-		{0x0328, 0x0358, L"TUTORIAL",				1},			// WB_ModeSelect_Button_Tutorial	// WB_ModeSelect_Txt_Tutorial
-
-		// Subwidgets // They're one less pointer away.
-
-		{0x02E0, 0x0320, L"Exit to Titlescreen",							1, true},	// WB_ModeSelect_Button_EndGame		// RetainerBox_1
-		{0x02F8, 0x0328, L"Fight waves of bots in the Everglades Farm.",	6, true},	// WB_ModeSelect_Button_PvE			// RetainerBox_0	// The only UAJBTextBlock is in index #6, everything else is a UImage or other crap.
-	};
-
-	static SDK::FString Blank{L" "};
-
-	for (const ModeSelectWidget& WidgetTT : WidgetsToTranslate)
-	{
-		RetainerBoxSubclass* RetainerBoxWrapper = WidgetSubclassIndexer::GetRetainerBox((uint64)AJB::SimpleMatchHUD, WidgetTT.OffsetToClass, WidgetTT.OffsetToRetainerBox);
-		if (RetainerBoxWrapper)
-		{
-			SDK::URetainerBox* CurrentRetainer = WidgetTT.bSubwidget ? (SDK::URetainerBox*)RetainerBoxWrapper : RetainerBoxWrapper->RetainerBox;
-			if (CurrentRetainer)
-			{
-				SDK::UHorizontalBox* Box = static_cast<SDK::UHorizontalBox*>(CurrentRetainer->Slots[0]->Content);
-				const int Count = Box->Slots.Num();
-
-				for (int i{0}; i < Count; ++i)
-				{
-					if (!Box->Slots[i] || !Box->Slots[i]->Content || !Box->Slots[i]->Content->IsA(SDK::UTextBlock::StaticClass())) continue;
-
-					///LogA("Slot", Box->Slots[i]->Content->GetFullName());
-					// LogA(Widget->GetFullName(), std::to_string(i));
-
-					SDK::UTextBlock* Widget = static_cast<SDK::UTextBlock*>(Box->Slots[i]->Content);
-					AJB::MOD_GlobalPatcher->SetWidgetText(Widget, i == WidgetTT.BestPlacementIndex ? WidgetTT.TranslationString : Blank);
-				}				
-			}
-		}
-	}
-}
-
 void AJB::TryFixInfiniteLoadingScreen()
 {
 	// If a player leaves and rejoins the stupid PlayerID increments even though the count is wrong, it goes from 1 and upwards but due to the bug you will have missing slots.
@@ -1161,6 +1095,11 @@ bool __fastcall AJB::FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, S
 		}
 	}
 
+	if (AJB::bIsLemonPossessioned)
+	{
+		AJB::CreateCallbackTimer(AJB::Callbacks::LemonPossession, 0.7f);
+	}
+
 	if (SDK::APlayerController* PC = Player(); PC != nullptr)
 	{
 		for (SDK::FName& Flowstate : MouseLockFlowstates)
@@ -1273,7 +1212,7 @@ SDK::UAJBWindowWidget* __fastcall AJB::AJBWindowWidget(SDK::UAJBWindowWidget* Th
 
 			AJB::SimpleMatchHUD = (SDK::UWB_ModeSelect_C*)This;
 
-			AJB::CreateCallbackTimer(AJB::TranslateSimpleMatch, 0.0f);
+			AJB::CreateCallbackTimer(AJB::Callbacks::TranslateSimpleMatch, 0.0f);
 		}
 		/*else if (Result->IsA(SDK::UWB_GameOver_C::StaticClass()))
 		{
@@ -1290,5 +1229,20 @@ SDK::ALevelScriptActor* __fastcall AJB::ALevelScriptActor(SDK::AActor* This, voi
 		AJB::CreaditPointer = static_cast<SDK::AAJBCreadit_C*>(This);
 	}
 	return OFF::ALevelScriptActorConstructor.VerifyFC<SDK::ALevelScriptActor* (__fastcall*)(SDK::AActor*, void*)>()(This, ObjectInitializer);
+}
+
+SDK::UMediaPlayer* __fastcall AJB::UMediaPlayer(SDK::UMediaPlayer* This, void* ObjectInitializer)
+{
+	if (!AJB::LemonPlayer && This)
+	{
+		static SDK::FName ElNameOh = FName::NAME_FindOrAdd("LemonPlayer");
+		if (This->Name == ElNameOh)
+		{
+			//LogA("LemonPlayer", This->GetFullName());
+			AJB::LemonPlayer = This;
+		}
+		//LogA(OFF::MediaPlayer.GetName(), This->GetFullName());
+	}
+	return OFF::MediaPlayer.VerifyFC<SDK::UMediaPlayer*(__fastcall*)(SDK::UMediaPlayer*, void*)>()(This, ObjectInitializer);
 }
 

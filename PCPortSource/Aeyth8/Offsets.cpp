@@ -77,6 +77,12 @@ namespace OFF
 	OFFSET SetInputGameOnly("UWidgetBlueprintLibrary::SetInputMode_GameOnly", 0x10C41D0);
 	OFFSET SetInputMode_GameAndUIEx("UWidgetBlueprintLibrary::SetInputMode_GameAndUIEx", 0x10C4060);
 
+	// Essential for Lemon Possession
+
+	OFFSET ImageSetBrushFromMaterial("UImage::SetBrushFromMaterial", 0x10C1D10);
+	OFFSET BorderSetBrushFromMaterial("UBorder::SetBrushFromMaterial", 0x10C1C10);
+	OFFSET MediaPlayer("UMediaPlayer::UMediaPlayer", 0x19813D0);
+
 	/*
 	
 	UWorld::DestroyActor 0x1484190 (lowest level)

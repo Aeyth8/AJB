@@ -218,8 +218,10 @@ using namespace Global;
 #include "../../Dumper-7/SDK/BP_AJBInteractAction_classes.hpp"
 #include "../../Dumper-7/SDK/BP_AJBPlacementSkill_classes.hpp"
 
+#include "../../Dumper-7/SDK/MediaAssets_classes.hpp"
+
 #include "TickHook/TickHook.h"
-#include "FNamePool.hpp"
+#include "../Logic/Callbacks/AJBCallbacks.h"
 
 static bool* TOGGLEDEBUGBADGAMEDESIGN{nullptr};
 
@@ -241,106 +243,6 @@ extern "C" void GodMode()
 		Character->DebugForceFireSkill_On();
 		Character->DebugAutoFullMP_On();
 		
-	}
-}
-
-void LemonPossession()
-{
-
-	/*SDK::ALemonHelper_C* LemonHelper = Pointers::SpawnActor<SDK::ALemonHelper_C>();
-	if (LemonHelper)
-	{
-		LemonHelper->PlayGrayscaleLemonPossession();
-	}*/
-
-	// UImage::SetBrushFromMaterial 0x10C1D10
-	// UBorder::SetBrushFromMaterial 0x10C1C10
-	// UPrimitiveComponent::execSetMaterial 0x18D70A0
-
-	static bool bOne{0};
-	if (!bOne)
-	{
-		bOne = true;
-
-		// static SDK::ALemonHelper_C* LemonHelper = (SDK::ALemonHelper_C*)Call<UFunctions::Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(SDK::ALemonHelper_C::StaticClass(), GEngine, FName::NAME_FindOrAdd(L"/Game/Aeyth8/Media/LemonPossession/LemonHelper.LemonHelper_C"), 0, UFunctions::EInternalObjectFlags::None, 0, 0, 0, 0);
-		// SDK::ALemonHelper_C* LemonHelper = (SDK::ALemonHelper_C*)Pointers::SpawnActorInternal(GWorld, UFunctions::StaticLoadClass(SDK::AActor::StaticClass(), GEngine, L"/Game/Aeyth8/Media/LemonPossession/LemonHelper.LemonHelper_C", nullptr, 0, nullptr), SDK::FVector{}, SDK::FRotator{}, Pointers::FActorSpawnParameters{});
-		SDK::ALemonHelper_C* LemonHelper = Pointers::SpawnActor<SDK::ALemonHelper_C>();
-		if (LemonHelper)
-		{
-			LemonHelper->PlayGrayscaleLemonPossession();
-		}
-	}
-
-	SDK::UMaterial* LemonEssence = AJB::AM_LemonPossession;
-	if (LemonEssence)
-	{
-		SDK::UClass* ImageClass = SDK::UImage::StaticClass();
-		SDK::UClass* BorderClass = SDK::UBorder::StaticClass();
-		SDK::UClass* PrimitiveClass = SDK::UPrimitiveComponent::StaticClass();
-		SDK::UClass* MaterialClass = SDK::UMaterial::StaticClass();
-		SDK::UClass* LandscapeClass = SDK::ALandscapeProxy::StaticClass();
-
-		SDK::UObject* CurrentObject{nullptr};
-		for (int i{0}; i < SDK::UObject::GObjects->Num(); ++i)
-		{
-			CurrentObject = SDK::UObject::GObjects->GetByIndex(i);
-
-			if (!CurrentObject) continue;
-
-			if (CurrentObject->IsA(ImageClass))
-			{				
-				static uint64 ImageSetBrushFromMaterial(PB(0x10C1D10));
-
-				SDK::UImage* Image = static_cast<SDK::UImage*>(CurrentObject);
-
-				SDK::UMaterial* Mat = static_cast<SDK::UMaterial*>(Image->Brush.ResourceObject); if (Mat && Mat->IsA(MaterialClass)) LemonEssence = Mat->MaterialDomain == SDK::EMaterialDomain::MD_UI ? AJB::M_LemonPossession : AJB::AM_LemonPossession;
-
-				Call<void(__fastcall*)(SDK::UImage*, SDK::UMaterialInterface*)>(ImageSetBrushFromMaterial)(Image, LemonEssence);
-			}
-			else if (CurrentObject->IsA(BorderClass))
-			{
-				static uint64 BorderSetBrushFromMaterial(PB(0x10C1C10));
-
-				SDK::UBorder* Border = static_cast<SDK::UBorder*>(CurrentObject);
-
-				SDK::UMaterial* Mat = static_cast<SDK::UMaterial*>(Border->Background.ResourceObject); if (Mat && Mat->IsA(MaterialClass)) LemonEssence = Mat->MaterialDomain == SDK::EMaterialDomain::MD_UI ? AJB::M_LemonPossession : AJB::AM_LemonPossession;
-
-				Call<void(__fastcall*)(SDK::UBorder*, SDK::UMaterialInterface*)>(BorderSetBrushFromMaterial)(Border, LemonEssence);
-			}
-			else if (CurrentObject->IsA(PrimitiveClass))
-			{
-				//static uint64 execPrimitiveSetMaterial(PB(0x18D70A0));
-
-				SDK::UPrimitiveComponent* Primitive = static_cast<SDK::UPrimitiveComponent*>(CurrentObject);
-				for (int i{0}; i < Primitive->GetNumMaterials(); ++i)
-				{
-					SDK::UMaterialInterface* Mat = Primitive->GetMaterial(i);
-					if (Mat) { if (SDK::UMaterial* Base = Mat->GetBaseMaterial()) LemonEssence = Base->MaterialDomain == SDK::EMaterialDomain::MD_UI ? AJB::M_LemonPossession : AJB::AM_LemonPossession;  }
-					Primitive->SetMaterial(i, LemonEssence);
-
-					//Call<void(__fastcall*)(SDK::UPrimitiveComponent*, SDK::Params::PrimitiveComponent_SetMaterial*)>(execPrimitiveSetMaterial)(Primitive, &Parms);
-				}
-
-				/*if (CurrentObject->IsA(LandscapeClass))
-				{
-					SDK::ALandscapeProxy* Landscape = static_cast<SDK::ALandscapeProxy*>(CurrentObject);
-					Landscape->LandscapeMaterial = MLemon;
-
-
-					for (SDK::ULandscapeComponent* Component : Landscape->LandscapeComponents)
-					{
-						if (Component && Component->bRegistered)
-						{
-							SDK::ULandscapeHeightfieldCollisionComponent* CollisionComponent = Component->CollisionComponent.Get();
-							if (CollisionComponent)
-							{
-								CollisionComponent->SetShouldUpdatePhysicsVolume(true);
-							}
-						}
-					}
-				}*/
-			}
-		}
 	}
 }
 
@@ -761,7 +663,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	else if (StrCommand == "AJBExecInternal Konami")
 	{
 		AJB::bIsLemonPossessioned = true;
-		AJB::CreateCallbackTimer(LemonPossession, 0.7f);
+		AJB::CreateCallbackTimer(AJB::Callbacks::LemonPossession, 0.7f);
 	}
 	else if (StrCommand == "AJBExecInternal GoldShower")
 	{
@@ -1322,9 +1224,49 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		{
 			static bool bToggle{false};
 			bToggle = !bToggle;
-			bToggle ? Character->BP_AJBInteractSkill->ROS_OnStartHiding() : Character->BP_AJBInteractSkill->ROS_OnFinishHiding();
-			//bToggle ? Character->BP_AJBInteractSkill->RestoreToHiding() : Character->BP_AJBInteractSkill->RestoreFromHiding();
-			//bToggle ? Character->BP_AJBInteractSkill->ChangeCharaStateToStartHiding(true) : Character->BP_AJBInteractSkill->ChangeCharaStateToFinishHiding(true);
+			if (bToggle)
+			{
+				Character->BP_AJBInteractSkill->ROS_OnStartHiding();
+				Character->BP_AJBInteractSkill->ChangeCharaStateToStartHiding(true);
+			}
+			else
+			{
+				Character->BP_AJBInteractSkill->ROS_OnFinishHiding();
+				Character->BP_AJBInteractSkill->ChangeCharaStateToFinishHiding(true);
+			}
+		}
+	}
+	else if (StrCommand.find("AJBExecInternal LemonPlayerPlay") == 0 && StrCommand.size() > 32)
+	{
+		SDK::FName MovieName = FName::NAME_FindOrAdd(StrCommand.substr(32).c_str());
+
+		if (AJB::LemonPlayer)
+		{
+			for (SDK::UMediaSource* MediaSource : Pointers::FindObjects<SDK::UMediaSource>())
+			{
+				if (MediaSource->Name == MovieName)
+				{
+					AJB::LemonPlayer->Close();
+					AJB::LemonPlayer->OpenSource(MediaSource);
+					MediaSource->AddToRootSet();
+					break;
+				}
+			}
+			for (SDK::UMediaSoundComponent* Sound : Pointers::FindObjects<SDK::UMediaSoundComponent>(0))
+			{
+				Sound->SetMediaPlayer(AJB::LemonPlayer);
+			}
+			/*std::vector<SDK::UMediaSoundComponent*> Sounds = Pointers::FindObjects<SDK::UMediaSoundComponent>(0);
+			if (Sounds.empty())
+			{
+				SDK::UMediaSoundComponent* NewSound = Pointers::SpawnActor<SDK::UMediaSoundComponent>();
+				if (NewSound) NewSound->SetMediaPlayer(AJB::LemonPlayer);
+			}
+			else for (SDK::UMediaSoundComponent* Sound : Sounds)
+			{
+				LogA("Sound", Sound->GetFullName());
+				Sound->SetMediaPlayer(AJB::LemonPlayer);
+			}*/
 		}
 	}
 
@@ -1662,7 +1604,7 @@ void UFunctions::HandleStartingNewPlayer(SDK::AGameModeBase* This, SDK::APlayerC
 	if (AJB::bIsLemonPossessioned)
 	{
 		static const float WaitTimer = AJB::NUM_CPUCores >= 4 ? (16.0f / AJB::NUM_CPUCores) * 0.7f : 5.0f;
-		AJB::CreateCallbackTimer(LemonPossession, WaitTimer);
+		AJB::CreateCallbackTimer(AJB::Callbacks::LemonPossession, WaitTimer);
 	}
 
 	OFF::HandleStartingNewPlayer.VerifyFC<Decl::HandleStartingNewPlayer>()(This, Player);

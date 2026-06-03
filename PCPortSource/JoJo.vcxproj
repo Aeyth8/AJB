@@ -126,6 +126,7 @@
     <ClInclude Include="Aeyth8\Hooks\Hooks.hpp" />
     <ClInclude Include="Aeyth8\Logger.hpp" />
     <ClInclude Include="Aeyth8\Logic\AJB.h" />
+    <ClInclude Include="Aeyth8\Logic\Callbacks\AJBCallbacks.h" />
     <ClInclude Include="Aeyth8\Logic\ServerLogic.h" />
     <ClInclude Include="Aeyth8\Logic\Server\Temporary\MRWT.h" />
     <ClInclude Include="Aeyth8\OffsetBase.h" />
@@ -138,7 +139,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="Aeyth8\Tools\BytePatcher.h" />
-    <ClInclude Include="Aeyth8\Tools\FNamePool.hpp" />
     <ClInclude Include="Aeyth8\Tools\Pointers.h" />
     <ClInclude Include="Aeyth8\Tools\TickHook\TickHook.h" />
     <ClInclude Include="Aeyth8\Tools\UFunctions.hpp" />
@@ -197,6 +197,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Aeyth8\Logic\Callbacks\AJBCallbacks.cpp" />
     <ClCompile Include="Aeyth8\Logic\ServerLogic.cpp" />
     <ClCompile Include="Aeyth8\Offsets.cpp" />
     <ClCompile Include="Aeyth8\Proxy8\Entry\ProxyEntry.cpp" />

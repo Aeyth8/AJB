@@ -126,6 +126,9 @@
     <Filter Include="Aeyth8\Tools\TickHook">
       <UniqueIdentifier>{c4dc4f06-c967-4266-a6bb-e5fac34e4d8d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Aeyth8\Logic\Callbacks">
+      <UniqueIdentifier>{eca76baf-b05e-4902-a6bf-77f075412d5d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -383,6 +386,9 @@
     <ClCompile Include="Dumper-7\SDK\BP_AJBPlacementSkill_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
+    <ClCompile Include="Aeyth8\Logic\Callbacks\AJBCallbacks.cpp">
+      <Filter>Aeyth8\Logic\Callbacks</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Aeyth8\Logger.hpp">
@@ -541,8 +547,8 @@
     <ClInclude Include="Dumper-7\SDK\BP_AJBInteractAction_classes.hpp">
       <Filter>SDK\CPP</Filter>
     </ClInclude>
-    <ClInclude Include="Aeyth8\Tools\FNamePool.hpp">
-      <Filter>Aeyth8\Tools</Filter>
+    <ClInclude Include="Aeyth8\Logic\Callbacks\AJBCallbacks.h">
+      <Filter>Aeyth8\Logic\Callbacks</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

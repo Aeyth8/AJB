@@ -258,7 +258,7 @@ namespace AJB
 	extern UC::FString* StrDLLCommitVersion;					// FString Singleton for UI usage, not guaranteed to be a valid pointer.
 	extern UC::FString* StrInGameUserName;						// Temporary because it's 4am and my mind has shattered I AM SO TIRED TODAY
 
-	extern SDK::ALemonHelper_C* MOD_LemonHelper;				// Only exists as a singleton during in lemon possession mode.
+	extern SDK::UMediaPlayer* LemonPlayer;						// Default set media player that persists across all worlds.
 	extern SDK::UMaterial* M_LemonPossession;					// UI based material
 	extern SDK::UMaterial* AM_LemonPossession;					// All around surface/particle/etc material
 
@@ -322,8 +322,6 @@ namespace AJB
 	// You don't have to worry about any of that stuff since this wrapper simply requires the callback function.
 	void CreateCallbackTimer(void* FunctionCallback, float fTimer, unsigned nLoopFor = 0, bool bInfinite = false);
 
-	// Called externally by a callback timer, should not be manually called!
-	void TranslateSimpleMatch();
 
 	enum EInfiniteLoadingReason : unsigned char
 	{
@@ -355,5 +353,6 @@ namespace AJB
 	// Constructor Hooks
 	SDK::UAJBWindowWidget* __fastcall AJBWindowWidget(SDK::UAJBWindowWidget* This);
 	SDK::ALevelScriptActor* __fastcall ALevelScriptActor(SDK::AActor* This, void* ObjectInitializer);
+	SDK::UMediaPlayer* __fastcall UMediaPlayer(SDK::UMediaPlayer* This, void* ObjectInitializer);
 }
 }
