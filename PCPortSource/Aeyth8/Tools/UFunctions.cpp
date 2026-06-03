@@ -1379,11 +1379,18 @@ bool UFunctions::InitListen(SDK::UIpNetDriver* This, SDK::UObject* InNotify, SDK
 	return OFF::InitListen.VerifyFC<Decl::InitListen>()(This, InNotify, LocalURL, bReuseAddressAndPort, Error);
 }
 
-void UFunctions::NotifyControlMessage(SDK::UPendingNetGame* This, SDK::UNetConnection* Connection, uint8 MessageType, void* InBunch)
+void UFunctions::NotifyControlMessage(SDK::UPendingNetGame* This, SDK::UNetConnection* Connection, unsigned char MessageType, void* InBunch)
 {
 	LogA(OFF::NotifyControlMessage.GetName(), std::format("[UPendingNetGame]: {} | [Connection]: {} | [MessageType]: {}", This->GetFullName(), Connection->GetFullName(), MessageType));
 	
 	OFF::NotifyControlMessage.VerifyFC<Decl::NotifyControlMessage>()(This, Connection, MessageType, InBunch);
+}
+
+void UFunctions::PeekNetworkFailureMessages(SDK::UGameViewportClient* This, SDK::UWorld* InWorld, SDK::UNetDriver* NetDriver, SDK::ENetworkFailure FailureType, SDK::FString& ErrorString)
+{
+	OFF::PeekNetworkFailureMessages.VerifyFC<Decl::PeekNetworkFailureMessages>()(This, InWorld, NetDriver, FailureType, ErrorString);
+
+	LogA(OFF::PeekNetworkFailureMessages.GetName(), std::format("[This]: {} | [InWorld]: {} | [NetDriver]: {} | [FailureType]: {} | [ErrorString]: {}", This->GetFullName(), InWorld->GetFullName(), NetDriver->GetFullName(), (byte)FailureType, ErrorString.ToString()));
 }
 
 void UFunctions::InitLocalConnection(SDK::UNetConnection* This, SDK::UNetDriver* InDriver, void* InSocket, SDK::FURL& InURL, EConnectionState InState, int InMaxPacket, int InPacketOverhead)
@@ -1552,6 +1559,18 @@ SDK::APlayerController* UFunctions::Login(SDK::AGameModeBase* This, SDK::UPlayer
 		if (AJB::M_LemonPossession = SDK::UObject::FindObject<SDK::UMaterial>("Material M_LemonPossession.M_LemonPossession"))
 		{
 			AJB::M_LemonPossession->AddToRootSet();
+		}
+
+		// Sort of redundant since I add this to the lemon possession mode, however not loading this into root by launch and then attempting to lemon possess in a world where the video isn't loaded will result in all materials becoming blank white.
+		// And while the callback rootset may be redundant the actual finding of the object isn't since the video isn't global, I could easily solve this issue by making it global but I'm unsure if it's a good idea, also loading this tiny video into memory doesn't affect performance or usage.
+		SDK::FName LemonPossessionGrayscale = FName::NAME_FindOrAdd(L"LemonPossessionGrayscale");
+		for (SDK::UMediaSource* Source : Pointers::FindObjects<SDK::UMediaSource>())
+		{			
+			if (Source->Name == LemonPossessionGrayscale)
+			{
+				Source->AddToRootSet();
+				break;
+			}
 		}
 	}
 

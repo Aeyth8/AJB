@@ -46,6 +46,7 @@ namespace A8CL
 		extern OFFSET InitListen;
 		extern OFFSET InitLocalConnection;
 		extern OFFSET NotifyControlMessage;
+		extern OFFSET PeekNetworkFailureMessages;
 
 		extern OFFSET AddClientConnection;
 		extern OFFSET HandleClientPlayer;
@@ -87,6 +88,7 @@ namespace A8CL
 		extern OFFSET ImageSetBrushFromMaterial;
 		extern OFFSET BorderSetBrushFromMaterial;
 		extern OFFSET MediaPlayer;
+		extern OFFSET OpenSource;
 
 		// Native Game Functions
 
@@ -122,11 +124,18 @@ namespace A8CL
 		
 		*/
 
-		constexpr ull VFT_GameEngineTick		= 0x4F;	// UGameEngine::Tick
-		constexpr ull VFT_GetMaxFPS				= 0x51;	// UEngine::GetMaxFPS
-		constexpr ull VFT_FindWidgetOfClass		= 0xFE; // AAJBHUDBase::FindAJBWidgetOfClass
-		constexpr ull VFT_HandleClientPlayer	= 0x55;	// UNetConnection::HandleClientPlayer
-		constexpr ull VFT_GetMaterial			= 0x49; // UMaterialInterface::GetMaterial
+		constexpr ull VFT_GameEngineTick		= 0x4F;	 // UGameEngine::Tick
+		constexpr ull VFT_GetMaxFPS				= 0x51;	 // UEngine::GetMaxFPS
+		constexpr ull VFT_FindWidgetOfClass		= 0xFE;  // AAJBHUDBase::FindAJBWidgetOfClass
+		constexpr ull VFT_HandleClientPlayer	= 0x55;	 // UNetConnection::HandleClientPlayer
+		constexpr ull VFT_GetMaterial			= 0x49;  // UMaterialInterface::GetMaterial
+		constexpr ull VFT_ClientMainMenu		= 0x141; // APlayerController::ClientReturnToMainMenuWithTextReason
+		constexpr ull VFT_LocalTravel			= 0x13F; // APlayerController::LocalTravel
+		constexpr ull VFT_NetworkFailureMsg		= 0x62;	 // UGameViewportClient::PeekNetworkFailureMessages
+
+		// Non-Hooks
+
+		constexpr ull FControlChannelOutBunch = 0x1357E90;
 	}
 
 

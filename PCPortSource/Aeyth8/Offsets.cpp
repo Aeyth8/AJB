@@ -41,6 +41,7 @@ namespace OFF
 	//OFFSET InitConnection("UNetConnection::InitConnection", 0x14FBAF0);
 	OFFSET InitLocalConnection("UIpConnection::InitLocalConnection", 0x3FBFB0); 
 	OFFSET NotifyControlMessage("UPendingNetGame::NotifyControlMessage", 0x15BDFE0);
+	OFFSET PeekNetworkFailureMessages("UGameViewportClient::PeekNetworkFailureMessages", 0x140CB20);
 
 	OFFSET AddClientConnection("UNetDriver::AddClientConnection", 0x14EEDF0);
 	OFFSET HandleClientPlayer("UNetConnection::HandleClientPlayer", 0x14FB010);	
@@ -82,6 +83,7 @@ namespace OFF
 	OFFSET ImageSetBrushFromMaterial("UImage::SetBrushFromMaterial", 0x10C1D10);
 	OFFSET BorderSetBrushFromMaterial("UBorder::SetBrushFromMaterial", 0x10C1C10);
 	OFFSET MediaPlayer("UMediaPlayer::UMediaPlayer", 0x19813D0);
+	OFFSET OpenSource("UMediaPlayer::OpenSource", 0x19877F0);
 
 	/*
 	

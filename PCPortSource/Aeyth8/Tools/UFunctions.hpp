@@ -197,6 +197,8 @@ public:
 
 		typedef void(__thiscall* NotifyControlMessage)(SDK::UPendingNetGame* This, SDK::UNetConnection* Connection, unsigned char MessageType, void* InBunch);
 
+		typedef void (__thiscall* PeekNetworkFailureMessages)(SDK::UGameViewportClient* This, SDK::UWorld* InWorld, SDK::UNetDriver* NetDriver, SDK::ENetworkFailure FailureType, SDK::FString& ErrorString);
+
 		typedef void(__thiscall* SetClientTravel)(SDK::UEngine* This, SDK::UWorld* InWorld, const wchar_t* NextURL, char TravelType);
 
 		typedef void(__thiscall* ClientTravel)(SDK::APlayerController* This, SDK::FString* URL, unsigned char TravelType, bool bSeamless, void* MapPackageGuid);
@@ -285,6 +287,8 @@ public:
 	static bool InitListen(SDK::UIpNetDriver* This, SDK::UObject* InNotify, SDK::FURL& LocalURL, bool bReuseAddressAndPort, SDK::FString& Error);
 
 	static void NotifyControlMessage(SDK::UPendingNetGame* This, SDK::UNetConnection* Connection, unsigned char MessageType, void* InBunch);
+
+	static void PeekNetworkFailureMessages(SDK::UGameViewportClient* This, SDK::UWorld* InWorld, SDK::UNetDriver* NetDriver, SDK::ENetworkFailure FailureType, SDK::FString& ErrorString);
 
 	//static void InitConnection(SDK::UNetConnection* This, SDK::UNetDriver* InDriver, EConnectionState InState, SDK::FURL& InURL, int InConnectionSpeed, int MaxPacket);
 	static void InitLocalConnection(SDK::UNetConnection* This, SDK::UNetDriver* InDriver, void* InSocket, SDK::FURL& InURL, EConnectionState InState, int InMaxPacket, int InPacketOverhead);

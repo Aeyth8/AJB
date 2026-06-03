@@ -81,29 +81,14 @@ void AJB::Callbacks::LemonPossession()
 		AJB::CreateCallbackTimer(AJB::Callbacks::LemonPossession, 5.0f);
 		return;
 	}
-	else
-	{
-		static SDK::FName MovieName = FName::NAME_FindOrAdd("LemonPossessionGrayscale");
-		for (SDK::UMediaSource* MediaSource : Pointers::FindObjects<SDK::UMediaSource>())
-		{
-			if (MediaSource->Name == MovieName)
-			{
-				AJB::LemonPlayer->OpenSource(MediaSource);
-				MediaSource->AddToRootSet();
-				//LogA("I FECKING HAVE IT!!!", MediaSource->GetFullName());
-				break;
-			}
 
-			//LogA("MediaSource", MediaSource->GetName());
-			// This is the stupidest thing I've ever discovered, for some reason it crashes if you type "getall MediaSource"
-		}
-		//AJB::LemonPlayer->OpenUrl(L"https://chumlee.org/CHUMLEEYOUSTUPIDFU.mp4");
-	}
+	SDK::UClass* MediaSourceClass = SDK::UMediaSource::StaticClass();
 
 	SDK::UClass* ImageClass = SDK::UImage::StaticClass();
 	SDK::UClass* BorderClass = SDK::UBorder::StaticClass();
 	SDK::UClass* PrimitiveClass = SDK::UPrimitiveComponent::StaticClass();
 	SDK::UClass* LandscapeClass = SDK::ALandscapeProxy::StaticClass();
+
 
 	SDK::UObject* CurrentObject{nullptr};
 	for (int i{0}; i < SDK::UObject::GObjects->Num(); ++i)
@@ -112,7 +97,27 @@ void AJB::Callbacks::LemonPossession()
 
 		if (!CurrentObject) continue;
 
-		if (CurrentObject->IsA(ImageClass))
+		if (CurrentObject->IsA(MediaSourceClass) && AJB::LemonPlayer)
+		{
+			//AJB::LemonPlayer->OpenUrl(L"https://chumlee.org/CHUMLEEYOUSTUPIDFU.mp4");
+			// This is the stupidest thing I've ever discovered, for some reason it crashes if you type "getall MediaSource"
+
+			static SDK::FName MovieName = FName::NAME_FindOrAdd("LemonPossessionGrayscale");
+			static SDK::UMediaSource* LemonPossessionGrayscale{nullptr};
+
+			SDK::UMediaSource* Source = static_cast<SDK::UMediaSource*>(CurrentObject);
+
+			// SHUTUP. STUPID IDIOT IDIOT
+			__assume (Source != nullptr);
+
+			if (!LemonPossessionGrayscale && Source->Name == MovieName)
+			{
+				LemonPossessionGrayscale = Source;
+				Source->AddToRootSet();
+				OFF::OpenSource.VerifyFC<bool(__thiscall*)(SDK::UMediaPlayer*, SDK::UMediaSource*)>()(AJB::LemonPlayer, Source);
+			}
+		}
+		else if (CurrentObject->IsA(ImageClass))
 		{
 			SDK::UImage* Image = static_cast<SDK::UImage*>(CurrentObject);
 			if (SDK::UMaterial* LemonEssence = GetLemonMaterial(Image->Brush.ResourceObject))
@@ -146,7 +151,7 @@ void AJB::Callbacks::LemonPossession()
 			{
 				if (SDK::UMaterialInterface* Mat = Primitive->GetMaterial(i))
 				{
-					if (SDK::UMaterial* LemonEssence = GetLemonMaterial(GetBaseMaterial(Mat)))
+					if (SDK::UMaterial* LemonEssence = GetLemonMaterial(Mat))
 					{
 						Primitive->SetMaterial(i, LemonEssence);
 					}

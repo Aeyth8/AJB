@@ -144,7 +144,7 @@ enum class EMovementMode : uint8
 
 // Enum Engine.ENetworkFailure
 // NumValues: 0x000C
-enum class ENetworkFailure : uint8
+enum ENetworkFailure : uint8
 {
 	NetDriverAlreadyExists                   = 0,
 	NetDriverCreateFailure                   = 1,

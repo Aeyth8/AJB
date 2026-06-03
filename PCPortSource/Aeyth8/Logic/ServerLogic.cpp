@@ -232,7 +232,13 @@ bool AJB::Server::Invoke(SDK::UFunction* This, SDK::UObject* Obj, void* FFrame_S
 				if (bIsUnauthorized)
 				{
 					LogA("Kicked for cheating", Obj->GetFullName());
-					UFunctions::CloseConnection(NetConnection);
+					
+					OFFSET::VFTable<void(__thiscall*)(SDK::APlayerController*, const SDK::FText&)>(NetConnection->PlayerController)[OFF::VFT_ClientMainMenu](NetConnection->PlayerController, (Call<SDK::FText(*)(const SDK::FString&)>(PB(0x5F9600))(SDK::FString{L"CHEATING PIECE OF "}))); // Amazingly works first try first ever compilation, but is identical to me just closing it with UNetConnection::Close
+					//Call<void(__thiscall*)(SDK::APlayerController*, const SDK::FText&)>(PB(0x18C6280))(NetConnection->PlayerController, (Call<SDK::FText(*)(const SDK::FString&)>(PB(0x5F9600))(SDK::FString{L"CHEATING PIECE OF "}))); //  Does nothing
+
+					//OFFSET::VFTable<void(__thiscall*)(SDK::APlayerController*, const SDK::FString&)>(NetConnection->PlayerController)[OFF::VFT_LocalTravel](NetConnection->PlayerController, SDK::FString{L"/Game/Aeyth8/Maps/Purgatory/Purgatory"});
+					//NetConnection->PlayerController->ClientTravel(L"/Game/Aeyth8/Maps/Purgatory/Purgatory", SDK::ETravelType::TRAVEL_Absolute, true, SDK::FGuid{});
+					//UFunctions::CloseConnection(NetConnection);
 					return false;
 				}
 			}			

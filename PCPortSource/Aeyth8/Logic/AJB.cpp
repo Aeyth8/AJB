@@ -149,6 +149,7 @@ std::vector<Hooks::HookStructure> StandaloneHooks =
 	{OFF::AJBPreLogin,						AJB::Server::PreLogin},
 	{OFF::InitListen,						UFunctions::InitListen},
 	//{OFF::NotifyControlMessage,			UFunctions::NotifyControlMessage},
+	{OFF::PeekNetworkFailureMessages,		UFunctions::PeekNetworkFailureMessages},
 	{OFF::InitLocalConnection,				UFunctions::InitLocalConnection},
 	{OFF::AppPreExit,						UFunctions::AppPreExit},
 	{OFF::IsNonPakFileNameAllowed,			UFunctions::IsNonPakFilenameAllowed},
@@ -478,6 +479,13 @@ static bool __fastcall SetString(void* This, const wchar_t* Section, const wchar
 	return GSetString.VerifyFC<bool(__thiscall*)(void*, const wchar_t*, const wchar_t*, SDK::FString&, SDK::FString&)>()(This, Section, Key, Value, Filename);
 }
 
+A8CL::OFFSET oMainMenuImplementation("APlayerController::ClientReturnToMainMenuWithTextReason_Implementation", 0x1606670);
+void ClientReturnToMainMenuWithTextReason_Implementation(SDK::APlayerController* This, SDK::FText& Reason)
+{
+	LogA(oMainMenuImplementation.GetName(), std::format("[This]: {} | [Reason]: {}", This->GetFullName(), Reason.ToString()));
+	oMainMenuImplementation.VerifyFC<void(__thiscall*)(SDK::APlayerController* This, SDK::FText& Reason)>()(This, Reason);
+}
+
 void AJB::Init_Hooks()
 {
 	constexpr const BYTE Replacement[] = { RETN, NOP };
@@ -614,7 +622,7 @@ void AJB::Init_Hooks()
 		AJB::bServerAllowsAdmins = CMLA::ServerAdminPassword.HasChanged();
 		AJB::bServerHasPassword = CMLA::ServerPreLoginPassword.HasChanged();
 
-
+		Hooks::CreateAndEnableHook(oMainMenuImplementation, ClientReturnToMainMenuWithTextReason_Implementation);
 		//BytePatcher::ReplaceBytes(OFF::IsAJBOfflineMode.PlusBase(), {MOV, 0, RETN, NOP, NOP});
 		//BytePatcher::ReplaceBytes(OFF::IsOfflineMode.PlusBase(), {MOV, 0, RETN, NOP, NOP});
 
