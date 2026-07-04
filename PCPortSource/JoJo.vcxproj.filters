@@ -129,6 +129,9 @@
     <Filter Include="Aeyth8\Logic\Callbacks">
       <UniqueIdentifier>{eca76baf-b05e-4902-a6bf-77f075412d5d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SDK\Custom\OnlineStatus">
+      <UniqueIdentifier>{bba0ca3a-7441-4ce6-83ab-d3e0f4856815}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -278,9 +281,6 @@
     <ClCompile Include="Dumper-7\SDK\WB_PpBuyWindow_functions.cpp">
       <Filter>SDK\CPP\Widgets</Filter>
     </ClCompile>
-    <ClCompile Include="Dumper-7\CustomSDK\WBP_OptionsMenu_functions.cpp">
-      <Filter>SDK\Custom\OptionsMenu</Filter>
-    </ClCompile>
     <ClCompile Include="Dumper-7\CustomSDK\BP_GlobalPatcher_functions.cpp">
       <Filter>SDK\Custom\Global</Filter>
     </ClCompile>
@@ -389,6 +389,15 @@
     <ClCompile Include="Aeyth8\Logic\Callbacks\AJBCallbacks.cpp">
       <Filter>Aeyth8\Logic\Callbacks</Filter>
     </ClCompile>
+    <ClCompile Include="Dumper-7\CustomSDK\WBP_OptionsMenu_functions.cpp">
+      <Filter>SDK\Custom\OptionsMenu</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\CustomSDK\WBP_BLOnlineStatus_functions.cpp">
+      <Filter>SDK\Custom\OnlineStatus</Filter>
+    </ClCompile>
+    <ClCompile Include="Dumper-7\SDK\BP_AJBSkillBase_functions.cpp">
+      <Filter>SDK\CPP</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Aeyth8\Logger.hpp">
@@ -478,12 +487,6 @@
     <ClInclude Include="Dumper-7\CustomSDK\WBP_Cursor_classes.hpp">
       <Filter>SDK\Custom\Cursor</Filter>
     </ClInclude>
-    <ClInclude Include="Dumper-7\CustomSDK\WBP_OptionsMenu_parameters.hpp">
-      <Filter>SDK\Custom\OptionsMenu</Filter>
-    </ClInclude>
-    <ClInclude Include="Dumper-7\CustomSDK\WBP_OptionsMenu_classes.hpp">
-      <Filter>SDK\Custom\OptionsMenu</Filter>
-    </ClInclude>
     <ClInclude Include="Dumper-7\CustomSDK\BP_GlobalPatcher_classes.hpp">
       <Filter>SDK\Custom\Global</Filter>
     </ClInclude>
@@ -549,6 +552,15 @@
     </ClInclude>
     <ClInclude Include="Aeyth8\Logic\Callbacks\AJBCallbacks.h">
       <Filter>Aeyth8\Logic\Callbacks</Filter>
+    </ClInclude>
+    <ClInclude Include="Dumper-7\CustomSDK\WBP_OptionsMenu_classes.hpp">
+      <Filter>SDK\Custom\OptionsMenu</Filter>
+    </ClInclude>
+    <ClInclude Include="Dumper-7\CustomSDK\WBP_OptionsMenu_parameters.hpp">
+      <Filter>SDK\Custom\OptionsMenu</Filter>
+    </ClInclude>
+    <ClInclude Include="Dumper-7\CustomSDK\WBP_BLOnlineStatus_classes.hpp">
+      <Filter>SDK\Custom\OnlineStatus</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

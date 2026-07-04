@@ -153,6 +153,7 @@
     <ClInclude Include="Dumper-7\CustomSDK\GM_AJBUserInterface_parameters.hpp" />
     <ClInclude Include="Dumper-7\CustomSDK\LemonHelper_classes.hpp" />
     <ClInclude Include="Dumper-7\CustomSDK\LemonHelper_parameters.hpp" />
+    <ClInclude Include="Dumper-7\CustomSDK\WBP_BLOnlineStatus_classes.hpp" />
     <ClInclude Include="Dumper-7\CustomSDK\WBP_Cursor_classes.hpp" />
     <ClInclude Include="Dumper-7\CustomSDK\WBP_OptionsMenu_classes.hpp" />
     <ClInclude Include="Dumper-7\CustomSDK\WBP_OptionsMenu_parameters.hpp" />
@@ -230,6 +231,7 @@
     <ClCompile Include="Dumper-7\CustomSDK\BP_GlobalPatcher_functions.cpp" />
     <ClCompile Include="Dumper-7\CustomSDK\GM_AJBUserInterface_functions.cpp" />
     <ClCompile Include="Dumper-7\CustomSDK\LemonHelper_functions.cpp" />
+    <ClCompile Include="Dumper-7\CustomSDK\WBP_BLOnlineStatus_functions.cpp" />
     <ClCompile Include="Dumper-7\CustomSDK\WBP_OptionsMenu_functions.cpp" />
     <ClCompile Include="Dumper-7\CustomSDK\WBP_TLVersionInfo_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\AJBCreadit_functions.cpp" />
@@ -252,6 +254,7 @@
     <ClCompile Include="Dumper-7\SDK\BP_AJBPlacementSkill_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\BP_AJBSimpleMatchHUD_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\BP_AJBSimpleMatchPlayerController_functions.cpp" />
+    <ClCompile Include="Dumper-7\SDK\BP_AJBSkillBase_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\BP_AJBUIMapManager_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\BP_GameFlowStateManager_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\BP_HUDCountDownTimerWrapper_functions.cpp" />

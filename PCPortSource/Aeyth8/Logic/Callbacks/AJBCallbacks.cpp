@@ -233,3 +233,12 @@ void AJB::Callbacks::TranslateSimpleMatch()
 		}
 	}
 }
+
+UC::FString AJB::Callbacks::CacheErrorPopupString{};
+
+#include "../../../Dumper-7/CustomSDK/WBP_OptionsMenu_classes.hpp"				// Custom SDK header (NOT GAME NATIVE)
+
+void AJB::Callbacks::CallbackErrorPopup()
+{
+	AJB::MOD_OptionsMenu->CreateGenericErrorPopup(L"Failed To Connect", CacheErrorPopupString);
+}

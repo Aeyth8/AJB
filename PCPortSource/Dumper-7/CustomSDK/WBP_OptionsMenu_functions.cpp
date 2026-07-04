@@ -8,8 +8,6 @@
 
 // Package: WBP_OptionsMenu
 
-#include "../SDK/Basic.hpp"
-
 #include "WBP_OptionsMenu_classes.hpp"
 #include "WBP_OptionsMenu_parameters.hpp"
 
@@ -17,240 +15,118 @@
 namespace SDK
 {
 
-// Function WBP_OptionsMenu.WBP_OptionsMenu_C.SetDLLCommitVersion
-// (Public, HasOutParams, HasDefaults, BlueprintCallable, BlueprintEvent)
-// Parameters:
-// class FString&                          NewVersion                                             (BlueprintVisible, BlueprintReadOnly, Parm, OutParm, ZeroConstructor, ReferenceParm, HasGetValueTypeHash)
-
-void UWBP_OptionsMenu_C::SetDLLCommitVersion(class FString& NewVersion)
-{
-	static class UFunction* Func = nullptr;
-
-	if (Func == nullptr)
-		Func = Class->GetFunction("WBP_OptionsMenu_C", "SetDLLCommitVersion");
-
-	Params::WBP_OptionsMenu_C_SetDLLCommitVersion Parms{};
-
-	Parms.NewVersion = std::move(NewVersion);
-
-	UObject::ProcessEvent(Func, &Parms);
-
-	NewVersion = std::move(Parms.NewVersion);
-}
-
-
-// Function WBP_OptionsMenu.WBP_OptionsMenu_C.OnButtonClicked_PlaySFX
-// (Public, BlueprintCallable, BlueprintEvent)
-
-void UWBP_OptionsMenu_C::OnButtonClicked_PlaySFX()
-{
-	static class UFunction* Func = nullptr;
-
-	if (Func == nullptr)
-		Func = Class->GetFunction("WBP_OptionsMenu_C", "OnButtonClicked_PlaySFX");
-
-	UObject::ProcessEvent(Func, nullptr);
-}
-
-
-// Function WBP_OptionsMenu.WBP_OptionsMenu_C.SetOnlineStatus
+// Function WBP_OptionsMenu.WBP_OptionsMenu_C.SwitchToTabIndex
 // (Public, BlueprintCallable, BlueprintEvent)
 // Parameters:
-// bool                                    bIsOnline                                              (BlueprintVisible, BlueprintReadOnly, Parm, ZeroConstructor, IsPlainOldData, NoDestructor)
+// int32                                   Index_0                                                (BlueprintVisible, BlueprintReadOnly, Parm, ZeroConstructor, IsPlainOldData, NoDestructor, HasGetValueTypeHash)
 
-void UWBP_OptionsMenu_C::SetOnlineStatus(bool bIsOnline)
+void UWBP_OptionsMenu_C::SwitchToTabIndex(int32 Index_0)
 {
 	static class UFunction* Func = nullptr;
 
 	if (Func == nullptr)
-		Func = Class->GetFunction("WBP_OptionsMenu_C", "SetOnlineStatus");
+		Func = Class->GetFunction("WBP_OptionsMenu_C", "SwitchToTabIndex");
 
-	Params::WBP_OptionsMenu_C_SetOnlineStatus Parms{};
+	Params::WBP_OptionsMenu_C_SwitchToTabIndex Parms{};
 
-	Parms.bIsOnline = bIsOnline;
+	Parms.Index_0 = Index_0;
 
 	UObject::ProcessEvent(Func, &Parms);
 }
 
 
-// Function WBP_OptionsMenu.WBP_OptionsMenu_C.ToggleVisibility
+// Function WBP_OptionsMenu.WBP_OptionsMenu_C.SwitchToTab
 // (Public, BlueprintCallable, BlueprintEvent)
+// Parameters:
+// class UUserWidget*                      OwnedWidget                                            (BlueprintVisible, BlueprintReadOnly, Parm, ZeroConstructor, InstancedReference, IsPlainOldData, NoDestructor, HasGetValueTypeHash)
 
-void UWBP_OptionsMenu_C::ToggleVisibility()
+void UWBP_OptionsMenu_C::SwitchToTab(class UUserWidget* OwnedWidget)
 {
 	static class UFunction* Func = nullptr;
 
 	if (Func == nullptr)
-		Func = Class->GetFunction("WBP_OptionsMenu_C", "ToggleVisibility");
+		Func = Class->GetFunction("WBP_OptionsMenu_C", "SwitchToTab");
 
-	UObject::ProcessEvent(Func, nullptr);
+	Params::WBP_OptionsMenu_C_SwitchToTab Parms{};
+
+	Parms.OwnedWidget = OwnedWidget;
+
+	UObject::ProcessEvent(Func, &Parms);
 }
 
 
-// Function WBP_OptionsMenu.WBP_OptionsMenu_C.bVisibilityToESlate
+// Function WBP_OptionsMenu.WBP_OptionsMenu_C.CreateGenericErrorPopup
+// (Public, BlueprintCallable, BlueprintEvent)
+// Parameters:
+// const class FString&                    InHeader                                               (BlueprintVisible, BlueprintReadOnly, Parm, ZeroConstructor, HasGetValueTypeHash)
+// const class FString&                    InDescriptor                                           (BlueprintVisible, BlueprintReadOnly, Parm, ZeroConstructor, HasGetValueTypeHash)
+
+void UWBP_OptionsMenu_C::CreateGenericErrorPopup(const class FString& InHeader, const class FString& InDescriptor)
+{
+	static class UFunction* Func = nullptr;
+
+	if (Func == nullptr)
+		Func = Class->GetFunction("WBP_OptionsMenu_C", "CreateGenericErrorPopup");
+
+	Params::WBP_OptionsMenu_C_CreateGenericErrorPopup Parms{};
+
+	Parms.InHeader = std::move(InHeader);
+	Parms.InDescriptor = std::move(InDescriptor);
+
+	UObject::ProcessEvent(Func, &Parms);
+}
+
+
+// Function WBP_OptionsMenu.WBP_OptionsMenu_C.RemoveInputKey
 // (Public, HasOutParams, BlueprintCallable, BlueprintEvent)
 // Parameters:
-// ESlateVisibility*                       Visibility_0                                           (Parm, OutParm, ZeroConstructor, IsPlainOldData, NoDestructor, HasGetValueTypeHash)
+// struct FKey&                            InKey                                                  (BlueprintVisible, BlueprintReadOnly, Parm, OutParm, ReferenceParm, HasGetValueTypeHash)
+// bool*                                   bItemFoundAndRemoved                                   (Parm, OutParm, ZeroConstructor, IsPlainOldData, NoDestructor)
 
-ESlateVisibility UWBP_OptionsMenu_C::bVisibilityToESlate()
+void UWBP_OptionsMenu_C::RemoveInputKey(struct FKey& InKey, bool* bItemFoundAndRemoved)
 {
 	static class UFunction* Func = nullptr;
 
 	if (Func == nullptr)
-		Func = Class->GetFunction("WBP_OptionsMenu_C", "bVisibilityToESlate");
+		Func = Class->GetFunction("WBP_OptionsMenu_C", "RemoveInputKey");
 
-	Params::WBP_OptionsMenu_C_bVisibilityToESlate Parms{};
+	Params::WBP_OptionsMenu_C_RemoveInputKey Parms{};
+
+	Parms.InKey = std::move(InKey);
 
 	UObject::ProcessEvent(Func, &Parms);
 
-	return Parms.OutVisibility;
+	InKey = std::move(Parms.InKey);
+
+	if (bItemFoundAndRemoved != nullptr)
+		*bItemFoundAndRemoved = Parms.bItemFoundAndRemoved;
 }
 
 
-// Function WBP_OptionsMenu.WBP_OptionsMenu_C.GetDominatingTickRate
-// (Public, HasOutParams, BlueprintCallable, BlueprintEvent, BlueprintPure)
+// Function WBP_OptionsMenu.WBP_OptionsMenu_C.AddInputKey
+// (Public, HasOutParams, BlueprintCallable, BlueprintEvent)
 // Parameters:
-// float*                                  NewParam                                               (Parm, OutParm, ZeroConstructor, IsPlainOldData, NoDestructor, HasGetValueTypeHash)
+// struct FKey&                            InKey                                                  (BlueprintVisible, BlueprintReadOnly, Parm, OutParm, ReferenceParm, HasGetValueTypeHash)
 
-float UWBP_OptionsMenu_C::GetDominatingTickRate()
+void UWBP_OptionsMenu_C::AddInputKey(struct FKey& InKey)
 {
 	static class UFunction* Func = nullptr;
 
 	if (Func == nullptr)
-		Func = Class->GetFunction("WBP_OptionsMenu_C", "GetDominatingTickRate");
+		Func = Class->GetFunction("WBP_OptionsMenu_C", "AddInputKey");
 
-	Params::WBP_OptionsMenu_C_GetDominatingTickRate Parms{};
+	Params::WBP_OptionsMenu_C_AddInputKey Parms{};
+
+	Parms.InKey = std::move(InKey);
 
 	UObject::ProcessEvent(Func, &Parms);
 
-	return Parms.DominatingTickRate;
-}
-
-
-// Function WBP_OptionsMenu.WBP_OptionsMenu_C.GetInputKey
-// (Public, HasOutParams, BlueprintCallable, BlueprintEvent, BlueprintPure)
-// Parameters:
-// struct FKey*                            InputKey_0                                             (Parm, OutParm, HasGetValueTypeHash)
-
-FKey UWBP_OptionsMenu_C::GetInputKey() const
-{
-	static class UFunction* Func = nullptr;
-
-	if (Func == nullptr)
-		Func = Class->GetFunction("WBP_OptionsMenu_C", "GetInputKey");
-
-	Params::WBP_OptionsMenu_C_GetInputKey Parms{};
-
-	UObject::ProcessEvent(Func, &Parms);
-
-	return Parms.OutputKey;
-}
-
-
-// Function WBP_OptionsMenu.WBP_OptionsMenu_C.IsMenuVisible
-// (Public, HasOutParams, BlueprintCallable, BlueprintEvent, BlueprintPure)
-// Parameters:
-// bool*                                   Bool                                                   (Parm, OutParm, ZeroConstructor, IsPlainOldData, NoDestructor)
-
-bool UWBP_OptionsMenu_C::IsMenuVisible()
-{
-	static class UFunction* Func = nullptr;
-
-	if (Func == nullptr)
-		Func = Class->GetFunction("WBP_OptionsMenu_C", "IsMenuVisible");
-
-	Params::WBP_OptionsMenu_C_IsMenuVisible Parms{};
-
-	UObject::ProcessEvent(Func, &Parms);
-
-	return Parms.Bool;
-}
-
-
-// Function WBP_OptionsMenu.WBP_OptionsMenu_C.SetInputKey
-// (Public, BlueprintCallable, BlueprintEvent)
-// Parameters:
-// const struct FKey&                      NewKey                                                 (BlueprintVisible, BlueprintReadOnly, Parm, HasGetValueTypeHash)
-
-void UWBP_OptionsMenu_C::SetInputKey(const struct FKey& NewKey)
-{
-	static class UFunction* Func = nullptr;
-
-	if (Func == nullptr)
-		Func = Class->GetFunction("WBP_OptionsMenu_C", "SetInputKey");
-
-	Params::WBP_OptionsMenu_C_SetInputKey Parms{};
-
-	Parms.NewKey = std::move(NewKey);
-
-	UObject::ProcessEvent(Func, &Parms);
-}
-
-
-// Function WBP_OptionsMenu.WBP_OptionsMenu_C.OnFailure_C64D486E4E489CADFC32FC91E18DF130
-// (BlueprintCallable, BlueprintEvent)
-
-void UWBP_OptionsMenu_C::OnFailure_C64D486E4E489CADFC32FC91E18DF130()
-{
-	static class UFunction* Func = nullptr;
-
-	if (Func == nullptr)
-		Func = Class->GetFunction("WBP_OptionsMenu_C", "OnFailure_C64D486E4E489CADFC32FC91E18DF130");
-
-	UObject::ProcessEvent(Func, nullptr);
-}
-
-
-// Function WBP_OptionsMenu.WBP_OptionsMenu_C.OnSuccess_C64D486E4E489CADFC32FC91E18DF130
-// (BlueprintCallable, BlueprintEvent)
-
-void UWBP_OptionsMenu_C::OnSuccess_C64D486E4E489CADFC32FC91E18DF130()
-{
-	static class UFunction* Func = nullptr;
-
-	if (Func == nullptr)
-		Func = Class->GetFunction("WBP_OptionsMenu_C", "OnSuccess_C64D486E4E489CADFC32FC91E18DF130");
-
-	UObject::ProcessEvent(Func, nullptr);
-}
-
-
-// Function WBP_OptionsMenu.WBP_OptionsMenu_C.PreConstruct
-// (BlueprintCosmetic, Event, Public, BlueprintEvent)
-// Parameters:
-// bool                                    IsDesignTime                                           (BlueprintVisible, BlueprintReadOnly, Parm, ZeroConstructor, IsPlainOldData, NoDestructor)
-
-void UWBP_OptionsMenu_C::PreConstruct(bool IsDesignTime)
-{
-	static class UFunction* Func = nullptr;
-
-	if (Func == nullptr)
-		Func = Class->GetFunction("WBP_OptionsMenu_C", "PreConstruct");
-
-	Params::WBP_OptionsMenu_C_PreConstruct Parms{};
-
-	Parms.IsDesignTime = IsDesignTime;
-
-	UObject::ProcessEvent(Func, &Parms);
-}
-
-
-// Function WBP_OptionsMenu.WBP_OptionsMenu_C.BndEvt__SettingsButton_K2Node_ComponentBoundEvent_1_OnButtonClickedEvent__DelegateSignature
-// (BlueprintEvent)
-
-void UWBP_OptionsMenu_C::BndEvt__SettingsButton_K2Node_ComponentBoundEvent_1_OnButtonClickedEvent__DelegateSignature()
-{
-	static class UFunction* Func = nullptr;
-
-	if (Func == nullptr)
-		Func = Class->GetFunction("WBP_OptionsMenu_C", "BndEvt__SettingsButton_K2Node_ComponentBoundEvent_1_OnButtonClickedEvent__DelegateSignature");
-
-	UObject::ProcessEvent(Func, nullptr);
+	InKey = std::move(Parms.InKey);
 }
 
 
 // Function WBP_OptionsMenu.WBP_OptionsMenu_C.InternalTick
-// (BlueprintCallable, BlueprintEvent)
+// (Public, HasDefaults, BlueprintCallable, BlueprintEvent)
 
 void UWBP_OptionsMenu_C::InternalTick()
 {
@@ -263,79 +139,83 @@ void UWBP_OptionsMenu_C::InternalTick()
 }
 
 
-// Function WBP_OptionsMenu.WBP_OptionsMenu_C.BndEvt__ReturnToMainMenuButton_K2Node_ComponentBoundEvent_2_OnButtonClickedEvent__DelegateSignature
-// (BlueprintEvent)
+// Function WBP_OptionsMenu.WBP_OptionsMenu_C.ToggleMenu
+// (Public, HasDefaults, BlueprintCallable, BlueprintEvent)
 
-void UWBP_OptionsMenu_C::BndEvt__ReturnToMainMenuButton_K2Node_ComponentBoundEvent_2_OnButtonClickedEvent__DelegateSignature()
+void UWBP_OptionsMenu_C::ToggleMenu()
 {
 	static class UFunction* Func = nullptr;
 
 	if (Func == nullptr)
-		Func = Class->GetFunction("WBP_OptionsMenu_C", "BndEvt__ReturnToMainMenuButton_K2Node_ComponentBoundEvent_2_OnButtonClickedEvent__DelegateSignature");
+		Func = Class->GetFunction("WBP_OptionsMenu_C", "ToggleMenu");
 
 	UObject::ProcessEvent(Func, nullptr);
 }
 
 
-// Function WBP_OptionsMenu.WBP_OptionsMenu_C.BndEvt__QuitGameButton_K2Node_ComponentBoundEvent_3_OnButtonClickedEvent__DelegateSignature
-// (BlueprintEvent)
-
-void UWBP_OptionsMenu_C::BndEvt__QuitGameButton_K2Node_ComponentBoundEvent_3_OnButtonClickedEvent__DelegateSignature()
-{
-	static class UFunction* Func = nullptr;
-
-	if (Func == nullptr)
-		Func = Class->GetFunction("WBP_OptionsMenu_C", "BndEvt__QuitGameButton_K2Node_ComponentBoundEvent_3_OnButtonClickedEvent__DelegateSignature");
-
-	UObject::ProcessEvent(Func, nullptr);
-}
-
-
-// Function WBP_OptionsMenu.WBP_OptionsMenu_C.BndEvt__Start_OR_StopHostingButton_K2Node_ComponentBoundEvent_4_OnButtonClickedEvent__DelegateSignature
-// (BlueprintEvent)
-
-void UWBP_OptionsMenu_C::BndEvt__Start_OR_StopHostingButton_K2Node_ComponentBoundEvent_4_OnButtonClickedEvent__DelegateSignature()
-{
-	static class UFunction* Func = nullptr;
-
-	if (Func == nullptr)
-		Func = Class->GetFunction("WBP_OptionsMenu_C", "BndEvt__Start_OR_StopHostingButton_K2Node_ComponentBoundEvent_4_OnButtonClickedEvent__DelegateSignature");
-
-	UObject::ProcessEvent(Func, nullptr);
-}
-
-
-// Function WBP_OptionsMenu.WBP_OptionsMenu_C.BndEvt__ResumeButton_K2Node_ComponentBoundEvent_0_OnButtonClickedEvent__DelegateSignature
-// (BlueprintEvent)
-
-void UWBP_OptionsMenu_C::BndEvt__ResumeButton_K2Node_ComponentBoundEvent_0_OnButtonClickedEvent__DelegateSignature()
-{
-	static class UFunction* Func = nullptr;
-
-	if (Func == nullptr)
-		Func = Class->GetFunction("WBP_OptionsMenu_C", "BndEvt__ResumeButton_K2Node_ComponentBoundEvent_0_OnButtonClickedEvent__DelegateSignature");
-
-	UObject::ProcessEvent(Func, nullptr);
-}
-
-
-// Function WBP_OptionsMenu.WBP_OptionsMenu_C.Tick
-// (BlueprintCosmetic, Event, Public, BlueprintEvent)
+// Function WBP_OptionsMenu.WBP_OptionsMenu_C.EventOnToggleMenu
+// (BlueprintCallable, BlueprintEvent)
 // Parameters:
-// const struct FGeometry&                 MyGeometry                                             (BlueprintVisible, BlueprintReadOnly, Parm, IsPlainOldData, NoDestructor)
-// float                                   InDeltaTime                                            (BlueprintVisible, BlueprintReadOnly, Parm, ZeroConstructor, IsPlainOldData, NoDestructor, HasGetValueTypeHash)
+// bool                                    bIsOptionsMenuVisible_0                                (BlueprintVisible, BlueprintReadOnly, Parm, ZeroConstructor, IsPlainOldData, NoDestructor)
 
-void UWBP_OptionsMenu_C::Tick(const struct FGeometry& MyGeometry, float InDeltaTime)
+void UWBP_OptionsMenu_C::EventOnToggleMenu(bool bIsOptionsMenuVisible_0)
 {
 	static class UFunction* Func = nullptr;
 
 	if (Func == nullptr)
-		Func = Class->GetFunction("WBP_OptionsMenu_C", "Tick");
+		Func = Class->GetFunction("WBP_OptionsMenu_C", "EventOnToggleMenu");
 
-	Params::WBP_OptionsMenu_C_Tick Parms{};
+	Params::WBP_OptionsMenu_C_EventOnToggleMenu Parms{};
 
-	Parms.MyGeometry = std::move(MyGeometry);
-	Parms.InDeltaTime = InDeltaTime;
+	Parms.bIsOptionsMenuVisible_0 = bIsOptionsMenuVisible_0;
+
+	UObject::ProcessEvent(Func, &Parms);
+}
+
+
+// Function WBP_OptionsMenu.WBP_OptionsMenu_C.EventOnClickedResume
+// (BlueprintCallable, BlueprintEvent)
+
+void UWBP_OptionsMenu_C::EventOnClickedResume()
+{
+	static class UFunction* Func = nullptr;
+
+	if (Func == nullptr)
+		Func = Class->GetFunction("WBP_OptionsMenu_C", "EventOnClickedResume");
+
+	UObject::ProcessEvent(Func, nullptr);
+}
+
+
+// Function WBP_OptionsMenu.WBP_OptionsMenu_C.EventOnClickedSettings
+// (BlueprintCallable, BlueprintEvent)
+
+void UWBP_OptionsMenu_C::EventOnClickedSettings()
+{
+	static class UFunction* Func = nullptr;
+
+	if (Func == nullptr)
+		Func = Class->GetFunction("WBP_OptionsMenu_C", "EventOnClickedSettings");
+
+	UObject::ProcessEvent(Func, nullptr);
+}
+
+
+// Function WBP_OptionsMenu.WBP_OptionsMenu_C.EventOnInputKeyPressed
+// (BlueprintCallable, BlueprintEvent)
+// Parameters:
+// const struct FKey&                      PressedKey                                             (BlueprintVisible, BlueprintReadOnly, Parm, HasGetValueTypeHash)
+
+void UWBP_OptionsMenu_C::EventOnInputKeyPressed(const struct FKey& PressedKey)
+{
+	static class UFunction* Func = nullptr;
+
+	if (Func == nullptr)
+		Func = Class->GetFunction("WBP_OptionsMenu_C", "EventOnInputKeyPressed");
+
+	Params::WBP_OptionsMenu_C_EventOnInputKeyPressed Parms{};
+
+	Parms.PressedKey = std::move(PressedKey);
 
 	UObject::ProcessEvent(Func, &Parms);
 }
@@ -350,6 +230,34 @@ void UWBP_OptionsMenu_C::Construct()
 
 	if (Func == nullptr)
 		Func = Class->GetFunction("WBP_OptionsMenu_C", "Construct");
+
+	UObject::ProcessEvent(Func, nullptr);
+}
+
+
+// Function WBP_OptionsMenu.WBP_OptionsMenu_C.EventOnClickedMultiplayer
+// (BlueprintCallable, BlueprintEvent)
+
+void UWBP_OptionsMenu_C::EventOnClickedMultiplayer()
+{
+	static class UFunction* Func = nullptr;
+
+	if (Func == nullptr)
+		Func = Class->GetFunction("WBP_OptionsMenu_C", "EventOnClickedMultiplayer");
+
+	UObject::ProcessEvent(Func, nullptr);
+}
+
+
+// Function WBP_OptionsMenu.WBP_OptionsMenu_C.EventOnClosedGenericMenu
+// (BlueprintCallable, BlueprintEvent)
+
+void UWBP_OptionsMenu_C::EventOnClosedGenericMenu()
+{
+	static class UFunction* Func = nullptr;
+
+	if (Func == nullptr)
+		Func = Class->GetFunction("WBP_OptionsMenu_C", "EventOnClosedGenericMenu");
 
 	UObject::ProcessEvent(Func, nullptr);
 }

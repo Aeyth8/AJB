@@ -104,6 +104,7 @@ int									AJB::NUM_CPUCores{0};
 
 bool								AJB::bDebugModeFromCMLA{false};
 bool								AJB::bIsLemonPossessioned{false};
+bool								AJB::bIsFrameRateUncapped{false};
 
 
 
@@ -119,7 +120,7 @@ SDK::UClass*						AJB::MOD_SynchronizerClass{nullptr};
 SDK::ABP_Synchronizer_C*			AJB::MOD_PROXY_Synchronizer{nullptr};
 SDK::ABP_Synchronizer_C*			AJB::MOD_Global_Synchronizer{nullptr};
 
-const wchar_t*						AJB::DLLCommitVersion{L"[v0.7.0]"};
+const wchar_t*						AJB::DLLCommitVersion{L"[v0.7.5]"};
 UC::FString*						AJB::StrDLLCommitVersion{nullptr};
 UC::FString*						AJB::StrInGameUserName{nullptr};
 
@@ -410,6 +411,13 @@ const wchar_t* WinGetUsername()
 	return L"NAMELESS FECKER";
 }
 
+A8CL::OFFSET oFindRow("UDataTable::FindRow", 0x498CF0);
+void* UFindRow(SDK::FName RowName, wchar_t* ContextString, bool bWarnIfMissing)
+{
+	LogA(oFindRow.GetName(), std::format("[RowName]: {} | [ContextString]: {} | [bWarnIfMissing]: {}", RowName.ToString(), SDK::FString(ContextString).ToString(), bWarnIfMissing));
+	return oFindRow.VerifyFC<void*(__fastcall*)(SDK::FName, wchar_t*, bool)>()(RowName, ContextString, bWarnIfMissing);
+}
+
 static void* GConfigCache{nullptr};
 static constexpr const wchar_t* StaticKey{L"SoftwareCursors"};
 static const SDK::FString StaticValue{L"SoftwareCursors=((Default, /Game/Aeyth8/Blueprints/WBP_Cursor.WBP_Cursor_C))"};
@@ -564,10 +572,7 @@ void AJB::Init_Hooks()
 
 
 		BytePatcher::ReplaceBytes(PB(OFF::HideCursorCaller), ReturnZero); // HideCursorCaller, I don't have a proper name but it spam-hides the cursor like 100 times a second
-
-
-		//BytePatcher::ReplaceBytes(PB(OFF::AJBGetMaxTickRate), {NOP, NOP, NOP, NOP, NOP}); // AJBGetMaxTickRate, no proper name but it's a wrapper that calls UEngine::GetMaxTickRate and this function enforces a 60fps cap if you set it to uncapped (t.MaxFPS 0)
-		//BytePatcher::ReplaceBytes(PB(OFF::AJBGetMaxTickRateCap), {NOP, NOP}); ^ Actual patch is this line right here that I am commenting on <---- ; WRONG both need to be patched I think but I didnt look at the binary to actually verify I just tested it again today
+	
 		//BytePatcher::ReplaceBytes(PB(0x522530), {MOV, 0, RETN, NOP, NOP, NOP, NOP}); // UAJBAMSystemObject::IsActiveAJBError
 
 		LogA("BytePatcher", "Applied all patches successfully. (Failing would crash)");
@@ -623,6 +628,7 @@ void AJB::Init_Hooks()
 		AJB::bServerHasPassword = CMLA::ServerPreLoginPassword.HasChanged();
 
 		Hooks::CreateAndEnableHook(oMainMenuImplementation, ClientReturnToMainMenuWithTextReason_Implementation);
+		//Hooks::CreateAndEnableHook(oFindRow, UFindRow);
 		//BytePatcher::ReplaceBytes(OFF::IsAJBOfflineMode.PlusBase(), {MOV, 0, RETN, NOP, NOP});
 		//BytePatcher::ReplaceBytes(OFF::IsOfflineMode.PlusBase(), {MOV, 0, RETN, NOP, NOP});
 
@@ -757,7 +763,7 @@ void AJB::Init_Vars()
 	}*/
 
 	//Instance->TryCreateOfflinePlayerInfo();
-	for (SDK::FCustomData& Data : Instance->PlayerLoginInfo.CustomData)
+	/*for (SDK::FCustomData& Data : Instance->PlayerLoginInfo.CustomData)
 	{
 		Data.charaSkinId = 2;
 
@@ -781,6 +787,11 @@ void AJB::Init_Vars()
 	}
 
 	/**(int*)&Instance->Pad_3A0[8] = 2; UAJBGameInstance::GetNationalMatchSchedule Modifies this*/
+
+	/*for (SDK::FString& Text : AJB::Instance->InGameParamFileNames)
+	{
+		LogA("InGameCharacterParamFileNames", Text.ToString());
+	}*/
 
 	if (!IsNull(Settings = static_cast<SDK::UAJBAMSystemSettings*>(Instance->AMSystemSettings)))
 	{
@@ -935,6 +946,22 @@ void AJB::CreateCallbackTimer(void* FunctionCallback, float fTimer, unsigned nLo
 
 		AJB::MOD_CallbackTimer->SetCallbackTimer(fTimer, Upper, Lower);
 	}*/
+}
+
+void AJB::SetFrameRateCap(bool bEnabled)
+{
+	bIsFrameRateUncapped = bEnabled;
+
+	if (bEnabled)
+	{
+		BytePatcher::ReplaceBytes(PB(OFF::AJBGetMaxTickRate), {0x4D, 0x3B, 0xCB, 0x7C, 0xE9});
+		BytePatcher::ReplaceBytes(PB(OFF::AJBGetMaxTickRateCap), {0x75, 0x03});
+	}
+	else
+	{
+		BytePatcher::ReplaceBytes(PB(OFF::AJBGetMaxTickRate), {NOP, NOP, NOP, NOP, NOP}); 
+		BytePatcher::ReplaceBytes(PB(OFF::AJBGetMaxTickRateCap), {NOP, NOP});		
+	}
 }
 
 void AJB::TryFixInfiniteLoadingScreen()

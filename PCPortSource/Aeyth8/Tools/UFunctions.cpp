@@ -185,6 +185,8 @@ using namespace Global;
 
 #include "../../Dumper-7/CustomSDK/BP_GlobalPatcher_classes.hpp"			// Custom SDK header (NOT GAME NATIVE)
 #include "../../Dumper-7/CustomSDK/WBP_OptionsMenu_classes.hpp"				// Custom SDK header (NOT GAME NATIVE)
+#include "../../Dumper-7/CustomSDK/WBP_BLOnlineStatus_classes.hpp"
+
 #include "../../Dumper-7/CustomSDK/GM_AJBUserInterface_classes.hpp"			// Custom SDK header (NOT GAME NATIVE)
 
 #include "../../Dumper-7/CustomSDK/WBP_TLVersionInfo_classes.hpp"			// Custom SDK header (NOT GAME NATIVE)
@@ -231,6 +233,7 @@ static bool* TOGGLEDEBUGBADGAMEDESIGN{nullptr};
 #include "StringTables.inl"
 
 #include "../Logic/ServerLogic.h"
+#include "../../Dumper-7/SDK/BP_AJBInGameCharacter_CSR_classes.hpp"
 
 extern "C" void GodMode()
 {
@@ -391,12 +394,12 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		}		
 	}
 	
-	else if (StrCommand.find("AJBExecInternalSwapCharacter") == 0)
+	else if (StrCommand.find("AJBExecInternal SwapCharacter") == 0)
 	{
 		SDK::ABP_AJBInGamePlayerController_C* Player = Pointers::Player<SDK::ABP_AJBInGamePlayerController_C>();
 		if (Player && Player->Character->IsA(SDK::AAJBInGameCharacterBase::StaticClass()))
 		{
-			int NewChar = std::stoi(StrCommand.substr(29));
+			int NewChar = std::stoi(StrCommand.substr(30));
 			if (NewChar)
 			{
 				//static_cast<SDK::AAJBInGameCharacterBase*>(Player->Character)->SetMatchingPlayerIndex(NewChar);
@@ -484,16 +487,16 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			}
 		}
 	}
-	else if (StrCommand.find("AJBExecInternalError") == 0)
+	else if (StrCommand.find("AJBExecInternal WinError") == 0)
 	{
 		size HeaderEnd = StrCommand.find('~');
 		if (HeaderEnd != std::string::npos)
 		{
-			const int Box = MessageBoxA(0, StrCommand.substr((HeaderEnd + 1)).c_str(), StrCommand.substr(21, HeaderEnd - 21).c_str(), MB_OK);
+			const int Box = MessageBoxA(0, StrCommand.substr((HeaderEnd + 1)).c_str(), StrCommand.substr(25, HeaderEnd - 25).c_str(), MB_OK);
 			if (Box == IDNO) AJB::bIsLemonPossessioned = false;
 		}
 	}
-	else if (StrCommand.find("AJBExecInternalHost") == 0)
+	else if (StrCommand.find("AJBExecInternal Host") == 0)
 	{
 		int PARM_Area{0};
 		int PARM_NPCCount = wcstol(CMLA::HardcodedNPCNum.GetArgumentAsString(), 0, 10);
@@ -514,10 +517,10 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			PARM_Area = std::stoi(StrCommand.substr(AreaIdx, AreaIdxEnd - AreaIdx));
 		}
 
-		size ModeIdx = StrCommand.find("?Mode=");
+		size ModeIdx = StrCommand.find("?PlayMode=");
 		if (ModeIdx != std::string::npos)
 		{
-			ModeIdx += 6;
+			ModeIdx += 10;
 
 			size ModeIdxEnd = StrCommand.find("?", ModeIdx);
 			if (ModeIdxEnd == std::string::npos)
@@ -591,9 +594,6 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			AJB::bServerAllowsAdmins = false;
 		}
 
-		PARM_Respawn = StrCommand.find("?Respawn") != std::string::npos;
-
-
 		SDK::FAJBBattleSettings TheSettings{};
 		TheSettings.AILevel = PARM_NPCDifficulty;
 		TheSettings.DamageAreaType = PARM_Area;
@@ -613,17 +613,17 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 
 		ConsoleOutput::Text(std::format(L"Creating a session with parameters === [Area]: {} || [Mode]: {} || [NPC Num]: {} || [NPC Difficulty]: {} || [Password]: {} || [[Admin Password]: {}", SDT::EDamageAreaType.Find(PARM_Area), SDT::EPlayModeW[PARM_PlayMode], PARM_NPCCount, PARM_NPCDifficulty, std::wstring(ServerPasswordStr.begin(), ServerPasswordStr.end()), std::wstring(AdminPasswordStr.begin(), AdminPasswordStr.end())));
 	}
-	else if (StrCommand.find("AJBExecInternalChar") == 0)
+	else if (StrCommand.find("AJBExecInternal Char") == 0)
 	{
-		int NewChar = std::stoi(StrCommand.substr(20));
+		int NewChar = std::stoi(StrCommand.substr(21));
 		AJB::TEMP_CachedCharacterID = NewChar;
 		AJB::SetSelectedCharacter((AJB::ESelectedCharacter)NewChar);
 
 		ConsoleOutput::Text(std::format(L"Setting character number to [{}] --> {} || Requires level restart and may not reflect during online sessions, use AJBExecInternalSwapCharacter instead.", NewChar, SDT::ESelectedCharacterW[NewChar]));
 	}
-	else if (StrCommand.find("AJBExecInternalMode") == 0)
+	else if (StrCommand.find("AJBExecInternal Mode") == 0)
 	{
-		uint8 NewPlayMode = std::stoi(StrCommand.substr(20));
+		uint8 NewPlayMode = std::stoi(StrCommand.substr(21));
 
 		switch (NewPlayMode)
 		{
@@ -797,7 +797,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	{		
 		if (AJB::MOD_OptionsMenu)
 		{
-			if (AJB::bDebugModeFromCMLA) LogA(AJB::MOD_OptionsMenu->GetFullName(), std::format("[bPauseMenuIsVisible]: {} | [Visibility]: {}", AJB::MOD_OptionsMenu->bPauseMenuIsVisible, AJB::MOD_OptionsMenu->Visibility == SDK::ESlateVisibility::Visible ? "Visible" : "Collapsed"));
+			//if (AJB::bDebugModeFromCMLA) LogA(AJB::MOD_OptionsMenu->GetFullName(), std::format("[bPauseMenuIsVisible]: {} | [Visibility]: {}", AJB::MOD_OptionsMenu->bPauseMenuIsVisible, AJB::MOD_OptionsMenu->Visibility == SDK::ESlateVisibility::Visible ? "Visible" : "Collapsed"));
 
 			SDK::APlayerController* Player = Pointers::Player();
 			if (Player)
@@ -805,7 +805,8 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 				// Seems redundant but it's not, the stupid widget doesn't show up on clients connected to the server, I'm not sure if it's due to replication which I don't see any flags for or if Login doesn't get called (which it should be either way)
 				if (!AJB::MOD_OptionsMenu->IsInViewport()) AJB::MOD_OptionsMenu->AddToViewport(111);
 
-				AJB::MOD_OptionsMenu->SetOnlineStatus(AJB::IsInSession());
+				SDK::EOnlineStatus NewStatus = AJB::IsServer() ? SDK::EOnlineStatus::Hosting : AJB::IsInSession() ? SDK::EOnlineStatus::Online : SDK::EOnlineStatus::Offline;
+				AJB::MOD_OptionsMenu->OnlineStatus->UpdateStatus(NewStatus);
 				
 				//const float CurrentMaxFPS = OFFSET::VFTable<float(__fastcall*)(SDK::UEngine*, float, bool)>(GEngine.GetPointer())[0x50](GEngine.GetPointer(), AJB::MOD_OptionsMenu->InternalTickCount, true);
 				
@@ -814,11 +815,12 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 
 				// Dynamic polling for different framecaps ensuring no delay, even if you have your game uncapped the game framerate will not actually be uncapped because of a limit Namco placed (I wrote a patch for it and it's still in the codebase but it's not really useful)
 				if (CurrentMaxFPS != 0) AJB::MOD_OptionsMenu->InternalTickRate = CurrentMaxFPS;
+				//else AJB::MOD_OptionsMenu->InternalTickRate = AJB::bIsFrameRateUncapped ? 240 : 62;
 
 				// I'd rather put this in the actual blueprint logic but then ID HAVE TO REDUMP THE SDK AND GET THE NEW STRUCTURE and I don't feel like it until it's actually a proper menu.
 
 				// Temporary toggle switch for proper mouse visibility
-				static bool bWasShowingMouse{false};
+				/*static bool bWasShowingMouse{false};
 
 				bool bMenuCurrentlyVisible = AJB::MOD_OptionsMenu->bPauseMenuIsVisible;
 
@@ -844,9 +846,9 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 					HUD->SetupForceInvisibleAllWidgetsFlag(AJB::MOD_OptionsMenu->bPauseMenuIsVisible);
 				}
 
-				AJB::MOD_OptionsMenu->bPauseMenuIsVisible ? OFF::SetInputMode_GameAndUIEx.Call<SetInputModeGameAndUI>()(Player, AJB::MOD_OptionsMenu, SDK::EMouseLockMode::LockAlways, false) :  OFF::SetInputGameOnly.Call<SetInputModeGameOnly>()(Player);
+				AJB::MOD_OptionsMenu->bPauseMenuIsVisible ? OFF::SetInputMode_GameAndUIEx.Call<SetInputModeGameAndUI>()(Player, AJB::MOD_OptionsMenu, SDK::EMouseLockMode::LockAlways, false) :  OFF::SetInputGameOnly.Call<SetInputModeGameOnly>()(Player);*/
 
-				ConsoleOutput::Text(std::format(L"[bPauseMenuIsVisible]: {} | [Visibility]: {}", AJB::MOD_OptionsMenu->bPauseMenuIsVisible, AJB::MOD_OptionsMenu->Visibility == SDK::ESlateVisibility::Visible ? L"Visible" : L"Collapsed"));
+				ConsoleOutput::Text(std::format(L"[bPauseMenuIsVisible]: {} | [Visibility]: {} | [InternalTickRate]: {}", AJB::MOD_OptionsMenu->bIsOptionsMenuVisible, AJB::MOD_OptionsMenu->Visibility == SDK::ESlateVisibility::Visible ? L"Visible" : L"Collapsed", AJB::MOD_OptionsMenu->InternalTickRate));
 			}
 		}
 	}
@@ -879,13 +881,6 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		{
 			LogA("CLIENT JOIN OPTIONS", String.ToString());
 		}*/
-	}
-	else if (StrCommand == "oss")
-	{
-		static bool bOnline{false};
-		bOnline = !bOnline;
-
-		if (AJB::MOD_OptionsMenu) AJB::MOD_OptionsMenu->SetOnlineStatus(bOnline);
 	}
 	else if (StrCommand == "reset")
 	{
@@ -1269,6 +1264,22 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			}*/
 		}
 	}
+	else if (StrCommand == "cap")
+	{
+		static bool bToggle{true};
+		bToggle = !bToggle;
+		AJB::SetFrameRateCap(bToggle);
+	}
+	else if (StrCommand == "little")
+	{
+		if (auto Character = Pointers::Character<SDK::ABP_AJBInGameCharacter_CSR_C>())
+		{
+			for (auto Skill : Character->AllSkillComponents)
+			{
+				LogA("Skill", std::format("[Name]: {} | [Skill Tag]: {} | [Type]: {} | [Current State]: {}", Skill->GetFullName(), Skill->SkillTag.TagName.ToString(), (byte)Skill->SkillType, Skill->SkillState));
+			}
+		}
+	}
 
 	LogA("ConsoleCommand", std::format("[Owning PlayerController]: {} | [Command]: {}", This->GetFullName(), StrCommand));
 
@@ -1281,9 +1292,9 @@ UFunctions::BrowseReturnVal UFunctions::Browse(SDK::UEngine* This, SDK::FWorldCo
 		LogA("Browse", "Constructed UConsole early.");
 	}
 
-	if (AJB::MOD_OptionsMenu && AJB::MOD_OptionsMenu->bPauseMenuIsVisible)
+	if (AJB::MOD_OptionsMenu && AJB::MOD_OptionsMenu->bIsOptionsMenuVisible)
 	{
-		AJB::MOD_OptionsMenu->ToggleVisibility();
+		AJB::MOD_OptionsMenu->ToggleMenu();
 	}
 
 	AJB::MOD_Global_Synchronizer = nullptr;
@@ -1391,6 +1402,12 @@ void UFunctions::PeekNetworkFailureMessages(SDK::UGameViewportClient* This, SDK:
 	OFF::PeekNetworkFailureMessages.VerifyFC<Decl::PeekNetworkFailureMessages>()(This, InWorld, NetDriver, FailureType, ErrorString);
 
 	LogA(OFF::PeekNetworkFailureMessages.GetName(), std::format("[This]: {} | [InWorld]: {} | [NetDriver]: {} | [FailureType]: {} | [ErrorString]: {}", This->GetFullName(), InWorld->GetFullName(), NetDriver->GetFullName(), (byte)FailureType, ErrorString.ToString()));
+
+	if (AJB::MOD_OptionsMenu)
+	{
+		AJB::CopyString(&AJB::Callbacks::CacheErrorPopupString, &ErrorString);
+		AJB::CreateCallbackTimer(AJB::Callbacks::CallbackErrorPopup, 1.0f);
+	}
 }
 
 void UFunctions::InitLocalConnection(SDK::UNetConnection* This, SDK::UNetDriver* InDriver, void* InSocket, SDK::FURL& InURL, EConnectionState InState, int InMaxPacket, int InPacketOverhead)
@@ -1497,7 +1514,7 @@ SDK::APlayerController* UFunctions::Login(SDK::AGameModeBase* This, SDK::UPlayer
 	if (!ONE)
 	{
 		constexpr const wchar_t* GlobalPatchObjectBlueprintPath{L"/Game/Aeyth8/Blueprints/Global/BP_GlobalPatcher.BP_GlobalPatcher_C"};
-		constexpr const wchar_t* OptionsMenuBlueprintPath{L"/Game/Aeyth8/Blueprints/UI/OptionsMenu/WBP_OptionsMenu.WBP_OptionsMenu_C"};
+		constexpr const wchar_t* OptionsMenuBlueprintPath{L"/Game/Aeyth8/Blueprints/UI/OptionsMenuV2/WBP_OptionsMenu.WBP_OptionsMenu_C"};
 		constexpr const wchar_t* SynchronizerPath{L"/Game/Aeyth8/Blueprints/Global/ServerReplicated/BP_Synchronizer.BP_Synchronizer_C"};
 
 		AJB::MOD_GlobalPatcherClass = UFunctions::StaticLoadClass(AJB::CoreUObject, GEngine, GlobalPatchObjectBlueprintPath, nullptr, 0, nullptr);
@@ -1537,7 +1554,7 @@ SDK::APlayerController* UFunctions::Login(SDK::AGameModeBase* This, SDK::UPlayer
 
 					if (AJB::StrDLLCommitVersion)
 					{
-						AJB::MOD_OptionsMenu->SetDLLCommitVersion(*AJB::StrDLLCommitVersion);
+						AJB::MOD_OptionsMenu->VersionInfo->SetDLLCommitVersion(*AJB::StrDLLCommitVersion);
 					}
 
 				}

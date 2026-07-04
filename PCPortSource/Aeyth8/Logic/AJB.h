@@ -267,7 +267,7 @@ namespace AJB
 
 	extern bool bDebugModeFromCMLA;								// Used to determine if extra/unnecessary logs for development purposes are enabled.
 	extern bool bIsLemonPossessioned;							// Oh that's nice, I work as LP | LP? as in, Loss Prevention? | lemon possession
-
+	extern bool bIsFrameRateUncapped;							// Internal flag on whether the FPS is truly uncapped, which requires a bytepatch thanks to Namco.
 	
 	
 	
@@ -322,6 +322,7 @@ namespace AJB
 	// You don't have to worry about any of that stuff since this wrapper simply requires the callback function.
 	void CreateCallbackTimer(void* FunctionCallback, float fTimer, unsigned nLoopFor = 0, bool bInfinite = false);
 
+	void SetFrameRateCap(bool bEnabled);
 
 	enum EInfiniteLoadingReason : unsigned char
 	{

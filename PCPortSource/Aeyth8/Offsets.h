@@ -107,7 +107,7 @@ namespace A8CL
 		// Byte Patches
 
 		constexpr ull HideCursorCaller			= 0x04A04A0;
-		constexpr ull AJBGetMaxTickRate			= 0x13CCB43;
+		constexpr ull AJBGetMaxTickRate			= 0x13CCB43; // AJBGetMaxTickRate, no proper name but it's a wrapper that calls UEngine::GetMaxTickRate and this function enforces a 60fps cap if you set it to uncapped (t.MaxFPS 0)
 		constexpr ull AJBGetMaxTickRateCap		= 0x13CCBD8;
 		constexpr ull ResetPP					= 0x04840B0;
 		constexpr ull StartConsumePP			= 0x0522CE0;
