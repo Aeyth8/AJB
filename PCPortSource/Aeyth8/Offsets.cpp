@@ -78,6 +78,12 @@ namespace OFF
 	OFFSET SetInputGameOnly("UWidgetBlueprintLibrary::SetInputMode_GameOnly", 0x10C41D0);
 	OFFSET SetInputMode_GameAndUIEx("UWidgetBlueprintLibrary::SetInputMode_GameAndUIEx", 0x10C4060);
 
+	// VFT Function Reimplementation
+
+	OFFSET WorldWelcomePlayer("UWorld::GameWelcomePlayer", (OFF::WelcomePlayer6B - 0x113));
+	OFFSET WelcomePlayerStripped("AGameModeBase::GameWelcomePlayer [Stripped]", (OFF::WelcomePlayer6B - 0x5));
+	OFFSET WelcomedByServer("48 89 44 24 20 | mov [rsp+600h+Format], rax", (NotifyControlMessage.Offset + 0xB8F));
+
 	// Essential for Lemon Possession
 
 	OFFSET ImageSetBrushFromMaterial("UImage::SetBrushFromMaterial", 0x10C1D10);

@@ -63,6 +63,7 @@ namespace AJB
 
 	extern SDK::FName NAME_ServerPassword;
 	extern SDK::FName NAME_AdminPassword;
+	extern SDK::FName NAME_PreJoinParameters;				// Sent by the server to the client via RedirectURL and custom assembly.
 
 	extern SDK::FName NAME_ClientJoinOptions;
 	extern std::vector<FAJBNetConnection> ClientConnections;
@@ -89,6 +90,12 @@ namespace AJB
 		bool Invoke(SDK::UFunction* This, SDK::UObject* Obj, void* FFrame_Stack, void* Result);
 		void AddClientConnection(SDK::UNetDriver* This, SDK::UNetConnection* Connection);
 		void CloseConnection(SDK::UNetConnection* This);
+
+		// VFT Function Reimplementation
+
+		void WorldWelcomePlayer(SDK::UWorld* This, SDK::UNetConnection* Connection);
+		void ASM_GameWelcomePlayer(SDK::AGameModeBase* This, SDK::UNetConnection* Connection, UC::FString& RedirectURL);
+		//void ASM_WelcomedByServer();
 	}
 	
 }

@@ -224,6 +224,7 @@ using namespace Global;
 
 #include "TickHook/TickHook.h"
 #include "../Logic/Callbacks/AJBCallbacks.h"
+#include "../UConsole/Core/UConsole.h"
 
 static bool* TOGGLEDEBUGBADGAMEDESIGN{nullptr};
 
@@ -346,7 +347,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	}
 	else if (StrCommand == "playmode")
 	{
-		ConsoleOutput::Text(std::format(L"Current PlayMode: {}", SDT::EPlayModeW[(byte)AJB::Instance->PlayMode]));
+		UConsole::ConsoleOutput::Text(std::format("Current PlayMode: {}", SDT::EPlayMode[(byte)AJB::Instance->PlayMode]).c_str());
 	}
 	else if (StrCommand.find("kick") != std::string::npos && StrCommand.size() > 5)
 	{
@@ -404,12 +405,12 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			{
 				//static_cast<SDK::AAJBInGameCharacterBase*>(Player->Character)->SetMatchingPlayerIndex(NewChar);
 				Player->ROS_DebugCharaChange(NewChar);
-				ConsoleOutput::Text(std::format(L"Changing character to [{}] --> {}", NewChar, SDT::ESelectedCharacterW[NewChar]));
+				UConsole::ConsoleOutput::Text(std::format("Changing character to [{}] --> {}", NewChar, SDT::ESelectedCharacter[NewChar]).c_str());
 			}			
 		}
 		else
 		{
-			ConsoleOutput::Text(L"Unable to swap characters.");
+			UConsole::ConsoleOutput::Text("Unable to swap characters.");
 		}
 	}
 	else if (StrCommand == "char")
@@ -470,7 +471,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	else if (StrCommand.find("AJBExecInternal PlayBG") == 0 && StrCommand.size() > 23)
 	{
 		Pointers::GetBlueprintClass<SDK::UBPF_AJBWwiseFunctionLibrary_C>()->RequestWwiseBGM_Event(SDK::FGameplayTag{FName::NAME_FindOrAdd(StrCommand.substr(23).c_str())}, true, GWorld.GetPointer());
-		ConsoleOutput::Text(L"Playing soundtrack " + Command->ToWString().substr(23));
+		UConsole::ConsoleOutput::Text(std::format("Playing soundtrack {}", Command->ToString().substr(23)).c_str());
 	}
 	else if (StrCommand.find("AJBExecInternal TempFix") == 0)
 	{
@@ -611,7 +612,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		std::string ServerPasswordStr = (AJB::bServerHasPassword ? AJB::NAME_ServerPassword.ToString() : "None");
 		std::string AdminPasswordStr = (AJB::bServerAllowsAdmins ? AJB::NAME_AdminPassword.ToString() : "None");
 
-		ConsoleOutput::Text(std::format(L"Creating a session with parameters === [Area]: {} || [Mode]: {} || [NPC Num]: {} || [NPC Difficulty]: {} || [Password]: {} || [[Admin Password]: {}", SDT::EDamageAreaType.Find(PARM_Area), SDT::EPlayModeW[PARM_PlayMode], PARM_NPCCount, PARM_NPCDifficulty, std::wstring(ServerPasswordStr.begin(), ServerPasswordStr.end()), std::wstring(AdminPasswordStr.begin(), AdminPasswordStr.end())));
+		UConsole::ConsoleOutput::Text(std::format("Creating a session with parameters === [Area]: {} || [Mode]: {} || [NPC Num]: {} || [NPC Difficulty]: {} || [Password]: {} || [[Admin Password]: {}", SDT::EDamageAreaType.Find(PARM_Area), SDT::EPlayMode[PARM_PlayMode], PARM_NPCCount, PARM_NPCDifficulty, std::string(ServerPasswordStr.begin(), ServerPasswordStr.end()), std::string(AdminPasswordStr.begin(), AdminPasswordStr.end())).c_str());
 	}
 	else if (StrCommand.find("AJBExecInternal Char") == 0)
 	{
@@ -619,7 +620,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		AJB::TEMP_CachedCharacterID = NewChar;
 		AJB::SetSelectedCharacter((AJB::ESelectedCharacter)NewChar);
 
-		ConsoleOutput::Text(std::format(L"Setting character number to [{}] --> {} || Requires level restart and may not reflect during online sessions, use AJBExecInternalSwapCharacter instead.", NewChar, SDT::ESelectedCharacterW[NewChar]));
+		UConsole::ConsoleOutput::Text(std::format("Setting character number to [{}] --> {} || Requires level restart and may not reflect during online sessions, use AJBExecInternalSwapCharacter instead.", NewChar, SDT::ESelectedCharacter[NewChar]).c_str());
 	}
 	else if (StrCommand.find("AJBExecInternal Mode") == 0)
 	{
@@ -717,23 +718,23 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	else if (StrCommand == "mute")
 	{
 		Pointers::GetBlueprintClass<SDK::UBPF_AJBWwiseFunctionLibrary_C>()->RequestWwiseBGM_StopEvent(GWorld.GetPointer());
-		ConsoleOutput::Text(L"SHUTUP! SHUTUP CHUMLEE");
+		UConsole::ConsoleOutput::Text("SHUTUP! SHUTUP CHUMLEE");
 	}
 	else if (StrCommand == "hidemouse")
 	{
 		Pointers::Player()->bShowMouseCursor = false;
-		ConsoleOutput::Text(L"Hiding mouse.");
+		UConsole::ConsoleOutput::Text("Hiding mouse.");
 	}
 	else if (StrCommand == "showmouse")
 	{
 		Pointers::Player()->bShowMouseCursor = true;
-		ConsoleOutput::Text(L"Showing mouse.");
+		UConsole::ConsoleOutput::Text("Showing mouse.");
 	}
 	else if (StrCommand == "lockmouse")
 	{
 		SDK::APlayerController* Player = Pointers::Player();
 		OFF::SetInputGameOnly.Call<SetInputModeGameOnly>()(Player);
-		ConsoleOutput::Text(L"Locking mouse.");
+		UConsole::ConsoleOutput::Text("Locking mouse.");
 	}
 	else if (StrCommand == "netid")
 	{
@@ -750,21 +751,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 
 		if (!IsNull(Filter))
 		{
-			ConsoleOutput::Text(L"Using shader " + std::to_wstring((uint8)Filter->CurrentType));
-		}
-	}
-	else if (StrCommand == "shader")	// Soon to be deprecated..
-	{
-		SDK::APlayerController* Player = Pointers::Player();
-		SDK::ABP_PPV_VSFilter_C* Filter = AJB::GetPostProcessFilter((SDK::ABP_AJBInGamePlayerController_C*)Player);
-
-		if (Filter)
-		{
-			//Filter->SetFilter(SDK::E_VSFilterType::NewEnumerator0);
-			Filter->NextFilter();
-
-			std::wstring Log = L"Using shader " + std::to_wstring((uint8)Filter->CurrentType);
-			ConsoleOutput::Text(Log);
+			UConsole::ConsoleOutput::Text(std::format("Using shader {}", (uint8)Filter->CurrentType).c_str());
 		}
 	}
 	else if (StrCommand.find("AJBExecInternal Filter") == 0 && StrCommand.size() >= 23)
@@ -778,8 +765,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			Filter->CurrentType = (SDK::E_VSFilterType)FilterIndex;
 			Filter->SetFilter(Filter->CurrentType); // Sometimes there's a STUPID PIECE OF MODULO BY ZERO I HATE YOU I FECKING HATE YOU UNREAL ENGINE OR STUPID PIECE OF TRASH COMPILER>. HATE LET ME TELL YOU HOW MUCH IVE COME TO HATE YEOU SINCE I BEGAN TO LIVE
 			
-			std::wstring Log = L"Using shader " + std::to_wstring((uint8)Filter->CurrentType);
-			ConsoleOutput::Text(Log);
+			UConsole::ConsoleOutput::Text(std::format("Using shader {}", (uint8)Filter->CurrentType).c_str());
 		}
 	}
 	else if (StrCommand == "tenpo")
@@ -848,7 +834,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 
 				AJB::MOD_OptionsMenu->bPauseMenuIsVisible ? OFF::SetInputMode_GameAndUIEx.Call<SetInputModeGameAndUI>()(Player, AJB::MOD_OptionsMenu, SDK::EMouseLockMode::LockAlways, false) :  OFF::SetInputGameOnly.Call<SetInputModeGameOnly>()(Player);*/
 
-				ConsoleOutput::Text(std::format(L"[bPauseMenuIsVisible]: {} | [Visibility]: {} | [InternalTickRate]: {}", AJB::MOD_OptionsMenu->bIsOptionsMenuVisible, AJB::MOD_OptionsMenu->Visibility == SDK::ESlateVisibility::Visible ? L"Visible" : L"Collapsed", AJB::MOD_OptionsMenu->InternalTickRate));
+				UConsole::ConsoleOutput::Text(std::format("[bPauseMenuIsVisible]: {} | [Visibility]: {} | [InternalTickRate]: {}", AJB::MOD_OptionsMenu->bIsOptionsMenuVisible, AJB::MOD_OptionsMenu->Visibility == SDK::ESlateVisibility::Visible ? "Visible" : "Collapsed", AJB::MOD_OptionsMenu->InternalTickRate).c_str());
 			}
 		}
 	}
@@ -910,6 +896,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	else if (StrCommand.find("setverbosity") == 0 && StrCommand.size() > 13)
 	{
 		*reinterpret_cast<byte*>(PB(OFF::LogVerbosity)) = std::stoi(StrCommand.substr(13));
+		*reinterpret_cast<byte*>(PB(0x3051520)) = std::stoi(StrCommand.substr(13));
 	}
 	else if (StrCommand == "showhud")
 	{
@@ -928,9 +915,9 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 				static_cast<SDK::AAJBInGameHUD*>(HUD)->SetupForceInvisibleAllWidgetsFlag(bOne);
 			}
 
-			ConsoleOutput::Text(bOne ? L"HUD is hidden." : L"HUD is visible.");
+			UConsole::ConsoleOutput::Text(bOne ? "HUD is hidden." : "HUD is visible.");
 		}
-		else ConsoleOutput::Text(L"Unable to toggle HUD.");
+		else UConsole::ConsoleOutput::Text("Unable to toggle HUD.");
 	}
 	else if (StrCommand == "toggledebugmenu")
 	{
@@ -1013,7 +1000,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 				reinterpret_cast<SDK::UWB_TestModeMenuBase_C*>(Menus[2])->CloseWindow();
 			}
 
-			ConsoleOutput::Text(bToggled ? L"Showing debug menu" : L"Hiding debug menu");
+			UConsole::ConsoleOutput::Text(bToggled ? "Showing debug menu" : "Hiding debug menu");
 		}
 	}	
 	else if (StrCommand == "host")
@@ -1091,7 +1078,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		SDK::ABP_AJBInGamePlayerController_C* Player = Pointers::Player<SDK::ABP_AJBInGamePlayerController_C>();
 		if (Player)
 		{
-			ConsoleOutput::Text(L"Ending game..");
+			UConsole::ConsoleOutput::Text("Ending game..");
 			Player->ROS_DebugLastSurvivor();
 		}
 	}
@@ -1116,7 +1103,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 				if (Entry.pFunctionAddress == (ull)GodMode)
 				{
 					Entry.bInfiniteLoop = false;
-					ConsoleOutput::Text(L"God mode deactivated.");
+					UConsole::ConsoleOutput::Text("God mode deactivated.");
 					if (auto Char = Pointers::Character<SDK::ABP_AJBInGameCharacter_C>()) Char->DebugForceFireSkill_Off(); 
 					bOne = false;
 					break;
@@ -1130,7 +1117,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			TickHook::FTimerHandlerEntry Entry{(ull)GodMode, 0.25f, 0, 0, true, 0};
 			TickHook::CallbackTimers.push_back(Entry);
 
-			ConsoleOutput::Text(L"God mode activated.");			
+			UConsole::ConsoleOutput::Text("God mode activated.");
 		}
 		
 	}
@@ -1163,17 +1150,15 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	}*/
 	else if (StrCommand == "fly")
 	{
-		static bool bToggle{0};
-		bToggle = !bToggle;
-
 		SDK::ABP_AJBInGamePlayerController_C* Player = reinterpret_cast<SDK::ABP_AJBInGamePlayerController_C*>(Pointers::Player());
 		if (Player)
 		{
-			Player->ROS_DebugEnableAirJump(bToggle);
-		}
+			//Player->ROS_DebugEnableAirJump(bToggle);
+			bool& bIsFlying = Player->CharacterBPRef->bDebugSuperJump;
+			Player->CharacterBPRef->bCallMCJumpAll = Player->CharacterBPRef->bIsFlyingMode = (bIsFlying = !bIsFlying);
 
-		bToggle ? ConsoleOutput::Text(L"Flying activated") : ConsoleOutput::Text(L"Flying deactivated.");
-		//LogA("PairId", static_cast<SDK::AAJBInGameCharacterBase*>(Pointers::Player()->Character)->PairID.ToString());
+			bIsFlying ? UConsole::ConsoleOutput::Text("Flying activated") : UConsole::ConsoleOutput::Text("Flying deactivated.");
+		}
 	}
 	else if (StrCommand == "trydedicated")
 	{
@@ -1387,6 +1372,8 @@ bool UFunctions::InitListen(SDK::UIpNetDriver* This, SDK::UObject* InNotify, SDK
 	LogA("InitListen", This->GetFullName() + " | " + Helpers::FURLParser(LocalURL));
 	LocalURL.Port = wcstol(CMLA::ServerPort.GetArgumentAsString(), 0, 10);
 
+	FName::NAME_FindOrAdd(&AJB::NAME_PreJoinParameters, std::to_string(AJB::Instance->PlayMode).c_str());
+
 	return OFF::InitListen.VerifyFC<Decl::InitListen>()(This, InNotify, LocalURL, bReuseAddressAndPort, Error);
 }
 
@@ -1394,7 +1381,40 @@ void UFunctions::NotifyControlMessage(SDK::UPendingNetGame* This, SDK::UNetConne
 {
 	LogA(OFF::NotifyControlMessage.GetName(), std::format("[UPendingNetGame]: {} | [Connection]: {} | [MessageType]: {}", This->GetFullName(), Connection->GetFullName(), MessageType));
 	
+	
+
+	if (!AJB::IsServer() && MessageType == 1)
+	{
+		constexpr qword SIZE = 0x400;
+		struct KillMe
+		{
+			byte* Data;
+			qword Size;
+		};
+		KillMe DeathRow{};
+		DeathRow.Size = SIZE;
+		DeathRow.Data = new byte[SIZE]{0};
+		memcpy(DeathRow.Data, InBunch, DeathRow.Size);
+
+		SDK::FString AllocatedBunch{};
+		Call<qword(__fastcall*)(qword, qword)>(PB(0x5802E0))((qword)DeathRow.Data, (qword)&This->URL);
+		//LogA("ALlocatedBunch REEEEEEEETAAAAAAAAAARRRRDDDDDDDD", AllocatedBunch.ToString());
+		Call<qword(__fastcall*)(qword, qword)>(PB(0x5802E0))((qword)DeathRow.Data, (qword)&AllocatedBunch);
+		//LogA("ALlocatedBunch REEEEEEEETAAAAAAAAAARRRRDDDDDDDD", AllocatedBunch.ToString());
+		Call<qword(__fastcall*)(qword, qword)>(PB(0x5802E0))((qword)DeathRow.Data, (qword)&AllocatedBunch);
+		const int NewPlayMode = std::stoi(AllocatedBunch.ToString());
+		AJB::Instance->PlayMode = (SDK::EPlayMode)NewPlayMode;
+		std::wstring Bulllllll = L"AJBExecInternal Mode ";
+		Bulllllll += std::to_wstring(NewPlayMode);
+		SDK::FString Commando(Bulllllll.c_str());
+		UConsole(GEngine->GameViewport->ViewportConsole, Commando);
+		LogA("ALlocatedBunch REEEEEEEETAAAAAAAAAARRRRDDDDDDDD", AllocatedBunch.ToString());
+		
+		delete[] DeathRow.Data;
+	}
+	
 	OFF::NotifyControlMessage.VerifyFC<Decl::NotifyControlMessage>()(This, Connection, MessageType, InBunch);
+	
 }
 
 void UFunctions::PeekNetworkFailureMessages(SDK::UGameViewportClient* This, SDK::UWorld* InWorld, SDK::UNetDriver* NetDriver, SDK::ENetworkFailure FailureType, SDK::FString& ErrorString)
@@ -1403,7 +1423,7 @@ void UFunctions::PeekNetworkFailureMessages(SDK::UGameViewportClient* This, SDK:
 
 	LogA(OFF::PeekNetworkFailureMessages.GetName(), std::format("[This]: {} | [InWorld]: {} | [NetDriver]: {} | [FailureType]: {} | [ErrorString]: {}", This->GetFullName(), InWorld->GetFullName(), NetDriver->GetFullName(), (byte)FailureType, ErrorString.ToString()));
 
-	if (AJB::MOD_OptionsMenu)
+	if (AJB::MOD_OptionsMenu && !AJB::IsServer())
 	{
 		AJB::CopyString(&AJB::Callbacks::CacheErrorPopupString, &ErrorString);
 		AJB::CreateCallbackTimer(AJB::Callbacks::CallbackErrorPopup, 1.0f);

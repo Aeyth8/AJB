@@ -131,22 +131,22 @@ namespace SDT
     constexpr const char* EPlayMode[] = {"None", "Solo", "Pair", "Shop", "ShopCompetition", "Tutorial", "Training", "ShopCompetitionPair", "ShopExchange", "PVESolo", "PVEPair", "EPlayMode_MAX"};
     constexpr const wchar_t* EPlayModeW[] = {L"None", L"Solo", L"Pair", L"Shop", L"ShopCompetition", L"Tutorial", L"Training", L"ShopCompetitionPair", L"ShopExchange", L"PVESolo", L"PVEPair", L"EPlayMode_MAX"};
 
-    constexpr TPair<int, const wchar_t*> EDamageAreaType_Entries[] =
+    constexpr TPair<int, const char*> EDamageAreaType_Entries[] =
     {
-        {7,     L"Morioh Town (Trattoria Trussardi)"},
-        {2,     L"Morioh Town (Train Station)"},
-        {3,     L"Morioh Town (Angelo Rock)"},
-        {4,     L"Morioh Town (Rural)"},
-        {5,     L"Morioh Town (Owson)"},
-        {6,     L"Morioh Town (Kameyu)"},
-        {8,     L"Cairo"},
-        {9,     L"Farm"},
-        {10,    L"Colosseum"},
-        {11,    L"Venezia"},
-        {101,   L"Dealer's Challenge [PvE]"},
+        {7,     "Morioh Town (Trattoria Trussardi)"},
+        {2,     "Morioh Town (Train Station)"},
+        {3,     "Morioh Town (Angelo Rock)"},
+        {4,     "Morioh Town (Rural)"},
+        {5,     "Morioh Town (Owson)"},
+        {6,     "Morioh Town (Kameyu)"},
+        {8,     "Cairo"},
+        {9,     "Farm"},
+        {10,    "Colosseum"},
+        {11,    "Venezia"},
+        {101,   "Dealer's Challenge [PvE]"},
     };
 
-    constexpr TDictionary<int, const wchar_t*, sizeof(EDamageAreaType_Entries) / sizeof(EDamageAreaType_Entries[0])> EDamageAreaType = {EDamageAreaType_Entries};
+    constexpr TDictionary<int, const char*, sizeof(EDamageAreaType_Entries) / sizeof(EDamageAreaType_Entries[0])> EDamageAreaType = {EDamageAreaType_Entries};
     
 }
 }

@@ -227,6 +227,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Aeyth8\Tools\UnrealTypes.cpp" />
+    <ClCompile Include="Aeyth8\UConsole\Core\UConsole.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="Dumper-7\CustomSDK\BP_GlobalPatcher_functions.cpp" />
     <ClCompile Include="Dumper-7\CustomSDK\GM_AJBUserInterface_functions.cpp" />
@@ -349,6 +350,7 @@
     <None Include="Dumper-7\NameCollisions.inl" />
   </ItemGroup>
   <ItemGroup>
+    <MASM Include="Aeyth8\Logic\Server\GameWelcomePlayer.asm" />
     <MASM Include="Aeyth8\Proxy8\Entry\Entry.asm">
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Proxy|x64'">/D B64 %(AdditionalOptions)</AdditionalOptions>
     </MASM>

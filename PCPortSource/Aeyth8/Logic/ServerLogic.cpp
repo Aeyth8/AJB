@@ -26,6 +26,7 @@ bool								AJB::bServerAllowsAdmins{false};
 bool								AJB::bServerHasPassword{false};
 SDK::FName							AJB::NAME_ServerPassword{0};
 SDK::FName							AJB::NAME_AdminPassword{0};
+SDK::FName							AJB::NAME_PreJoinParameters{0};
 
 SDK::FName							AJB::NAME_ClientJoinOptions{0};
 std::vector<AJB::FAJBNetConnection>	AJB::ClientConnections{};
@@ -261,4 +262,66 @@ void AJB::Server::CloseConnection(SDK::UNetConnection* This)
 	{
 		ClientConnections.erase(ClientConnections.begin() + ConnectionIndex);
 	}
+}
+
+// VFT Function Reimplementation
+
+// Definition located in GameWelcomePlayer.asm
+extern "C" void ASMGrabRedirectURL(qword Agony);
+extern "C" qword RedirectURLAddress{0};
+extern "C" qword PointerOfAgony{0};
+
+struct PointerToStruct
+{
+	qword JumpTo;
+	qword CopyStringCall;
+	qword RedirectURL;
+	qword RCX;
+	qword RDX;
+	qword RAX;
+};
+
+static PointerToStruct StructureOfHell{0};
+static SDK::FString NewRedirectURL{L"KILLYOURSELFNOW"};
+
+// Hookception :lemon_possessing:
+// Basically this hook is the TRUE function, GameWelcomePlayer does not exist in the build, it was stripped.
+// However there still remains the function call for it, and it's a blank return function, BUT at that specific instruction r8 contains RedirectURL.
+// I redirected it to my own function hook and since I had to preserve the registers I had to whip something up in assembly that would properly modify the RedirectURL and preserve the flow.
+// The ASM_GameWelcomePlayer hook is basically an inline function hook, WorldWelcomePlayer is the actual function hook which gets called before it is actually called.
+
+void AJB::Server::WorldWelcomePlayer(SDK::UWorld* This, SDK::UNetConnection* Connection)
+{
+	std::string Feck(AJB::NAME_PreJoinParameters.ToString());
+	std::wstring Frick(Feck.begin(), Feck.end());
+	SDK::FString Frock(Frick.c_str());
+	AJB::CopyString(&NewRedirectURL, &Frock);
+	OFF::WorldWelcomePlayer.VerifyFC<void(__thiscall*)(SDK::UWorld*, SDK::UNetConnection*)>()(This, Connection);
+}
+
+
+
+extern "C" void InitHellscape()
+{
+	StructureOfHell.JumpTo = PB(OFF::WelcomePlayer6B);
+	StructureOfHell.CopyStringCall = OFF::CopyString.PlusBase();
+	StructureOfHell.RedirectURL = (qword)&NewRedirectURL;
+	StructureOfHell.RCX = 0;
+	StructureOfHell.RDX = 0;
+	StructureOfHell.RAX = 0;
+
+	PointerOfAgony = (qword)&StructureOfHell;
+}
+
+
+
+void AJB::Server::ASM_GameWelcomePlayer(SDK::AGameModeBase* This, SDK::UNetConnection* Connection, UC::FString& RedirectURL)
+{
+	ASMGrabRedirectURL(PointerOfAgony);
+	
+	
+	//LogA("RedirectURL Address", HexToString(RedirectURLAddress));
+	//AJB::CopyString(&RedirectURL, &KYS);
+	//LogA("ASM_GameWelcomePlayer", std::format("[This]: {} | [RedirectURL]: {}", This->GetFullName(), RedirectURL.ToString()));
+	//OFF::WelcomePlayerStripped.VerifyFC<void(__thiscall*)(SDK::AGameModeBase*, SDK::UNetConnection*, UC::FString&)>()(This, Connection, RedirectURL);
 }

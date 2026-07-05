@@ -64,6 +64,9 @@
 
 #include "ServerLogic.h"
 
+// UConsole Parser
+#include "../UConsole/Core/UConsole.h"
+
 /*
 
 Written by Aeyth8
@@ -143,13 +146,13 @@ std::vector<Hooks::HookStructure> StandaloneHooks =
 {
 	{OFF::UConsole,							UFunctions::UConsole},
 	{OFF::ConsoleCommand,					UFunctions::ConsoleCommand},
-	{OFF::OutputText,						UFunctions::OutputText},
+	{OFF::OutputText,						UConsole::OutputText},
 	{OFF::Browse,							UFunctions::Browse},
 	{OFF::Login,							UFunctions::Login},
 	{OFF::PreLogin,							UFunctions::PreLogin},
 	{OFF::AJBPreLogin,						AJB::Server::PreLogin},
 	{OFF::InitListen,						UFunctions::InitListen},
-	//{OFF::NotifyControlMessage,			UFunctions::NotifyControlMessage},
+	{OFF::NotifyControlMessage,				UFunctions::NotifyControlMessage},
 	{OFF::PeekNetworkFailureMessages,		UFunctions::PeekNetworkFailureMessages},
 	{OFF::InitLocalConnection,				UFunctions::InitLocalConnection},
 	{OFF::AppPreExit,						UFunctions::AppPreExit},
@@ -570,9 +573,8 @@ void AJB::Init_Hooks()
 		BytePatcher::ReplaceBytes(PB(OFF::ResetPP), Replacement);		// UAJBGameInstance::ResetPP
 		BytePatcher::ReplaceBytes(PB(OFF::StartConsumePP), Replacement); // UAJBGameInstance::StartConsumePP
 
-
 		BytePatcher::ReplaceBytes(PB(OFF::HideCursorCaller), ReturnZero); // HideCursorCaller, I don't have a proper name but it spam-hides the cursor like 100 times a second
-	
+
 		//BytePatcher::ReplaceBytes(PB(0x522530), {MOV, 0, RETN, NOP, NOP, NOP, NOP}); // UAJBAMSystemObject::IsActiveAJBError
 
 		LogA("BytePatcher", "Applied all patches successfully. (Failing would crash)");
@@ -628,6 +630,10 @@ void AJB::Init_Hooks()
 		AJB::bServerHasPassword = CMLA::ServerPreLoginPassword.HasChanged();
 
 		Hooks::CreateAndEnableHook(oMainMenuImplementation, ClientReturnToMainMenuWithTextReason_Implementation);
+
+		BytePatcher::ReplaceByte(PB(OFF::WelcomePlayer6B), 0x90);
+		Hooks::CreateAndEnableHook(OFF::WorldWelcomePlayer, AJB::Server::WorldWelcomePlayer);
+		Hooks::CreateAndEnableHook(OFF::WelcomePlayerStripped, AJB::Server::ASM_GameWelcomePlayer);
 		//Hooks::CreateAndEnableHook(oFindRow, UFindRow);
 		//BytePatcher::ReplaceBytes(OFF::IsAJBOfflineMode.PlusBase(), {MOV, 0, RETN, NOP, NOP});
 		//BytePatcher::ReplaceBytes(OFF::IsOfflineMode.PlusBase(), {MOV, 0, RETN, NOP, NOP});
@@ -654,9 +660,10 @@ void AJB::Init_Hooks()
 	}
 	
 }
-
+extern "C" void InitHellscape();
 void AJB::Init_Engine()
-{
+{	
+	InitHellscape();
 	while (!GEngine) Sleep(25);
 
 	//MRWT::Activate();

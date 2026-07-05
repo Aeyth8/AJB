@@ -83,6 +83,12 @@ namespace A8CL
 		extern OFFSET SetInputGameOnly;
 		extern OFFSET SetInputMode_GameAndUIEx;
 
+		// VFT Function Reimplementation
+
+		extern OFFSET WorldWelcomePlayer;
+		extern OFFSET WelcomePlayerStripped;
+		extern OFFSET WelcomedByServer;
+
 		// Essential for Lemon Possession
 
 		extern OFFSET ImageSetBrushFromMaterial;
@@ -115,6 +121,7 @@ namespace A8CL
 		constexpr ull NetDriverGetNetMode		= 0x14F90F0;
 		constexpr ull WorldInternalGetNetMode	= 0x17C4820;
 		constexpr ull ActorInternalGetNetMode	= 0x11BA5C0;
+		constexpr ull WelcomePlayer6B			= 0x17D2EF3; // The 6th byte within a stripped out VFT call in UWorld::WelcomePlayer, it gets hooked which costs 5 bytes so this byte needs patched to keep alignment.
 
 		// VFTable Functions
 

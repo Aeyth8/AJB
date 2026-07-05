@@ -398,6 +398,9 @@
     <ClCompile Include="Dumper-7\SDK\BP_AJBSkillBase_functions.cpp">
       <Filter>SDK\CPP</Filter>
     </ClCompile>
+    <ClCompile Include="Aeyth8\UConsole\Core\UConsole.cpp">
+      <Filter>Aeyth8\UConsole\Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Aeyth8\Logger.hpp">
@@ -582,6 +585,9 @@
     </MASM>
     <MASM Include="Aeyth8\Tools\IsInLocalDirectory.asm">
       <Filter>Aeyth8\Tools</Filter>
+    </MASM>
+    <MASM Include="Aeyth8\Logic\Server\GameWelcomePlayer.asm">
+      <Filter>Aeyth8\Logic\Server</Filter>
     </MASM>
   </ItemGroup>
   <ItemGroup>
