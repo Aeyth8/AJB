@@ -67,6 +67,9 @@
 // UConsole Parser
 #include "../UConsole/Core/UConsole.h"
 
+// Macro because I want to remember where I placed this stuff so I can use it later
+#define USING_CUSTOM_MESSAGING_SYSTEM 0
+
 /*
 
 Written by Aeyth8
@@ -152,7 +155,11 @@ std::vector<Hooks::HookStructure> StandaloneHooks =
 	{OFF::PreLogin,							UFunctions::PreLogin},
 	{OFF::AJBPreLogin,						AJB::Server::PreLogin},
 	{OFF::InitListen,						UFunctions::InitListen},
+
+#if USING_CUSTOM_MESSAGING_SYSTEM
 	{OFF::NotifyControlMessage,				UFunctions::NotifyControlMessage},
+#endif
+
 	{OFF::PeekNetworkFailureMessages,		UFunctions::PeekNetworkFailureMessages},
 	{OFF::InitLocalConnection,				UFunctions::InitLocalConnection},
 	{OFF::AppPreExit,						UFunctions::AppPreExit},
@@ -631,9 +638,11 @@ void AJB::Init_Hooks()
 
 		Hooks::CreateAndEnableHook(oMainMenuImplementation, ClientReturnToMainMenuWithTextReason_Implementation);
 
+#if USING_CUSTOM_MESSAGING_SYSTEM
 		BytePatcher::ReplaceByte(PB(OFF::WelcomePlayer6B), 0x90);
 		Hooks::CreateAndEnableHook(OFF::WorldWelcomePlayer, AJB::Server::WorldWelcomePlayer);
 		Hooks::CreateAndEnableHook(OFF::WelcomePlayerStripped, AJB::Server::ASM_GameWelcomePlayer);
+#endif
 		//Hooks::CreateAndEnableHook(oFindRow, UFindRow);
 		//BytePatcher::ReplaceBytes(OFF::IsAJBOfflineMode.PlusBase(), {MOV, 0, RETN, NOP, NOP});
 		//BytePatcher::ReplaceBytes(OFF::IsOfflineMode.PlusBase(), {MOV, 0, RETN, NOP, NOP});
@@ -928,15 +937,38 @@ bool AJB::IsServer()
 	return false;
 }
 
-bool A8CL::AJB::IsInSession()
+bool AJB::IsInSession()
 {
 	SDK::UWorld* CurrentWorld = GWorld.GetPointer();
 	return CurrentWorld && CurrentWorld->NetDriver && CurrentWorld->NetDriver->ServerConnection;
 }
 
-bool A8CL::AJB::IsOfflineMode()
+bool AJB::IsOfflineMode()
 {
 	return !IsInSession();
+}
+
+int AJB::SetPlayMode(int NewPlayMode)
+{
+	// Thanks to bad game design, it is ABSOLUTELY ESSENTIAL to set bIsLocalSessionMode, or else everything just breaks
+	// I don't even remember where I found it from, I think it was from decompiling the developer debug menu blueprint and reading the hosting logic (which is how I figured out how to even host on this game)
+	// After a lot of debugging with server->client custom messaging via the RedirectURL, I actually realized that this has to be set or it will still desync... oh no... don't tell me that's why the Synchronizer isn't able to fix it in the first place...
+	// (it is) I added the switch logic to my Synchronizer blueprint and now I don't need any of the custom messaging logic.. it will probably be useful in the future
+
+	switch (NewPlayMode)
+	{
+	case 3:
+	case 4:
+	case 7:
+	case 8:
+		AJB::Instance->bIsLocalSessionMode = true;
+		break;
+
+	default:
+		AJB::Instance->bIsLocalSessionMode = false;
+	}
+
+	AJB::Instance->PlayMode = (SDK::EPlayMode)NewPlayMode;
 }
 
 void AJB::CreateCallbackTimer(void* FunctionCallback, float fTimer, unsigned nLoopFor, bool bInfinite)

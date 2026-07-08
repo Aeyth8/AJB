@@ -1403,11 +1403,25 @@ void UFunctions::NotifyControlMessage(SDK::UPendingNetGame* This, SDK::UNetConne
 		//LogA("ALlocatedBunch REEEEEEEETAAAAAAAAAARRRRDDDDDDDD", AllocatedBunch.ToString());
 		Call<qword(__fastcall*)(qword, qword)>(PB(0x5802E0))((qword)DeathRow.Data, (qword)&AllocatedBunch);
 		const int NewPlayMode = std::stoi(AllocatedBunch.ToString());
+
+		switch (NewPlayMode)
+		{
+		case 3:
+		case 4:
+		case 7:
+		case 8:
+			AJB::Instance->bIsLocalSessionMode = true;
+			break;
+
+		default:
+			AJB::Instance->bIsLocalSessionMode = false;
+		}
+
 		AJB::Instance->PlayMode = (SDK::EPlayMode)NewPlayMode;
-		std::wstring Bulllllll = L"AJBExecInternal Mode ";
+		/*std::wstring Bulllllll = L"AJBExecInternal Mode ";
 		Bulllllll += std::to_wstring(NewPlayMode);
 		SDK::FString Commando(Bulllllll.c_str());
-		UConsole(GEngine->GameViewport->ViewportConsole, Commando);
+		UConsole(GEngine->GameViewport->ViewportConsole, Commando);*/
 		LogA("ALlocatedBunch REEEEEEEETAAAAAAAAAARRRRDDDDDDDD", AllocatedBunch.ToString());
 		
 		delete[] DeathRow.Data;

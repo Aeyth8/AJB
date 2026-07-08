@@ -316,6 +316,8 @@ namespace AJB
 	bool IsInSession();
 	bool IsOfflineMode();
 
+	int SetPlayMode(int NewPlayMode);
+
 	// The callback function MUST have no parameters and return void.
 	// The system relies solely on inter-gamethread communication with a persistent blueprint object that sets the timer and executes a console command indicating the callback.
 	// We access the blueprint object from the DLL, inside the object is two int32s which contain the split address of this callback function which is executed in the hook for APlayerController::ConsoleCommand.
