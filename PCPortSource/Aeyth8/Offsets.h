@@ -27,6 +27,7 @@ namespace A8CL
 		extern OFFSET FNameTS;
 		//extern OFFSET Logf;
 		extern OFFSET OutputText;
+		extern OFFSET ClipboardCopy;
 
 		extern OFFSET ProcessEvent;
 		extern OFFSET Invoke;
@@ -109,6 +110,7 @@ namespace A8CL
 		extern OFFSET IsTenpoHost;
 		extern OFFSET IsAJBOfflineMode;
 		extern OFFSET IsOfflineMode;
+		extern OFFSET Screenshot;
 
 		// Byte Patches
 
@@ -122,6 +124,7 @@ namespace A8CL
 		constexpr ull WorldInternalGetNetMode	= 0x17C4820;
 		constexpr ull ActorInternalGetNetMode	= 0x11BA5C0;
 		constexpr ull WelcomePlayer6B			= 0x17D2EF3; // The 6th byte within a stripped out VFT call in UWorld::WelcomePlayer, it gets hooked which costs 5 bytes so this byte needs patched to keep alignment.
+		//constexpr ull ClipboardCopy				= 0x06B7370; // Annoying function that copies the crash log to your clipboard automatically forcing to override whatever the clipboard previously contained. // FWindowsPlatformApplicationMisc::ClipboardCopy
 
 		// VFTable Functions
 

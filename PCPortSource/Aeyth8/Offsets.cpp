@@ -21,6 +21,7 @@ namespace OFF
 	OFFSET FNameTS("FName::ToString", 0x692ED0); // void FName::ToString(FString& Out)
 	//OFFSET Logf("FOutputDevice::Logf", 0x64D570);
 	OFFSET OutputText("UConsole::OutputText", 0x17A8BF0);
+	OFFSET ClipboardCopy("FWindowsPlatformApplicationMisc::ClipboardCopy", 0x06B7370);
 
 	OFFSET ProcessEvent("UObject::ProcessEvent", 0x823B30);
 	OFFSET Invoke("UFunction::Invoke", 0x70DBF0);
@@ -112,6 +113,7 @@ namespace OFF
 	OFFSET GetUsername("GetUsername", 0x694650);
 	OFFSET GetNationalMatchSchedule("UAJBGameInstance::GetNationalMatchSchedule", 0x47E410);
 	OFFSET AJBWindowWidget("UAJBWindowWidget::UAJBWindowWidget", 0x534690);
+	OFFSET Screenshot("UAJBUtilityFunctionLibrary::Screenshot", 0x49F9A0);
 
 	OFFSET IsTenpoHost("AAJBOutGameProxy::IsTenpoHost", 0x507210);
 	OFFSET IsAJBOfflineMode("UAJBUtilityFunctionLibrary::IsAJBOfflineMode", 0x49DE20);

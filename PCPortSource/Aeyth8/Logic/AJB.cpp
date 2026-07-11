@@ -209,6 +209,61 @@ A8CL::OFFSET PostEventByName("UAkComponent::PostAkEventByName", 0x291650);
 A8CL::OFFSET PostEvent("UAkComponent::PostAkEvent", 0x291390);
 A8CL::OFFSET LoadBankByName("UAkGameplayStatics::LoadBankByName", 0x286850);
 
+#define GenericConstructor(Type, Name, Offset, OutVar) \
+	Type* Name(Type* This, void* Crap) \
+	{ \
+		Type* Pointer = Offset.VerifyFC<Type*(__thiscall*)(Type*, void*)>()(This, Crap); \
+		std::string FullName = Pointer ? Pointer->GetFullName() : "None"; \
+		LogA(Offset.GetName(), FullName); \
+		OutVar = Pointer; \
+		return Pointer; \
+	}
+
+
+#define M_TypeDef(Name, ReturnType, ...) \
+	typedef ReturnType(__thiscall* Name##_T)(__VA_ARGS__);
+
+//#define M_DebugHook(Offset, OffsetName, MacroTypeDef) \
+//	ObjType* GenericHook()
+
+/*
+	* Offset			- qword
+	* Name				- string
+	* ReturnType		- type
+	* ParamTypes		- Parenthesised arguments with names
+	* ParamNames		- Parenthesised argument names only for function call
+	* PreIfCondition	- Lamda if condition with any logic, runs before VerifyFC | If not used write (0);
+	* PostIfCondition	- Lamda if condition with any logic, runs after VerifyFC | If not used write (0);
+
+	Example: M_DebugHook(0x10790C0, "UUserWidget::AddToViewport", MT_AddToViewport, SDK::UUserWidget*, (SDK::UUserWidget* This, int32 ZOrder), (This, ZOrder), (0); , (0); , "[This]: {} | [ZOrder]: {}", This->GetFullName(), ZOrder);
+*/
+#define M_DebugHook(Offset, OffsetName, Name, ReturnType, ParamTypes, ParamNames, PreIfCondition, PostIfCondition, ...) \
+	typedef void*(__thiscall* Name##_T) ParamTypes; \
+	namespace M_OFF { A8CL::OFFSET Name(OffsetName, Offset); } \
+	ReturnType __fastcall Name ParamTypes \
+	{	\
+		if PreIfCondition \
+		LogA(M_OFF::Name.GetName(), std::format(__VA_ARGS__)); \
+		ReturnType* Returnal = (ReturnType*)M_OFF::Name##.VerifyFC<Name##_T>()ParamNames; \
+		if PostIfCondition \
+		return (ReturnType)Returnal; \
+	}	\
+	struct Name##LazyHookObject{ A8CL::OFFSET OS; Name##LazyHookObject(A8CL::OFFSET& OS) : OS(OS) { StandaloneHooks.push_back({M_OFF::Name, Name}); } }; \
+	static Name##LazyHookObject Name##_LHO(M_OFF::Name);
+
+#define M_DebugHookO(OffsetObj, Name, ReturnType, ParamTypes, ParamNames, PreIfCondition, PostIfCondition, ...) \
+	M_DebugHook(OffsetObj.Offset, OffsetObj.GetName(), Name, ReturnType, ParamTypes, ParamNames, PreIfCondition, PostIfCondition, __VA_ARGS__);
+/*template <class T>	struct Return		{ template <class Func, class... Arg> static T Call (Func Function, Arg... Args) {	return Function(Args...);	} }; \
+	template <>			struct Return<void> { template <class Func, class... Arg> static T Call (Func Function, Arg... Args) {	Function(Args...);			} }; \
+	\*/
+
+//M_DebugHook(0x10790C0, "UUserWidget::AddToViewport", MT_AddToViewport, SDK::UUserWidget*, (SDK::UUserWidget* This, int32 ZOrder), (This, ZOrder), (0); , (0); ,  "[This]: {} | [ZOrder]: {}", This ? This->GetFullName() : "NULL", ZOrder);
+//M_DebugHook(0x106DDA0, "UUserWidget::UUserWidget", MT_UUserWidget, SDK::UUserWidget*, (SDK::UUserWidget* This, void* Initializer), (This, Initializer), (0);, (This && This->GetFullName() == "WB_CommonWIndow_S_C Transient.GameEngine_0.BP_AJBGameInstance_C_0.WB_CommonWIndow_S_C_0") { LogA("StupidFeckingIdiotIdiot", HexToString((qword)_ReturnAddress())); }, "[This]: {}", This ? This->GetFullName() : "NULL");
+M_DebugHook(0x10C4060, "UWidgetBlueprintLibrary::SetInputMode_GameAndUIEx",MT_SetInputMode_GameAndUIEx, void, (SDK::APlayerController* PlayerController, SDK::UWidget* InWidgetToFocus, SDK::EMouseLockMode InMouseLockMode, bool bHideCursorDuringCapture), (PlayerController, InWidgetToFocus, InMouseLockMode, bHideCursorDuringCapture), (0); , (1) { LogA("StupidFeckingIdiotIdiot", HexToString((qword)_ReturnAddress())); }, "[PlayerController]: {} | [InWidgetToFocus]: {} | [InMouseLockMode]: {} | [bHideCursorDuringCapture]: {} |", PlayerController->GetFullName(), InWidgetToFocus->GetFullName(), *((unsigned char*)&InMouseLockMode), bHideCursorDuringCapture);
+//M_DebugHook(0x6C60D0, "FWindowsCursor::Show", MT_ShowCursor, int, (void* This, bool bShow), (This, bShow), (0); , (0);, "[bShow]: {}", bShow);
+M_DebugHookO(OFF::ClipboardCopy, MT_ClipboardCopy, int, (void* String), (String), constexpr (1) { const qword StrLen{wcslen((const wchar_t*)String)}; char Buffer[4096]{0}; int i{0}; int j{0}; const char* Str = (const char*)String; while ((Str[j] || Str[++j]) && i < 4096) { Buffer[i] = Str[j]; ++i; ++j; }  LogA(OFF::ClipboardCopy.GetName(), std::format("========= [CRASH] =========\n\n{}", Buffer)); return 0; }, (0);, "");
+//M_DebugHook(0x966EA0, "FSlateApplication::SetUserFocus", MT_SetUserFocus, bool, (void* This, dword Index, void* WidgetToFocus, byte ReasonFocusIsChanging), (This, Index, WidgetToFocus, ReasonFocusIsChanging), (0); , (0); , "[Caller]: {}", HexToString((qword)_ReturnAddress()));
+
 void __fastcall GetNationalMatchSchedule(SDK::UAJBGameInstance* This, bool* OutCanPlaySoloMode, bool* OutCanPlayPairMode, SDK::FAJBMatchSchedule* OutMatchSchedule, SDK::FAJBMatchScheduleDateTime* OutSoloScheduleDateTime, SDK::FAJBMatchScheduleDateTime* OutPairScheduleDateTime)
 {
 	*OutCanPlaySoloMode = true;
@@ -581,6 +636,12 @@ void AJB::Init_Hooks()
 		BytePatcher::ReplaceBytes(PB(OFF::StartConsumePP), Replacement); // UAJBGameInstance::StartConsumePP
 
 		BytePatcher::ReplaceBytes(PB(OFF::HideCursorCaller), ReturnZero); // HideCursorCaller, I don't have a proper name but it spam-hides the cursor like 100 times a second
+		
+		//BytePatcher::ReplaceBytes(PB(0x57998C), {0x6A, 0x01, 0x58, NOP, NOP}); // push 1 ; pop rax
+		//BytePatcher::ReplaceBytes(PB(0x49DEC0), {MOV, 0x01, RETN, NOP}); // UAJBUtilityFunctionLibrary::IsEditorPreview
+
+
+		//BytePatcher::ReplaceBytes(PB(OFF::ClipboardCopy), {RETN, NOP, NOP, NOP, NOP}); // This is a native Unreal Engine function AND I HATE IT SO MUCH
 
 		//BytePatcher::ReplaceBytes(PB(0x522530), {MOV, 0, RETN, NOP, NOP, NOP, NOP}); // UAJBAMSystemObject::IsActiveAJBError
 
@@ -629,6 +690,7 @@ void AJB::Init_Hooks()
 
 			Hooks::CreateAndEnableHook(PostEventByName, PostEventByNameHook);
 			Hooks::CreateAndEnableHook(oAddActionMapping, AddActionMapping);
+			BytePatcher::ReplaceBytes(PB(0x57998C), {0x48, 0x31, 0xC0, NOP, NOP});	// UAJBUtilityFunctionLibrary::execIsShipping (Works and makes the debug menu spawn natively / might do other things / causes mouse to always appear ingame (probably because of their retardically designed HideCursorCaller)
 		}
 
 		AJB::bIsLemonPossessioned = CMLA::LemonPossession.GetAsBool();
@@ -948,7 +1010,7 @@ bool AJB::IsOfflineMode()
 	return !IsInSession();
 }
 
-int AJB::SetPlayMode(int NewPlayMode)
+unsigned char AJB::SetPlayMode(unsigned char NewPlayMode)
 {
 	// Thanks to bad game design, it is ABSOLUTELY ESSENTIAL to set bIsLocalSessionMode, or else everything just breaks
 	// I don't even remember where I found it from, I think it was from decompiling the developer debug menu blueprint and reading the hosting logic (which is how I figured out how to even host on this game)
@@ -969,6 +1031,8 @@ int AJB::SetPlayMode(int NewPlayMode)
 	}
 
 	AJB::Instance->PlayMode = (SDK::EPlayMode)NewPlayMode;
+
+	return NewPlayMode;
 }
 
 void AJB::CreateCallbackTimer(void* FunctionCallback, float fTimer, unsigned nLoopFor, bool bInfinite)
@@ -1135,6 +1199,8 @@ void A8CL::AJB::DedicatedServerLoop()
 
 }
 
+
+
 bool __fastcall AJB::FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag)
 {
 	LogA("UFlowStateUtil", std::format("New FlowState: {}", NextStateTag.TagName.ToString()));
@@ -1215,6 +1281,11 @@ bool __fastcall AJB::FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, S
 				AJB::CreateCallbackTimer(AJB::DedicatedServerLoop, 7.5f);
 			}
 		}
+
+		if (NextStateTag.TagName == MouseLockFlowstates[5])
+		{			
+			CreateCallbackTimer(AJB::Callbacks::Screenshot, 0.0f);			
+		}
 	}
 	
 	return OFF::ChangeState.VerifyFC<bool(__fastcall*)(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag)>()(StateHandler, NextStateTag);
@@ -1272,6 +1343,12 @@ int __fastcall AJB::PostEventAtLocation(SDK::UAkAudioEvent* AkEvent, SDK::FVecto
 	}
 
 	return OFF::PostEventAtLocation.VerifyFC<int32(__fastcall*)(SDK::UAkAudioEvent*, SDK::FVector&, SDK::FRotator&, SDK::FString&, SDK::UObject*)>()(AkEvent, Location, Orientation, EventName, WorldContextObject);
+}
+
+void __fastcall AJB::OnVictoryShot(SDK::UObject* Object)
+{
+	LogA("OnVictoryShot", "Screenshotting game...");
+	Pointers::GetBlueprintClass<SDK::UAJBUtilityFunctionLibrary>()->Screenshot(L"Screenshot", true);
 }
 
 SDK::UAJBWindowWidget* __fastcall AJB::AJBWindowWidget(SDK::UAJBWindowWidget* This)

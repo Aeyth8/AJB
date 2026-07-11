@@ -316,7 +316,7 @@ namespace AJB
 	bool IsInSession();
 	bool IsOfflineMode();
 
-	int SetPlayMode(int NewPlayMode);
+	unsigned char SetPlayMode(unsigned char NewPlayMode);
 
 	// The callback function MUST have no parameters and return void.
 	// The system relies solely on inter-gamethread communication with a persistent blueprint object that sets the timer and executes a console command indicating the callback.
@@ -352,6 +352,7 @@ namespace AJB
 	bool __fastcall FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag);
 	void __fastcall OnToggleFullMapVisibility(SDK::UObject* Object);
 	int __fastcall PostEventAtLocation(SDK::UAkAudioEvent* AkEvent, SDK::FVector& Location, SDK::FRotator& Orientation, UC::FString& EventName, SDK::UObject* WorldContextObject);
+	void __fastcall OnVictoryShot(SDK::UObject* Object);
 
 	// Constructor Hooks
 	SDK::UAJBWindowWidget* __fastcall AJBWindowWidget(SDK::UAJBWindowWidget* This);

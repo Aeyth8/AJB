@@ -13,9 +13,8 @@ void UConsole::OutputText(SDK::UConsole* This, SDK::FString* Text)
 		SDK::FString TempString(ConsoleOutput::TextCache);
 
 		OFF::CopyString.Call<SDK::FString*(__thiscall*)(SDK::FString*, SDK::FString*)>()(Text, &TempString);
+		LogA(OFF::OutputText.GetName(), Text->ToString());
 	}
-
-	LogA(OFF::OutputText.GetName(), Text->ToString());
 
 	OFF::OutputText.VerifyFC<Decl::OutputText>()(This, Text);
 }

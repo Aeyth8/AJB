@@ -219,6 +219,7 @@ using namespace Global;
 #include "../../Dumper-7/SDK/WB_DBISequencerSkipper_classes.hpp"
 #include "../../Dumper-7/SDK/BP_AJBInteractAction_classes.hpp"
 #include "../../Dumper-7/SDK/BP_AJBPlacementSkill_classes.hpp"
+#include "../../Dumper-7/SDK/BP_GameFlowStateManager_classes.hpp"
 
 #include "../../Dumper-7/SDK/MediaAssets_classes.hpp"
 
@@ -404,6 +405,8 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			if (NewChar)
 			{
 				//static_cast<SDK::AAJBInGameCharacterBase*>(Player->Character)->SetMatchingPlayerIndex(NewChar);
+				AJB::TEMP_CachedCharacterID = NewChar;
+				AJB::SetSelectedCharacter((AJB::ESelectedCharacter)NewChar);
 				Player->ROS_DebugCharaChange(NewChar);
 				UConsole::ConsoleOutput::Text(std::format("Changing character to [{}] --> {}", NewChar, SDT::ESelectedCharacter[NewChar]).c_str());
 			}			
@@ -626,20 +629,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	{
 		uint8 NewPlayMode = std::stoi(StrCommand.substr(21));
 
-		switch (NewPlayMode)
-		{
-		case 3:
-		case 4:
-		case 7:
-		case 8:
-			AJB::Instance->bIsLocalSessionMode = true;
-			break;
-
-		default:
-			AJB::Instance->bIsLocalSessionMode = false;
-		}
-
-		AJB::Instance->PlayMode = (SDK::EPlayMode)NewPlayMode;
+		AJB::SetPlayMode(NewPlayMode);
 		if (AJB::MOD_Global_Synchronizer) AJB::MOD_Global_Synchronizer->PlayMode = NewPlayMode;
 	}
 	else if (StrCommand == "chartable")
@@ -801,6 +791,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 
 				// Dynamic polling for different framecaps ensuring no delay, even if you have your game uncapped the game framerate will not actually be uncapped because of a limit Namco placed (I wrote a patch for it and it's still in the codebase but it's not really useful)
 				if (CurrentMaxFPS != 0) AJB::MOD_OptionsMenu->InternalTickRate = CurrentMaxFPS;
+				else AJB::MOD_OptionsMenu->InternalTickRate = AJB::bIsFrameRateUncapped ? 240 : 62;
 				//else AJB::MOD_OptionsMenu->InternalTickRate = AJB::bIsFrameRateUncapped ? 240 : 62;
 
 				// I'd rather put this in the actual blueprint logic but then ID HAVE TO REDUMP THE SDK AND GET THE NEW STRUCTURE and I don't feel like it until it's actually a proper menu.
@@ -921,6 +912,44 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	}
 	else if (StrCommand == "toggledebugmenu")
 	{
+		static bool bToggle{false};
+
+		if (SDK::APlayerController* PC = Pointers::Player())
+		{
+			if (PC->MyHUD)
+			{
+				if (PC->MyHUD->IsA(SDK::ABP_AJBInGameHUD_C::StaticClass()))
+				{
+					bToggle = !bToggle;
+					UConsole::ConsoleOutput::Text("Toggling InGame debug menu.");
+					SDK::ABP_AJBInGameHUD_C* HUD = static_cast<SDK::ABP_AJBInGameHUD_C*>(PC->MyHUD);
+
+					HUD->OnShowDebugMenu();
+				}
+				else if (PC->MyHUD->IsA(SDK::ABP_AJBOutGameHUD_C::StaticClass()))
+				{
+					bToggle = !bToggle;
+					UConsole::ConsoleOutput::Text("Toggling OutGame debug menu.");
+					SDK::ABP_AJBOutGameHUD_C* HUD = static_cast<SDK::ABP_AJBOutGameHUD_C*>(PC->MyHUD);					
+				}
+				else UConsole::ConsoleOutput::Text("Unable to debug menu.");
+
+				if (!bToggle)
+				{
+					for (SDK::UWB_TestModeMenuBase_C* Page : Pointers::FindObjects<SDK::UWB_TestModeMenuBase_C>(false))
+					{
+						if (Page && Page->Visibility == SDK::ESlateVisibility::Visible && !(Page->Flags & EObjectFlags::ArchetypeObject))
+						{
+							LogA("Page", Page->GetFullName());
+							Page->CloseWindow();
+							break;
+						}
+					}
+				}
+			}
+		}
+
+		/*
 		static SDK::UClass* Classes[4]{nullptr};
 		static SDK::UUserWidget* Menus[4]{nullptr};
 
@@ -950,7 +979,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 				}
 				else
 				{
-					Menus[i] = (SDK::UUserWidget*)Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(Classes[i], static_cast<SDK::UGameViewportClient*>(GEngine->GameViewport), Pointers::FString2FName(Name), 0, EInternalObjectFlags::RootSet, 0, 0, 0, 0);
+					Menus[i] = (SDK::UUserWidget*)Call<Decl::StaticConstructObject_Internal>(OFF::StaticConstructObject.PlusBase())(Classes[i], static_cast<SDK::UGameViewportClient*>(GEngine->GameViewport), FName::NAME_FindOrAdd(Name), 0, EInternalObjectFlags::RootSet, 0, 0, 0, 0);
 					if (!Menus[i])
 					{
 						bInitialized = false;
@@ -961,16 +990,18 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 						LogA("Menu", Menus[i]->GetFullName());
 						Menus[i]->AddToViewport(112);
 						Menus[i]->SetVisibility(SDK::ESlateVisibility::Visible);
-					}*/
+					}* /
 				}
 
 				++i;
 			}
 		}
 
-		if (Menus[2])
+		constexpr byte MenuIndex{2};
+
+		if (Menus[MenuIndex])
 		{
-			SDK::UUserWidget* MenuObj = Menus[2];
+			SDK::UUserWidget* MenuObj = Menus[MenuIndex];
 
 			static bool bToggled{false};
 			bToggled = !bToggled;
@@ -997,11 +1028,11 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 				OFF::SetInputGameOnly.Call<SetInputModeGameOnly>()(Pointers::Player());
 				MenuObj->SetVisibility(SDK::ESlateVisibility::Collapsed);
 
-				reinterpret_cast<SDK::UWB_TestModeMenuBase_C*>(Menus[2])->CloseWindow();
+				reinterpret_cast<SDK::UWB_TestModeMenuBase_C*>(Menus[MenuIndex])->CloseWindow();
 			}
 
 			UConsole::ConsoleOutput::Text(bToggled ? "Showing debug menu" : "Hiding debug menu");
-		}
+		}*/
 	}	
 	else if (StrCommand == "host")
 	{
@@ -1264,6 +1295,14 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 				LogA("Skill", std::format("[Name]: {} | [Skill Tag]: {} | [Type]: {} | [Current State]: {}", Skill->GetFullName(), Skill->SkillTag.TagName.ToString(), (byte)Skill->SkillType, Skill->SkillState));
 			}
 		}
+	}
+	else if (StrCommand == "screenshot")
+	{
+		Pointers::GetBlueprintClass<SDK::UAJBUtilityFunctionLibrary>()->Screenshot(L"Screenshot", 0);
+	}
+	else if (StrCommand == "pissingmeoff")
+	{
+		AJB::FlowUtilChangeState(&Pointers::Player<SDK::ABP_AJBInGamePlayerController_C>()->BP_GameFlowStateManager->FlowStateHander, SDK::FGameplayTag{FName::NAME_FindOrAdd("InGame.VictoryShot.Finish")});
 	}
 
 	LogA("ConsoleCommand", std::format("[Owning PlayerController]: {} | [Command]: {}", This->GetFullName(), StrCommand));
@@ -2090,6 +2129,10 @@ void UFunctions::Invoke(SDK::UFunction* This, SDK::UObject* Obj, void* FFrame_St
 	static TExternFunction ExternFunctionList[] = 
 	{
 		{AJB::OnToggleFullMapVisibility, L"OnToggleFullMapVisibility", {}}, // Function BP_AJBInGameHUD.BP_AJBInGameHUD_C.OnToggleFullMapVisibility
+		//{AJB::OnVictoryShot, L"TakeShot", {}},							// Function BP_AJBInGameVictoryShotCamera.BP_AJBInGameVictoryShotCamera_C.TakeShot
+ 		//{AJB::OnVictoryShot, L"PlayFlash", {}},								// Function WB_VictoryShotCameraflash.WB_VictoryShotCameraFlash_C.PlayFlash
+
+		// Currently neither of these work for some stupid reason
 		// More will be added later.
 	};
 
