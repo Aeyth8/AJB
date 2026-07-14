@@ -246,40 +246,29 @@ void AJB::Callbacks::CallbackErrorPopup()
 // Temporary
 #include "../../Logger.hpp"
 
-void AJB::Callbacks::Screenshot()
+// Especially temporary
+static const wchar_t* GetScreenshotTimestamp(bool bWithHUD = false)
 {
-	// Temporary string bloat crap
-
-	using T_Screenshot = decltype(&SDK::UAJBUtilityFunctionLibrary::Screenshot);
-	std::wstring Screenshot{L"Screenshot_"};
 	auto Crap = std::chrono::system_clock::now();
 	std::time_t NowTime = std::chrono::system_clock::to_time_t(Crap);
 	std::tm TmCrap; localtime_s(&TmCrap, &NowTime);
 	std::wstringstream Time;
-	Time << std::put_time(&TmCrap, L"%m_%d_%Y_%H_%M_%S_%p");			
-	Screenshot += Time.str();
-			
-	// (FOR NOW) I'm going to make two screenshots per call, one with the HUD and the other without, because of probable latency I'll have the HUD-less screenshot go first.
-	OFF::Screenshot.VerifyFC<T_Screenshot>()(Screenshot.c_str(), false);
+	Time << std::put_time(&TmCrap, bWithHUD ? L"Screenshot_%m_%d_%Y_%H_%M_%S_%p_+HUD" : L"Screenshot_%m_%d_%Y_%H_%M_%S_%p");
+	return Time.str().c_str();
+}
 
-	// (FOR NOW) I'm going to make two screenshots per call, one with the HUD and the other without, because of probable latency I'll have the HUD-less screenshot go first.
+void AJB::Callbacks::ScreenshotBoth()
+{
+	Screenshot();
 	CreateCallbackTimer(AJB::Callbacks::ScreenshotWithHUD, 0.0f);
 }
 
-void AJB::Callbacks::ScreenshotWithHUD()
+void AJB::Callbacks::Screenshot()
 {
-	//LogA("OnVictoryShot", "Screenshotting game...");
+	OFF::Screenshot.VerifyFC<decltype(&SDK::UAJBUtilityFunctionLibrary::Screenshot)>()(GetScreenshotTimestamp(), false);
+}
 
-	// Temporary string bloat crap
-
-	using T_Screenshot = decltype(&SDK::UAJBUtilityFunctionLibrary::Screenshot);
-	std::wstring Screenshot{L"Screenshot_"};
-	auto Crap = std::chrono::system_clock::now();
-	std::time_t NowTime = std::chrono::system_clock::to_time_t(Crap);
-	std::tm TmCrap; localtime_s(&TmCrap, &NowTime);
-	std::wstringstream Time;
-	Time << std::put_time(&TmCrap, L"%m_%d_%Y_%H_%M_%S_%p_+HUD");			
-	Screenshot += Time.str();
-
-	OFF::Screenshot.VerifyFC<T_Screenshot>()(Screenshot.c_str(), true);
+void AJB::Callbacks::ScreenshotWithHUD()
+{	
+	OFF::Screenshot.VerifyFC<decltype(&SDK::UAJBUtilityFunctionLibrary::Screenshot)>()(GetScreenshotTimestamp(true), true);
 }

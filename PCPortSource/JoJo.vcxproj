@@ -245,6 +245,7 @@
     <ClCompile Include="Dumper-7\SDK\BP_AJBDamageAreaLocal_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\BP_AJBHighlightPlayerController_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\BP_AJBInGameCharacter_functions.cpp" />
+    <ClCompile Include="Dumper-7\SDK\BP_AJBinGameDeathCamera_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\BP_AJBInGameHUD_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\BP_AJBInGameItemSpawnerMaster_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\BP_AJBInGamePlayerController_functions.cpp" />

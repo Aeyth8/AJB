@@ -220,6 +220,7 @@ using namespace Global;
 #include "../../Dumper-7/SDK/BP_AJBInteractAction_classes.hpp"
 #include "../../Dumper-7/SDK/BP_AJBPlacementSkill_classes.hpp"
 #include "../../Dumper-7/SDK/BP_GameFlowStateManager_classes.hpp"
+#include "../../Dumper-7/SDK/BP_AJBinGameDeathCamera_classes.hpp"
 
 #include "../../Dumper-7/SDK/MediaAssets_classes.hpp"
 
@@ -242,6 +243,7 @@ extern "C" void GodMode()
 	SDK::ABP_AJBInGameCharacter_C* Character = Pointers::Character<SDK::ABP_AJBInGameCharacter_C>();
 	if (Character)
 	{
+		Character->Heal(1000, 1000, 0, 0);
 		Character->DebugSPMax();
 		Character->DebugAPMax();
 		Character->DebugCPMax();
@@ -893,18 +895,10 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	{
 		static bool bOne{0};
 		SDK::APlayerController* Player = Pointers::Player();
-		if (Player && Player->MyHUD)
+		if (Player && Player->MyHUD && Player->MyHUD->IsA(SDK::AAJBHUDBase::StaticClass()))
 		{
-			SDK::AHUD* HUD = Player->MyHUD;
-
 			bOne = !bOne;
-			HUD->bHidden = bOne;
-			HUD->bShowHUD = bOne;
-
-			if (HUD->IsA(SDK::AAJBInGameHUD::StaticClass()))
-			{
-				static_cast<SDK::AAJBInGameHUD*>(HUD)->SetupForceInvisibleAllWidgetsFlag(bOne);
-			}
+			static_cast<SDK::AAJBHUDBase*>(Player->MyHUD)->SetupForceInvisibleAllWidgetsFlag(bOne);
 
 			UConsole::ConsoleOutput::Text(bOne ? "HUD is hidden." : "HUD is visible.");
 		}
@@ -1296,13 +1290,22 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			}
 		}
 	}
-	else if (StrCommand == "screenshot")
+	/*else if (StrCommand == "screenshot")
 	{
 		Pointers::GetBlueprintClass<SDK::UAJBUtilityFunctionLibrary>()->Screenshot(L"Screenshot", 0);
 	}
 	else if (StrCommand == "pissingmeoff")
 	{
 		AJB::FlowUtilChangeState(&Pointers::Player<SDK::ABP_AJBInGamePlayerController_C>()->BP_GameFlowStateManager->FlowStateHander, SDK::FGameplayTag{FName::NAME_FindOrAdd("InGame.VictoryShot.Finish")});
+	}*/
+	else if (StrCommand == "sprint")
+	{
+		Pointers::Player<SDK::ABP_AJBInGamePlayerController_C>()->DebugAddPassiveSkill(SDK::FGameplayTag{FName::NAME_FindOrAdd("CharaCondition.Passive.RunAwayBuff")});
+	}
+	else if (StrCommand == "noway")
+	{
+		Pointers::Player<SDK::ABP_AJBInGamePlayerController_C>()->CharacterNo = 26;
+		Pointers::Player<SDK::ABP_AJBInGamePlayerController_C>()->OnRep_CharacterNo();
 	}
 
 	LogA("ConsoleCommand", std::format("[Owning PlayerController]: {} | [Command]: {}", This->GetFullName(), StrCommand));

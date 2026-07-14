@@ -263,6 +263,7 @@ M_DebugHook(0x10C4060, "UWidgetBlueprintLibrary::SetInputMode_GameAndUIEx",MT_Se
 //M_DebugHook(0x6C60D0, "FWindowsCursor::Show", MT_ShowCursor, int, (void* This, bool bShow), (This, bShow), (0); , (0);, "[bShow]: {}", bShow);
 M_DebugHookO(OFF::ClipboardCopy, MT_ClipboardCopy, int, (void* String), (String), constexpr (1) { const qword StrLen{wcslen((const wchar_t*)String)}; char Buffer[4096]{0}; int i{0}; int j{0}; const char* Str = (const char*)String; while ((Str[j] || Str[++j]) && i < 4096) { Buffer[i] = Str[j]; ++i; ++j; }  LogA(OFF::ClipboardCopy.GetName(), std::format("========= [CRASH] =========\n\n{}", Buffer)); return 0; }, (0);, "");
 //M_DebugHook(0x966EA0, "FSlateApplication::SetUserFocus", MT_SetUserFocus, bool, (void* This, dword Index, void* WidgetToFocus, byte ReasonFocusIsChanging), (This, Index, WidgetToFocus, ReasonFocusIsChanging), (0); , (0); , "[Caller]: {}", HexToString((qword)_ReturnAddress()));
+M_DebugHook(0x49EAE0, "UAJBUtilityFunctionLibrary::LoadTexture2DFromDisk", MT_LoadTexture, SDK::UTexture2D*, (SDK::FString& FullFilePath, SDK::FString& Filename, SDK::EAJBImageFormatType ImageFormat, bool* bOutValid, int32* OutWidth, int32* OutHeight), (FullFilePath, Filename, ImageFormat, bOutValid, OutWidth, OutHeight), constexpr (1) { SDK::FString Pathy(L"C:\\Users\\Jay\\Desktop\\Desktopped\\dl\\AJB_Discord\\Emojis"); SDK::FString Namey(L"steamhappy"); AJB::CopyString(&FullFilePath, &Pathy); AJB::CopyString(&Filename, &Namey); ImageFormat = SDK::EAJBImageFormatType::Png; }; , (0);, "[FullFilePath]: {} | [Filename]: {} | [ImageFormat]: {}", FullFilePath.ToString(), Filename.ToString(), * ((char*)&ImageFormat));
 
 void __fastcall GetNationalMatchSchedule(SDK::UAJBGameInstance* This, bool* OutCanPlaySoloMode, bool* OutCanPlayPairMode, SDK::FAJBMatchSchedule* OutMatchSchedule, SDK::FAJBMatchScheduleDateTime* OutSoloScheduleDateTime, SDK::FAJBMatchScheduleDateTime* OutPairScheduleDateTime)
 {
@@ -1283,8 +1284,9 @@ bool __fastcall AJB::FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, S
 		}
 
 		if (NextStateTag.TagName == MouseLockFlowstates[5])
-		{			
-			CreateCallbackTimer(AJB::Callbacks::Screenshot, 0.0f);			
+		{
+			// (FOR NOW) I'm going to make two screenshots per call, one with the HUD and the other without, because of probable latency I'll have the HUD-less screenshot go first.
+			CreateCallbackTimer(AJB::Callbacks::ScreenshotBoth, 0.0f);			
 		}
 	}
 	

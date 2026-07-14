@@ -22,8 +22,8 @@ namespace AJB
 		// Used for a generic blueprint popup screen.
 		void CallbackErrorPopup();
 
-
 		// Deferred Screenshotting.
+		void ScreenshotBoth();
 		void Screenshot();
 		void ScreenshotWithHUD();
 	}
