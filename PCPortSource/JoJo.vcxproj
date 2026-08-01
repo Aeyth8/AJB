@@ -127,7 +127,8 @@
     <ClInclude Include="Aeyth8\Logger.hpp" />
     <ClInclude Include="Aeyth8\Logic\AJB.h" />
     <ClInclude Include="Aeyth8\Logic\Callbacks\AJBCallbacks.h" />
-    <ClInclude Include="Aeyth8\Logic\ServerLogic.h" />
+    <ClInclude Include="Aeyth8\Logic\Cheats\AJBCheats.h" />
+    <ClInclude Include="Aeyth8\Logic\Server\ServerLogic.h" />
     <ClInclude Include="Aeyth8\Logic\Server\Temporary\MRWT.h" />
     <ClInclude Include="Aeyth8\OffsetBase.h" />
     <ClInclude Include="Aeyth8\Offsets.h" />
@@ -199,7 +200,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Injectable|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Aeyth8\Logic\Callbacks\AJBCallbacks.cpp" />
-    <ClCompile Include="Aeyth8\Logic\ServerLogic.cpp" />
+    <ClCompile Include="Aeyth8\Logic\Cheats\AJBCheats.cpp" />
+    <ClCompile Include="Aeyth8\Logic\Server\ServerLogic.cpp" />
     <ClCompile Include="Aeyth8\Offsets.cpp" />
     <ClCompile Include="Aeyth8\Proxy8\Entry\ProxyEntry.cpp" />
     <ClCompile Include="Aeyth8\Proxy8\Proxy.cpp">
@@ -273,7 +275,9 @@
     <ClCompile Include="Dumper-7\SDK\WB_Fade_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\WB_InGameMain_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\WB_ModeSelectButtonBase_functions.cpp" />
+    <ClCompile Include="Dumper-7\SDK\WB_ModeSelect_Button_PremiumDraw_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\WB_ModeSelect_Button_PvE_functions.cpp" />
+    <ClCompile Include="Dumper-7\SDK\WB_ModeSelect_Button_Shop_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\WB_ModeSelect_Button_SOLO_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\WB_ModeSelect_functions.cpp" />
     <ClCompile Include="Dumper-7\SDK\WB_PpBuyWindow_functions.cpp" />

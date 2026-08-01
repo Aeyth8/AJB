@@ -142,6 +142,7 @@ namespace A8CL
 		constexpr ull VFT_ClientMainMenu		= 0x141; // APlayerController::ClientReturnToMainMenuWithTextReason
 		constexpr ull VFT_LocalTravel			= 0x13F; // APlayerController::LocalTravel
 		constexpr ull VFT_NetworkFailureMsg		= 0x62;	 // UGameViewportClient::PeekNetworkFailureMessages
+		constexpr ull VFT_ClientMessage			= 0x123; // APlayerController::ClientMessage
 
 		// Non-Hooks
 

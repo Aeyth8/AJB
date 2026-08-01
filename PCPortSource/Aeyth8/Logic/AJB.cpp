@@ -62,7 +62,7 @@
 // External callbacks
 #include "Callbacks/AJBCallbacks.h"
 
-#include "ServerLogic.h"
+#include "Server/ServerLogic.h"
 
 // UConsole Parser
 #include "../UConsole/Core/UConsole.h"
@@ -641,6 +641,9 @@ void AJB::Init_Hooks()
 		//BytePatcher::ReplaceBytes(PB(0x57998C), {0x6A, 0x01, 0x58, NOP, NOP}); // push 1 ; pop rax
 		//BytePatcher::ReplaceBytes(PB(0x49DEC0), {MOV, 0x01, RETN, NOP}); // UAJBUtilityFunctionLibrary::IsEditorPreview
 
+		BytePatcher::ReplaceBytes(PB(0x558878), {0x48, 0x31, 0xC0, NOP, NOP}); // UAJBInGameServerInfo::execIsEnableRedis
+		BytePatcher::ReplaceBytes(PB(0x5588F8), {0x48, 0x31, 0xC0, NOP, NOP}); // UAJBInGameServerInfo::execIsInitializedNPC
+		BytePatcher::ReplaceBytes(PB(0x500B20), {MOV, 0x1, 0xC3, NOP, NOP}); // AAJBOutGameProxy::CanTenpoBattle
 
 		//BytePatcher::ReplaceBytes(PB(OFF::ClipboardCopy), {RETN, NOP, NOP, NOP, NOP}); // This is a native Unreal Engine function AND I HATE IT SO MUCH
 
@@ -655,7 +658,7 @@ void AJB::Init_Hooks()
 
 		Hooks::CreateAndEnableHook(OFF::GetUsername, GetUsername);
 		Hooks::CreateAndEnableHook(OFF::TryGetMatchingMyPairInfo, TryGetMatchingMyPairInfo);
-
+		Hooks::CreateAndEnableHook(OFF::ProcessEvent, UFunctions::ProcessEvent);
 		if (CMLA::HookAndLogProcessEvent.GetAsBool())
 		{
 			Hooks::CreateAndEnableHook(OFF::ProcessEvent, UFunctions::ProcessEvent);
@@ -1293,8 +1296,10 @@ bool __fastcall AJB::FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, S
 	return OFF::ChangeState.VerifyFC<bool(__fastcall*)(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag)>()(StateHandler, NextStateTag);
 }
 
-void __fastcall AJB::OnToggleFullMapVisibility(SDK::UObject* Object)
+void __fastcall AJB::OnToggleFullMapVisibility(InvokeStack* Forwarded)
 {
+	SDK::UObject* Object = Forwarded->Object;
+
 	static bool bToggled{false};
 	SDK::UWB_FullMap_C* MapCache{nullptr};
 
@@ -1336,21 +1341,54 @@ int __fastcall AJB::PostEventAtLocation(SDK::UAkAudioEvent* AkEvent, SDK::FVecto
 	// Normally doing so would play the annoying and pointlessly delayed song and then eventually try to go to AJBStartUp_P.
 	// Since my browse hook already redirects it to my Titlescreen this hook will simply end the stupid delayed sequence early and immediately head back to the Titlescreen, I'M DONE WAITING.
 
-	if (EventName.ToString() == "Play_BGM03_Menu2")
+	/*if (EventName.ToString() == "Play_BGM03_Menu2")
 	{
 		constexpr const wchar_t* Titlescreen = L"open /Game/Aeyth8/Maps/TitleScreen/AJBTitleScreen";
 		SDK::FString ImmediateExit(Titlescreen);
 
 		UFunctions::UConsole(GEngine->GameViewport->ViewportConsole, ImmediateExit);
-	}
+	}*/
 
 	return OFF::PostEventAtLocation.VerifyFC<int32(__fastcall*)(SDK::UAkAudioEvent*, SDK::FVector&, SDK::FRotator&, SDK::FString&, SDK::UObject*)>()(AkEvent, Location, Orientation, EventName, WorldContextObject);
 }
 
-void __fastcall AJB::OnVictoryShot(SDK::UObject* Object)
+void __fastcall AJB::OnVictoryShot(InvokeStack* Forwarded)
 {
 	LogA("OnVictoryShot", "Screenshotting game...");
 	Pointers::GetBlueprintClass<SDK::UAJBUtilityFunctionLibrary>()->Screenshot(L"Screenshot", true);
+}
+
+void __fastcall AJB::IsEnableSelect(InvokeStack* Forwarded)
+{
+	LogA("IsEnableSelect", Forwarded->Object->GetFullName());
+	AJB::SimpleMatchHUD->OnSuccess_4FF5EC644FBF269D75F4E3B584758A8C(SDK::EAJBNetAPIResult::OK);
+}
+
+void __fastcall AJB::OnDecidedWindowEndGameConfirm(InvokeStack* Forwarded)
+{
+	constexpr const wchar_t* Titlescreen = L"open /Game/Aeyth8/Maps/TitleScreen/AJBTitleScreen";
+	SDK::FString ImmediateExit(Titlescreen);
+
+	UFunctions::UConsole(GEngine->GameViewport->ViewportConsole, ImmediateExit);
+}
+
+#include "../../Dumper-7/SDK/WB_ModeSelect_parameters.hpp"
+#include "../../Dumper-7/SDK/WB_CommonWIndow_S_classes.hpp"
+
+void __fastcall AJB::OnOpeningOrClosingAnyWindow(InvokeStack* Forwarded)
+{
+	OFF::Invoke.VerifyFC<UFunctions::Decl::Invoke>()(Forwarded->Function, Forwarded->Object, Forwarded->FFrame_Stack, Forwarded->Result);
+	auto Parms = reinterpret_cast<SDK::Params::WB_ModeSelect_C_OnOpeningOrClosingAnyWindow*>(Forwarded->Result);
+
+	LogA("Parms", Parms->TargetWidget->GetFullName());
+	/*if (AJB::SimpleMatchHUD && Forwarded->Object == AJB::SimpleMatchHUD)
+	{
+		byte* Stack = (byte*)Forwarded->FFrame_Stack;
+		byte* Locals = *reinterpret_cast<byte**>(Stack + 0x20);
+		auto Params = reinterpret_cast<SDK::Params::WB_ModeSelect_C_OnOpeningOrClosingAnyWindow*>(Locals);
+		LogA("Fecker", Params->TargetWidget ? Params->TargetWidget->GetFullName() : "Empty");
+	}*/
+	LogA("OnOpeningOrClosingAnyWindow", Forwarded->Object->GetFullName());
 }
 
 SDK::UAJBWindowWidget* __fastcall AJB::AJBWindowWidget(SDK::UAJBWindowWidget* This)

@@ -235,7 +235,7 @@ static bool* TOGGLEDEBUGBADGAMEDESIGN{nullptr};
 #include <sstream>
 #include "StringTables.inl"
 
-#include "../Logic/ServerLogic.h"
+#include "../Logic/Server/ServerLogic.h"
 #include "../../Dumper-7/SDK/BP_AJBInGameCharacter_CSR_classes.hpp"
 
 extern "C" void GodMode()
@@ -329,7 +329,22 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	if (AJB::IsServer())
 	{
 		SDK::APlayerController* Me = Pointers::Player();
-		if (Me && This != Me && !AJB::Server::IsAdmin(This))
+
+		if (Me && This != Me)
+		{
+			const bool bAllowed = AJB::Server::ConsoleCommand(This, Result, Command, bWriteToLog);
+
+			if (!bAllowed)
+			{
+				static SDK::FString Response{L"You're not supposed to be here."};
+				static SDK::FName NAME_Say = FName::NAME_FindOrAdd("Say");
+
+				OFFSET::VFTable<void(__thiscall*)(SDK::APlayerController*, SDK::FString&, SDK::FName, float)>(This)[OFF::VFT_ClientMessage](This, Response, NAME_Say, 0);
+			}
+			
+		}
+
+		/*if (Me && This != Me && !AJB::Server::IsAdmin(This))
 		{
 			LogA("RCE Detected", std::format("{} has attempted to remotely execute a console command, they have been kicked. || The command they attempted to execute was '{}'", This->GetName(), StrCommand));
 
@@ -338,11 +353,18 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 			static SDK::FString AWholeLottaNothin{L""};
 			AJB::CopyString(Command, &AWholeLottaNothin);
 			return OFF::ConsoleCommand.VerifyFC<Decl::ConsoleCommand>()(This, Result, Command, bWriteToLog);
-		}
+		}*/
 	}
 
 	using SetInputModeGameAndUI = decltype(&SDK::UWidgetBlueprintLibrary::SetInputMode_GameAndUIEx);
 	using SetInputModeGameOnly = decltype(&SDK::UWidgetBlueprintLibrary::SetInputMode_GameOnly);
+
+	//if (StrCommand == "yapfest")
+	//{
+	//	SDK::FString Fecker{L"Well FECK"};
+	//	//Call<void(__thiscall*)(SDK::APlayerController*, SDK::FString&, SDK::FName, float)>(PB(0x1605A70))(This, Fecker, FName::NAME_FindOrAdd("Say"), 5.0f);
+	//	//Call<void(__thiscall*)(SDK::APlayerController*, SDK::APlayerState*, SDK::FString&, SDK::FName, float)>(PB(0x18C5F00))(This, This->PlayerState, Fecker, FName::NAME_FindOrAdd("Say"), 5.0f);
+	//}
 
 	if (StrCommand == "exit")
 	{
@@ -1176,13 +1198,14 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	else if (StrCommand == "fly")
 	{
 		SDK::ABP_AJBInGamePlayerController_C* Player = reinterpret_cast<SDK::ABP_AJBInGamePlayerController_C*>(Pointers::Player());
-		if (Player)
+		if (Player && Player->CharacterBPRef)
 		{
-			//Player->ROS_DebugEnableAirJump(bToggle);
-			bool& bIsFlying = Player->CharacterBPRef->bDebugSuperJump;
-			Player->CharacterBPRef->bCallMCJumpAll = Player->CharacterBPRef->bIsFlyingMode = (bIsFlying = !bIsFlying);
+			bool bIsFlying = Player->CharacterBPRef->JumpMaxCount > 1;
+			Player->ROS_DebugEnableAirJump(!bIsFlying);
+			/*bool& bIsFlying = Player->CharacterBPRef->bDebugSuperJump;
+			Player->CharacterBPRef->bCallMCJumpAll = Player->CharacterBPRef->bIsFlyingMode = (bIsFlying = !bIsFlying);*/
 
-			bIsFlying ? UConsole::ConsoleOutput::Text("Flying activated") : UConsole::ConsoleOutput::Text("Flying deactivated.");
+			bIsFlying ? UConsole::ConsoleOutput::Text("Flying deactivated.") : UConsole::ConsoleOutput::Text("Flying activated");
 		}
 	}
 	else if (StrCommand == "trydedicated")
@@ -1307,6 +1330,10 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		Pointers::Player<SDK::ABP_AJBInGamePlayerController_C>()->CharacterNo = 26;
 		Pointers::Player<SDK::ABP_AJBInGamePlayerController_C>()->OnRep_CharacterNo();
 	}
+	else if (StrCommand == "shopify")
+	{
+		AJB::SimpleMatchHUD->GotoShop();
+	}
 
 	LogA("ConsoleCommand", std::format("[Owning PlayerController]: {} | [Command]: {}", This->GetFullName(), StrCommand));
 
@@ -1364,6 +1391,10 @@ UFunctions::BrowseReturnVal UFunctions::Browse(SDK::UEngine* This, SDK::FWorldCo
 void UFunctions::ClientTeamMessageImplementation(SDK::APlayerController* This, SDK::APlayerState* SenderPlayerState, SDK::FString* String, SDK::FName Type, float MsgLifeTime)
 {
 	LogA("ClientTeamMessageImplementation", std::format("[This]: {} | [SenderPlayerState]: {} | [String]: {} | [Type]: {} | [MsgLifeTime]: {}", This->GetFullName(), SenderPlayerState->GetFullName(), String->ToString(), Type.GetRawString(), std::to_string(MsgLifeTime)));
+
+	const bool bFromServer = !SenderPlayerState && AJB::IsInSession();
+
+
 	OFF::ClientTeamMessageImplementation.VerifyFC<Decl::ClientTeamMessageImplementation>()(This, SenderPlayerState, String, Type, MsgLifeTime);
 }
 
@@ -1783,6 +1814,8 @@ __int64* UFunctions::SpawnActor(SDK::UWorld* This, SDK::UClass* Class, const SDK
 	return OFF::SpawnActor.VerifyFC<Decl::SpawnActor>()(This, Class, Location, Rotation, SpawnParameters);
 }
 
+#include "../../Dumper-7/SDK/WB_ModeSelect_parameters.hpp"
+
 void UFunctions::ProcessEvent(SDK::UObject* This, SDK::UFunction* Function, LPVOID Parms)
 {
 	constexpr const int32 PEObjectBlacklist[] =
@@ -1836,7 +1869,8 @@ void UFunctions::ProcessEvent(SDK::UObject* This, SDK::UFunction* Function, LPVO
 		119390, // ExecuteUbergraph_WB_ModeSelectButtonBase
 	};
 
-	bool bLogPE{true};
+	//bool bLogPE{true};
+	static bool bLogPE = CMLA::HookAndLogProcessEvent.GetAsBool();
 
 	for (const int32& ObjNameIndex : PEObjectBlacklist)
 	{
@@ -1864,6 +1898,22 @@ void UFunctions::ProcessEvent(SDK::UObject* This, SDK::UFunction* Function, LPVO
 			This->GetFullName(), This->Name.ComparisonIndex, This ? HexToString(*(uintptr_t*)This - GBA) : "nullptr", This ? HexToString(*(uintptr_t*)This) : "nullptr", This ? HexToString((uintptr_t)This) : "nullptr",
 			Function->GetFullName(), Function->Outer->GetFullName(), Function->Name.ComparisonIndex, Function ? HexToString(*(uintptr_t*)Function - GBA) : "nullptr", Function ? HexToString(*(uintptr_t*)Function) : "nullptr", Function ? HexToString((uintptr_t)Function) : "nullptr",
 			Parms ? HexToString(*(uintptr_t*)Parms) : "nullptr", Parms ? HexToString((uintptr_t)Parms) : "nullptr"));
+	}
+
+	/*static SDK::FName WindowMode{FName::NAME_FindOrAdd("OnOpeningOrClosingAnyWindow")};
+	if (Function->Name == WindowMode)
+	{
+		auto* Retard = reinterpret_cast<SDK::Params::WB_ModeSelect_C_OnOpeningOrClosingAnyWindow*>(Parms);
+		LogA("Parameters in ProcessEvent", Retard->TargetWidget->GetFullName());
+		if (Retard->TargetWidget->GetFullName() == "WB_CommonWIndow_S_C Transient.GameEngine_0.BP_AJBGameInstance_C_0.WB_CommonWIndow_S_C_0")
+		{
+			LogA("AND YOUR LIFE", "IS\nWORTH\nNOTHING\nAND\nYOU\nSERVE\nZERO\nPURPOSE");
+		}
+	}*/
+
+	if (AJB::IsServer())
+	{
+		if (!AJB::Server::ProcessEvent(This, Function, Parms)) return;
 	}
 
 	OFF::ProcessEvent.VerifyFC<Decl::ProcessEvent>()(This, Function, Parms);
@@ -2121,21 +2171,28 @@ void UFunctions::Invoke(SDK::UFunction* This, SDK::UObject* Obj, void* FFrame_St
 		}
 	}
 
-
 	// A structure I made allowing me to pass the object obtained here to external functions.
 	struct TExternFunction 
 	{ 
-		void(*Function)(SDK::UObject*);
-		const wchar_t*	FunctionStrName;
+		void(*Function)(AJB::InvokeStack*);
+		const wchar_t*	FunctionStrName;		
 		SDK::FName		FunctionName;
+		bool			bPassthrough;
+
+		constexpr TExternFunction(void(*Function)(AJB::InvokeStack*), const wchar_t* StringName, bool bPassthrough = false, SDK::FName Name = SDK::FName{})
+			:	Function(Function), FunctionStrName(StringName), FunctionName(Name), bPassthrough(bPassthrough)
+		{}
 	};
+
 	static TExternFunction ExternFunctionList[] = 
 	{
-		{AJB::OnToggleFullMapVisibility, L"OnToggleFullMapVisibility", {}}, // Function BP_AJBInGameHUD.BP_AJBInGameHUD_C.OnToggleFullMapVisibility
-		//{AJB::OnVictoryShot, L"TakeShot", {}},							// Function BP_AJBInGameVictoryShotCamera.BP_AJBInGameVictoryShotCamera_C.TakeShot
+		{AJB::OnToggleFullMapVisibility, L"OnToggleFullMapVisibility", 1},		// Function BP_AJBInGameHUD.BP_AJBInGameHUD_C.OnToggleFullMapVisibility
+		//{AJB::OnVictoryShot, L"TakeShot", {}},								// Function BP_AJBInGameVictoryShotCamera.BP_AJBInGameVictoryShotCamera_C.TakeShot
  		//{AJB::OnVictoryShot, L"PlayFlash", {}},								// Function WB_VictoryShotCameraflash.WB_VictoryShotCameraFlash_C.PlayFlash
-
 		// Currently neither of these work for some stupid reason
+
+		{AJB::OnDecidedWindowEndGameConfirm, L"OnDecidedWindowEndGameConfirm"}, // Function WB_ModeSelect.WB_ModeSelect_C.OnDecidedWindowEndGameConfirm
+		//{AJB::OnOpeningOrClosingAnyWindow, L"OnOpeningOrClosingAnyWindow",},
 		// More will be added later.
 	};
 
@@ -2147,7 +2204,10 @@ void UFunctions::Invoke(SDK::UFunction* This, SDK::UObject* Obj, void* FFrame_St
 		}
 		if (This->Name == Entry.FunctionName)
 		{
-			Entry.Function(Obj);
+			AJB::InvokeStack Forwarded{This, Obj, FFrame_Stack, Result};
+
+			Entry.Function(&Forwarded);
+			if (!Entry.bPassthrough) return;
 			break;
 		}
 	}

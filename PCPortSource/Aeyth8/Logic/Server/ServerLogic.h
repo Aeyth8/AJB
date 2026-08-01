@@ -87,7 +87,10 @@ namespace AJB
 		void Login(SDK::AGameModeBase* This, SDK::UPlayer* NewPlayer, SDK::ENetRole InRemoteRole, UC::FString& Portal, UC::FString& Options, SDK::FUniqueNetIdRepl& UniqueId, UC::FString& ErrorMessage);
 		void PostLogin(SDK::AGameModeBase* This, SDK::APlayerController* Player);
 
+		bool ProcessEvent(SDK::UObject* This, SDK::UFunction* Function, void* Parms);
 		bool Invoke(SDK::UFunction* This, SDK::UObject* Obj, void* FFrame_Stack, void* Result);
+		bool ConsoleCommand(SDK::APlayerController* This, UC::FString* Result, UC::FString* Command, bool bWriteToLog);
+
 		void AddClientConnection(SDK::UNetDriver* This, SDK::UNetConnection* Connection);
 		void CloseConnection(SDK::UNetConnection* This);
 

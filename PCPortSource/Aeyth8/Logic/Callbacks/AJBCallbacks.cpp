@@ -161,6 +161,37 @@ void AJB::Callbacks::LemonPossession()
 	}	
 }
 
+#include "../../../Dumper-7/SDK/WB_GameModeView_classes.hpp"
+#include "../../../Dumper-7/SDK/WB_ModeSelect_Button_Shop_classes.hpp"
+#include "../../../Dumper-7/SDK/WB_ModeSelect_Button_SOLO_classes.hpp"
+#include "../../../Dumper-7/SDK/WB_ModeSelect_Button_PAIR_classes.hpp"
+#include "../../../Dumper-7/SDK/WB_ModeSelect_Button_PremiumDraw_classes.hpp"
+
+
+void Balls()
+{
+	if (AJB::SimpleMatchHUD)
+	{
+		if (AJB::SimpleMatchHUD->WB_ModeSelect_Button_Shop)
+		{
+			AJB::SimpleMatchHUD->WB_ModeSelect_Button_Shop->bForceDisableSelect = false;
+			AJB::SimpleMatchHUD->WB_ModeSelect_Button_Shop->SetEnableSelect(true);
+		}
+		if (AJB::SimpleMatchHUD->WB_ModeSelect_Button_SOLO)
+		{
+			AJB::SimpleMatchHUD->WB_ModeSelect_Button_SOLO->bForceDisableSelect = false;
+			AJB::SimpleMatchHUD->WB_ModeSelect_Button_SOLO->SetEnableSelect(true);
+		}
+		if (AJB::SimpleMatchHUD->WB_ModeSelect_Button_PremiumDraw)
+		{
+			AJB::SimpleMatchHUD->WB_ModeSelect_Button_PremiumDraw->bForceDisableSelect = false;
+			AJB::SimpleMatchHUD->WB_ModeSelect_Button_PremiumDraw->SetEnableSelect(true);
+		}
+		
+	}
+	else { for (int i{0}; i < TickHook::CallbackTimers.size(); ++i) { if (TickHook::CallbackTimers[i].pFunctionAddress == (qword)Balls) { TickHook::CallbackTimers.erase(TickHook::CallbackTimers.begin() + i); break; }} }
+}
+
 void AJB::Callbacks::TranslateSimpleMatch()
 {
 	//LogA("TranslateSimpleMatch", "START");
@@ -232,6 +263,15 @@ void AJB::Callbacks::TranslateSimpleMatch()
 			}
 		}
 	}
+
+	/*AJB::SimpleMatchHUD->bShowOfflineConfim = false;
+	AJB::SimpleMatchHUD->bDebugIgnorePP = true;
+	AJB::SimpleMatchHUD->bDebugIgnoreTimeCount = true;
+	AJB::SimpleMatchHUD->IsGuestPlay = false;
+	AJB::SimpleMatchHUD->WB_GameModeView->bOfflineModeCheck = false;
+	AJB::SimpleMatchHUD->WB_GameModeView->bErrorWindow = false;
+	AJB::SimpleMatchHUD->WB_GameModeView->bInGameModeCheck = false;
+	AJB::CreateCallbackTimer(Balls, 1.0f, 0, true);*/
 }
 
 UC::FString AJB::Callbacks::CacheErrorPopupString{};

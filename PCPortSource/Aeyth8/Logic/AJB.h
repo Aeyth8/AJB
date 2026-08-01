@@ -22,6 +22,7 @@ namespace SDK
 {
 	class UObject;
 	class UClass;
+	class UFunction;
 	class UWorld;
 	class UEngine;
 	class UGameMapsSettings;
@@ -210,6 +211,14 @@ namespace AJB
 		PVE							= 101,
 	};
 
+	struct InvokeStack
+	{
+		SDK::UFunction* Function;
+		SDK::UObject*	Object;
+		void*			FFrame_Stack;
+		void*			Result;
+	};
+
 	// ===========================================
 	// --			   VARIABLES			    --
 	// ===========================================
@@ -350,9 +359,12 @@ namespace AJB
 	// ===========================================
 
 	bool __fastcall FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag);
-	void __fastcall OnToggleFullMapVisibility(SDK::UObject* Object);
+	void __fastcall OnToggleFullMapVisibility(InvokeStack* Forwarded);
 	int __fastcall PostEventAtLocation(SDK::UAkAudioEvent* AkEvent, SDK::FVector& Location, SDK::FRotator& Orientation, UC::FString& EventName, SDK::UObject* WorldContextObject);
-	void __fastcall OnVictoryShot(SDK::UObject* Object);
+	void __fastcall OnVictoryShot(InvokeStack* Forwarded);
+	void __fastcall IsEnableSelect(InvokeStack* Forwarded);
+	void __fastcall OnDecidedWindowEndGameConfirm(InvokeStack* Forwarded);
+	void __fastcall OnOpeningOrClosingAnyWindow(InvokeStack* Forwarded);
 
 	// Constructor Hooks
 	SDK::UAJBWindowWidget* __fastcall AJBWindowWidget(SDK::UAJBWindowWidget* This);

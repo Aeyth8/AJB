@@ -1,21 +1,21 @@
-#include "AJB.h"
+#include "../AJB.h"
 #include "ServerLogic.h"
 
-#include "../Global.hpp"
-#include "../Hooks/Hooks.hpp"
-#include "../Offsets.h"
-#include "../../Version/resource.h"
+#include "../../Global.hpp"
+#include "../../Hooks/Hooks.hpp"
+#include "../../Offsets.h"
+#include "../../../Version/resource.h"
 
-#include "../Tools/Pointers.h"
-#include "../Tools/UFunctions.hpp"
-#include "../Tools/UnrealTypes.h"
-#include "../Tools/BytePatcher.h"
+#include "../../Tools/Pointers.h"
+#include "../../Tools/UFunctions.hpp"
+#include "../../Tools/UnrealTypes.h"
+#include "../../Tools/BytePatcher.h"
 
-#include "../Tools/UnrealExternWrapper.h"
+#include "../../Tools/UnrealExternWrapper.h"
 
-#include "../CmdArgs/CommandLineArgs.h"
+#include "../../CmdArgs/CommandLineArgs.h"
 
-#include "../../Dumper-7/CustomSDK/BP_Synchronizer_classes.hpp"				// Custom SDK header (NOT GAME NATIVE)
+#include "../../../Dumper-7/CustomSDK/BP_Synchronizer_classes.hpp"				// Custom SDK header (NOT GAME NATIVE)
 
 
 
@@ -181,6 +181,13 @@ void AJB::Server::PostLogin(SDK::AGameModeBase* This, SDK::APlayerController* Pl
 	}*/
 }
 
+bool AJB::Server::ProcessEvent(SDK::UObject* This, SDK::UFunction* Function, void* Parms)
+{
+	
+
+	return true;
+}
+
 bool AJB::Server::Invoke(SDK::UFunction* This, SDK::UObject* Obj, void* FFrame_Stack, void* Result)
 {
 	constexpr const wchar_t* SDT_CheatNames[] = 
@@ -257,6 +264,41 @@ bool AJB::Server::Invoke(SDK::UFunction* This, SDK::UObject* Obj, void* FFrame_S
 	}
 
 	return true;
+}
+
+#include "../Cheats/AJBCheats.h"
+
+bool AJB::Server::ConsoleCommand(SDK::APlayerController* This, UC::FString* Result, UC::FString* Command, bool bWriteToLog)
+{
+	bool bShouldExecute{false};
+
+	if (Command)
+	{
+		// I don't want to be using standard strings forever...
+		std::string CommandStr = Command->ToString();
+		
+		const bool bIsAdmin = Server::IsAdmin(This);
+		
+
+		if (CommandStr == "perm")
+		{
+			SDK::FString Response = bIsAdmin ? L"yes" : L"no";
+			static SDK::FName NAME_ServerResponse = FName::NAME_FindOrAdd("ServerResponse");
+
+			OFFSET::VFTable<void(__thiscall*)(SDK::APlayerController*, SDK::FString&, SDK::FName, float)>(This)[OFF::VFT_ClientMessage](This, Response, NAME_ServerResponse, 0);
+		}
+
+		for (TPair<const char*, void*> const& Cheat : AJB::Cheats::CheatPairTable)
+		{
+			if (StringCompare(CommandStr.c_str(), Cheat.Key, false))
+			{
+				((void(*)(SDK::APlayerController*, bool))(Cheat.Value))(This, true);
+				break;
+			}
+		}
+	}
+
+	return bShouldExecute;
 }
 
 void AJB::Server::AddClientConnection(SDK::UNetDriver* This, SDK::UNetConnection* Connection)
