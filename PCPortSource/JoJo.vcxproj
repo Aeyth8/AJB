@@ -128,6 +128,13 @@
     <ClInclude Include="Aeyth8\Logic\AJB.h" />
     <ClInclude Include="Aeyth8\Logic\Callbacks\AJBCallbacks.h" />
     <ClInclude Include="Aeyth8\Logic\Input\MouseLook.h" />
+    <ClInclude Include="Aeyth8\Logic\Input\KBMMenu.h" />
+    <ClInclude Include="Aeyth8\Logic\Input\KBMIcons.h" />
+    <ClInclude Include="ImGui\imgui.h" />
+    <ClInclude Include="ImGui\imgui_internal.h" />
+    <ClInclude Include="ImGui\imconfig.h" />
+    <ClInclude Include="ImGui\imgui_impl_dx11.h" />
+    <ClInclude Include="ImGui\imgui_impl_win32.h" />
     <ClInclude Include="Aeyth8\Logic\Cheats\AJBCheats.h" />
     <ClInclude Include="Aeyth8\Logic\Server\ServerLogic.h" />
     <ClInclude Include="Aeyth8\Logic\Server\Temporary\MRWT.h" />
@@ -202,6 +209,15 @@
     </ClCompile>
     <ClCompile Include="Aeyth8\Logic\Callbacks\AJBCallbacks.cpp" />
     <ClCompile Include="Aeyth8\Logic\Input\MouseLook.cpp" />
+    <ClCompile Include="Aeyth8\Logic\Input\KBMMenu.cpp" />
+    <ClCompile Include="Aeyth8\Logic\Input\KBMIcons.cpp" />
+    <ClCompile Include="Dumper-7\SDK\BPF_GameIconUtil_functions.cpp" />
+    <ClCompile Include="ImGui\imgui.cpp" />
+    <ClCompile Include="ImGui\imgui_draw.cpp" />
+    <ClCompile Include="ImGui\imgui_tables.cpp" />
+    <ClCompile Include="ImGui\imgui_widgets.cpp" />
+    <ClCompile Include="ImGui\imgui_impl_dx11.cpp" />
+    <ClCompile Include="ImGui\imgui_impl_win32.cpp" />
     <ClCompile Include="Aeyth8\Logic\Cheats\AJBCheats.cpp" />
     <ClCompile Include="Aeyth8\Logic\Server\ServerLogic.cpp" />
     <ClCompile Include="Aeyth8\Offsets.cpp" />

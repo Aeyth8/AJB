@@ -43,6 +43,9 @@ namespace A8CL
 
 		extern FSettings Settings;
 
+		// AJBInput.ini next to the game executable.
+		const std::wstring& SettingsPath();
+
 		void LoadSettings();
 		void SaveSettings();
 

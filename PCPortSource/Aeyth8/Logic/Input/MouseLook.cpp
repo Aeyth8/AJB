@@ -43,7 +43,7 @@ namespace Decl
 
 MouseLook::FSettings MouseLook::Settings{};
 
-static const std::wstring& SettingsPath()
+const std::wstring& MouseLook::SettingsPath()
 {
 	static std::wstring Path{};
 
@@ -62,7 +62,7 @@ static const std::wstring& SettingsPath()
 static float ReadFloat(const wchar_t* Section, const wchar_t* Key, float Default)
 {
 	wchar_t Buffer[64]{0};
-	GetPrivateProfileStringW(Section, Key, L"", Buffer, 64, SettingsPath().c_str());
+	GetPrivateProfileStringW(Section, Key, L"", Buffer, 64, MouseLook::SettingsPath().c_str());
 
 	wchar_t* End{nullptr};
 	const float Value = wcstof(Buffer, &End);
@@ -72,7 +72,7 @@ static float ReadFloat(const wchar_t* Section, const wchar_t* Key, float Default
 
 static void WriteValue(const wchar_t* Section, const wchar_t* Key, const std::wstring& Value)
 {
-	WritePrivateProfileStringW(Section, Key, Value.c_str(), SettingsPath().c_str());
+	WritePrivateProfileStringW(Section, Key, Value.c_str(), MouseLook::SettingsPath().c_str());
 }
 
 void MouseLook::LoadSettings()
