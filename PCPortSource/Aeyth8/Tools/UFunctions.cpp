@@ -11,6 +11,7 @@
 
 #include "../CmdArgs/CommandLineArgs.h"
 #include "../Tools/UnrealTypes.h"
+#include "../Logic/Input/MouseLook.h"
 
 /*
 
@@ -749,6 +750,10 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		SDK::APlayerController* Player = Pointers::Player();
 		OFF::SetInputGameOnly.Call<SetInputModeGameOnly>()(Player);
 		UConsole::ConsoleOutput::Text("Locking mouse.");
+	}
+	else if (MouseLook::ConsoleCommand(StrCommand))
+	{
+		// sens, invertmouse, lookspeed
 	}
 	else if (StrCommand == "netid")
 	{

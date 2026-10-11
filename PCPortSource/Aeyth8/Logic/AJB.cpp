@@ -59,6 +59,9 @@
 // New native and much more efficient callback timer using the native Engine Tick.
 #include "../Tools/TickHook/TickHook.h"
 
+// Native mouse look for keyboard & mouse players.
+#include "Input/MouseLook.h"
+
 // External callbacks
 #include "Callbacks/AJBCallbacks.h"
 
@@ -201,6 +204,12 @@ std::vector<Hooks::HookStructure> StandaloneHooks =
 
 
 	{OFF::Tick,								TickHook::Tick},
+
+	// Keyboard & mouse hooks
+
+	{OFF::AddAxisMapping,					MouseLook::AddAxisMapping},
+	{OFF::InGameTurnRate,					MouseLook::TurnRate},
+	{OFF::InGameLookUpRate,					MouseLook::LookUpRate},
 };
 
 A8CL::OFFSET NetID("UAJBNetworkObserver::GetNetID", 0x4ECC80);
@@ -651,6 +660,8 @@ void AJB::Init_Hooks()
 
 		LogA("BytePatcher", "Applied all patches successfully. (Failing would crash)");
 	}
+
+	MouseLook::LoadSettings();
 
 	if (Hooks::Init())
 	{

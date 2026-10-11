@@ -143,6 +143,7 @@ namespace A8CL
 		constexpr ull VFT_LocalTravel			= 0x13F; // APlayerController::LocalTravel
 		constexpr ull VFT_NetworkFailureMsg		= 0x62;	 // UGameViewportClient::PeekNetworkFailureMessages
 		constexpr ull VFT_ClientMessage			= 0x123; // APlayerController::ClientMessage
+		constexpr ull VFT_CanInputCamera		= 0x1E6; // AAJBInGamePlayerController, no proper name but TurnRate/LookUpRate only forward their value if it returns true
 
 		// Non-Hooks
 
