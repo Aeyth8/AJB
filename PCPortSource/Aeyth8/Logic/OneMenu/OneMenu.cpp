@@ -1,4 +1,5 @@
 ﻿#include <algorithm>
+#include <cmath>
 #include <unordered_set>
 #include "OneMenu.h"
 #include <format>
@@ -862,6 +863,30 @@ static std::string RunOnGame(const std::string& Cmd, const std::string& Arg)
 			LastPhase.empty() ? "none" : LastPhase, Joined, (int)bHosting, (int)OneMenu::bQuickHost, (int)bSearching, (int)bHoldActive, (int)(MenuW && MenuW->IsVisible()));
 	}
 	if (Cmd == "clickname") return ClickWidget(Arg);
+	if (Cmd == "hp" || Cmd == "nearbot")	// player HP, nearest bot; nearbot teleports the player beside it
+	{
+		SDK::UWorld* Wd = World(); SDK::APawn* P{nullptr};
+		if (Wd && Wd->OwningGameInstance && Wd->OwningGameInstance->LocalPlayers.Num() && Wd->OwningGameInstance->LocalPlayers[0]->PlayerController)
+			P = Wd->OwningGameInstance->LocalPlayers[0]->PlayerController->Pawn;
+		if (!P) return "err no player pawn";
+		const SDK::FVector PL = P->K2_GetActorLocation();
+		SDK::AActor* Best{nullptr}; double BD{1e30}; int Bots{0};
+		for (int i{0}; i < SDK::UObject::GObjects->Num(); ++i)
+		{
+			SDK::UObject* O = SDK::UObject::GObjects->GetByIndex(i);
+			if (!O || O == P || !O->Class || O->IsDefaultObject() || !O->IsA(SDK::AAJBInGameCharacter::StaticClass())) continue;
+			if (*(int*)((char*)O + 0x8A4) <= 0) continue;
+			const SDK::FVector L = ((SDK::AActor*)O)->K2_GetActorLocation();
+			const double D = (L.X - PL.X) * (L.X - PL.X) + (L.Y - PL.Y) * (L.Y - PL.Y) + (L.Z - PL.Z) * (L.Z - PL.Z);
+			++Bots; if (D < BD) { BD = D; Best = (SDK::AActor*)O; }
+		}
+		if (Cmd == "nearbot" && Best)
+		{
+			SDK::FVector L = Best->K2_GetActorLocation(); L.X += 150.f; L.Z += 50.f;
+			SDK::FHitResult H{}; P->K2_SetActorLocation(L, false, &H, true);
+		}
+		return std::format("ok hp={} hpmax={} bots={} nearest={:.0f}", *(int*)((char*)P + 0x8A4), *(int*)((char*)P + 0x928), Bots, Best ? std::sqrt(BD) : -1.0);
+	}
 	if (Cmd == "buttons")	// live buttons (optionally filtered by owner path), with visibility
 	{
 		std::string Out = "ok";
@@ -913,7 +938,7 @@ static std::string Handle(const std::string& Line)
 		return "ok unhooked";
 	}
 	if (!GameWnd && !EnableUnfocused()) return "err no game window yet";
-	if (C == "exec" || C == "state" || C == "buttons") return ToGame(Line);
+	if (C == "exec" || C == "state" || C == "buttons" || C == "hp" || C == "nearbot") return ToGame(Line);
 	if (C == "focus") { Activate(); return "ok focus"; }
 	if (C == "key") return Key(A);
 	if (C == "shot") return Shot(A);
