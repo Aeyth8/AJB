@@ -546,6 +546,26 @@ void OneMenu::Tick(float DT)
 			Show(MenuW, false); bHostMenuOpen = true;
 			((SDK::UWidget*)HostMenu)->SetVisibility(SDK::ESlateVisibility::Visible);
 			if (SDK::UWidget* A = Sub(HostMenu, "Arrow_Character")) A->SetVisibility(SDK::ESlateVisibility::Collapsed);
+			// The mod menu starts on Area 7 / 0 bots; start it on Area 4, 20 bots, Very Hard. The player's changes still apply.
+			static SDK::UObject* DefaultsFor{nullptr};
+			if (DefaultsFor != HostMenu)
+			{
+				DefaultsFor = HostMenu;
+				auto SetSel = [](SDK::UObject* W, int I)
+				{
+					int* P = (int*)PropPtr(W, "CurrentIndex"); if (!P) return; *P = I;
+					auto* Vals = (SDK::TArray<SDK::FString>*)PropPtr(W, "ValueArray");
+					auto** T = (SDK::UTextBlock**)PropPtr(W, "TXT_ItemValue");
+					if (Vals && T && *T && I < Vals->Num()) (*T)->SetText(SDK::UKismetTextLibrary::Conv_StringToText((*Vals)[I]));
+				};
+				SetSel(Sub(HostMenu, "Arrow_Location"), 3);
+				SetSel(Sub(HostMenu, "Arrow_NPC_Difficulty"), 3);
+				if (SDK::UObject* E = Sub(HostMenu, "EArrow_NPC"))
+				{
+					if (int* P = (int*)PropPtr(E, "CurrentValue")) *P = 20;
+					if (auto** T = (SDK::UEditableText**)PropPtr(E, "ETXT_ItemValue"); T && *T) (*T)->SetText(Txt(L"20"));
+				}
+			}
 		}
 		if (Clicked(BJoin))
 		{
