@@ -201,6 +201,7 @@
     </ClCompile>
     <ClCompile Include="Aeyth8\Logic\Callbacks\AJBCallbacks.cpp" />
     <ClCompile Include="Aeyth8\Logic\OneMenu\OneMenu.cpp" />
+    <ClCompile Include="Aeyth8\Logic\OneMenu\ArcadeLink.cpp" />
     <ClCompile Include="Aeyth8\Logic\Cheats\AJBCheats.cpp" />
     <ClCompile Include="Aeyth8\Logic\Server\ServerLogic.cpp" />
     <ClCompile Include="Aeyth8\Offsets.cpp" />

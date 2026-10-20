@@ -1,0 +1,182 @@
+#include "../../Global.hpp"
+#include "ArcadeLink.h"
+#include <windows.h>
+#include <winhttp.h>
+#include <tlhelp32.h>
+#include <atomic>
+#include <mutex>
+#include <thread>
+#include <format>
+#pragma comment(lib, "winhttp.lib")
+using namespace A8CL; using namespace Global;
+
+namespace
+{
+	std::atomic<bool> bAlive{false}, bPolled{false}, bStarted{false};
+	std::mutex M;
+	std::string Prof, Msg;
+
+	// One request with a 5 s budget; empty string on failure.
+	std::string Http(const wchar_t* Verb, const wchar_t* Path, const std::string& Body = {})
+	{
+		std::string Out;
+		HINTERNET S = WinHttpOpen(L"AJBPort", WINHTTP_ACCESS_TYPE_NO_PROXY, nullptr, nullptr, 0);
+		if (!S) return Out;
+		WinHttpSetTimeouts(S, 5000, 5000, 5000, 5000);
+		HINTERNET C = WinHttpConnect(S, L"127.0.0.1", 47811, 0);
+		HINTERNET R = C ? WinHttpOpenRequest(C, Verb, Path, nullptr, nullptr, nullptr, 0) : nullptr;
+		if (R && WinHttpSendRequest(R, L"Content-Type: application/json\r\n", (DWORD)-1, (LPVOID)Body.data(), (DWORD)Body.size(), (DWORD)Body.size(), 0) && WinHttpReceiveResponse(R, nullptr))
+		{
+			DWORD N{0}; char B[4096];
+			while (WinHttpReadData(R, B, sizeof B, &N) && N) Out.append(B, N);
+			if (Out.empty()) Out = "{}";
+		}
+		if (R) WinHttpCloseHandle(R);
+		if (C) WinHttpCloseHandle(C);
+		WinHttpCloseHandle(S);
+		return Out;
+	}
+
+	int Num(const std::string& J, const char* K)
+	{
+		const size_t P = J.find(std::string("\"") + K + "\":");
+		return P == std::string::npos ? -1 : atoi(J.c_str() + P + strlen(K) + 3);
+	}
+	std::string Str(const std::string& J, const char* K)
+	{
+		size_t P = J.find(std::string("\"") + K + "\": \"");
+		if (P == std::string::npos) return "";
+		P += strlen(K) + 5; return J.substr(P, J.find('"', P) - P);
+	}
+
+	void Keep(const std::string& J)
+	{
+		if (J.find("\"profile\"") == std::string::npos) return;
+		std::lock_guard G(M); Prof = J.substr(J.find("\"profile\""));
+	}
+
+	std::string Utf8(const std::wstring& W)
+	{
+		std::string S; for (wchar_t c : W) { if (c == L'"' || c == L'\\') S += '\\'; if (c < 0x80) S += (char)c; else S += std::format("\\u{:04x}", (unsigned)c); }
+		return S;
+	}
+
+	void LaunchServer()
+	{
+		wchar_t Exe[MAX_PATH]{}; GetModuleFileNameW(nullptr, Exe, MAX_PATH);
+		std::wstring Root = Exe;
+		for (int i{0}; i < 4; ++i) Root = Root.substr(0, Root.find_last_of(L'\\'));	// ...\AJB\Binaries\Win64\exe -> game root
+		const std::wstring Script = Root + L"\\ajbserver\\ajbserver.py";
+		if (GetFileAttributesW(Script.c_str()) == INVALID_FILE_ATTRIBUTES) { LogA("ArcadeLink", "ajbserver.py not found next to the game"); return; }
+		wchar_t Py[MAX_PATH]{};
+		if (!SearchPathW(nullptr, L"pythonw.exe", nullptr, MAX_PATH, Py, nullptr) && !SearchPathW(nullptr, L"python.exe", nullptr, MAX_PATH, Py, nullptr)) { LogA("ArcadeLink", "python not found on PATH"); return; }
+		std::wstring Cmd = std::wstring(L"\"") + Py + L"\" \"" + Script + L"\"";
+		STARTUPINFOW SI{sizeof SI}; PROCESS_INFORMATION PI{};
+		if (CreateProcessW(nullptr, Cmd.data(), nullptr, nullptr, FALSE, CREATE_NO_WINDOW | DETACHED_PROCESS, nullptr, (Root + L"\\ajbserver").c_str(), &SI, &PI))
+		{
+			LogA("ArcadeLink", std::format("started ajbserver pid {}", PI.dwProcessId));
+			CloseHandle(PI.hThread); CloseHandle(PI.hProcess);
+		}
+		else LogA("ArcadeLink", std::format("ajbserver launch failed ({})", GetLastError()));
+	}
+
+	using GetIf = void* (*)();
+	GetIf SteamIf(const char* const* Names, int N)
+	{
+		HMODULE H = GetModuleHandleW(L"steam_api64.dll");
+		for (int i{0}; H && i < N; ++i) if (auto F = (GetIf)GetProcAddress(H, Names[i])) return F;
+		return nullptr;
+	}
+}
+
+bool ArcadeLink::Alive() { return bAlive; }
+bool ArcadeLink::Polled() { return bPolled; }
+
+void ArcadeLink::Start()
+{
+	if (bStarted.exchange(true)) return;
+	std::thread([]
+	{
+		if (Http(L"GET", L"/ajb/profile").empty()) { LaunchServer(); Sleep(1500); }
+		for (bool Was{true};; Sleep(5000))
+		{
+			const std::string J = Http(L"GET", L"/ajb/profile");
+			bAlive = !J.empty(); bPolled = true;
+			if (bAlive) { std::lock_guard G(M); Prof = "\"profile\": " + J; }
+			if (Was != bAlive) LogA("ArcadeLink", bAlive ? "ajbserver answering" : "ajbserver not answering (5 s)");
+			Was = bAlive;
+		}
+	}).detach();
+}
+
+void ArcadeLink::Login(const std::wstring& Name)
+{
+	std::thread([Name]
+	{
+		const std::string J = Http(L"POST", L"/ajb/login", "{\"card\": \"local\", \"name\": \"" + Utf8(Name) + "\"}");
+		Keep(J); LogA("ArcadeLink", J.empty() ? "login failed" : "login ok " + Status());
+	}).detach();
+}
+
+void ArcadeLink::Result(int Kills, int Rank)
+{
+	std::thread([Kills, Rank]
+	{
+		const std::string J = Http(L"POST", L"/ajb/result", std::format("{{\"kills\": {}, \"rank\": {}}}", Kills, Rank));
+		Keep(J);
+		const size_t R = J.find("\"result\"");
+		const std::string Line = J.empty() ? "Match result not saved: arcade server not answering." :
+			std::format("Last match: place {}, {} kills  +{} PP  +{} tickets", Rank, Kills, R == std::string::npos ? 0 : Num(J.substr(R), "pp"), R == std::string::npos ? 0 : Num(J.substr(R), "tickets"));
+		{ std::lock_guard G(M); Msg = Line; }
+		LogA("ArcadeLink", "result " + Line);
+	}).detach();
+}
+
+void ArcadeLink::Draw(int Kind)
+{
+	std::thread([Kind]
+	{
+		const std::string J = Http(L"POST", L"/ajb/draw", std::format("{{\"kind\": {}}}", Kind == 3 ? 2 : 1));
+		Keep(J);
+		std::string Line;
+		if (J.empty()) Line = "Draw failed: arcade server not answering.";
+		else if (J.find("\"ok\": true") == std::string::npos) Line = "Not enough tickets: play a match to earn more.";
+		else Line = "Drew " + Str(J, "rarity") + ": " + Str(J, "item");
+		{ std::lock_guard G(M); Msg = Line; }
+		LogA("ArcadeLink", "draw " + Line);
+	}).detach();
+}
+
+std::string ArcadeLink::Status()
+{
+	std::lock_guard G(M);
+	if (Prof.empty() || !bAlive) return "";
+	return std::format("Lv {}   PP {}   Tickets {}", Num(Prof, "level"), Num(Prof, "pp"), Num(Prof, "tickets"));
+}
+
+std::string ArcadeLink::TakeMessage() { std::lock_guard G(M); std::string S; S.swap(Msg); return S; }
+
+bool ArcadeLink::SteamRunning()
+{
+	HMODULE H = GetModuleHandleW(L"steam_api64.dll");
+	auto F = H ? (bool (*)())GetProcAddress(H, "SteamAPI_IsSteamRunning") : nullptr;
+	if (F) return F();
+	HANDLE S = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	PROCESSENTRY32W E{sizeof E}; bool Found{false};
+	for (BOOL Ok = Process32FirstW(S, &E); Ok && !Found; Ok = Process32NextW(S, &E)) Found = _wcsicmp(E.szExeFile, L"steam.exe") == 0;
+	CloseHandle(S);
+	return Found;
+}
+
+std::wstring ArcadeLink::SteamName()
+{
+	static const char* Fr[] = { "SteamAPI_SteamFriends_v017", "SteamAPI_SteamFriends_v016", "SteamAPI_SteamFriends_v015" };
+	HMODULE H = GetModuleHandleW(L"steam_api64.dll");
+	GetIf F = SteamIf(Fr, 3);
+	auto Get = H ? (const char* (*)(void*))GetProcAddress(H, "SteamAPI_ISteamFriends_GetPersonaName") : nullptr;
+	void* I = F ? F() : nullptr;
+	const char* N = (I && Get) ? Get(I) : nullptr;
+	if (!N || !*N) return L"";
+	wchar_t W[128]{}; MultiByteToWideChar(CP_UTF8, 0, N, -1, W, 127);
+	return W;
+}

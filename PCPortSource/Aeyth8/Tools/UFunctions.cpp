@@ -1525,6 +1525,7 @@ void UFunctions::NotifyControlMessage(SDK::UPendingNetGame* This, SDK::UNetConne
 void UFunctions::PeekNetworkFailureMessages(SDK::UGameViewportClient* This, SDK::UWorld* InWorld, SDK::UNetDriver* NetDriver, SDK::ENetworkFailure FailureType, SDK::FString& ErrorString)
 {
 	OFF::PeekNetworkFailureMessages.VerifyFC<Decl::PeekNetworkFailureMessages>()(This, InWorld, NetDriver, FailureType, ErrorString);
+	OneMenu::NetFailure((int)FailureType, ErrorString.ToString());
 
 	LogA(OFF::PeekNetworkFailureMessages.GetName(), std::format("[This]: {} | [InWorld]: {} | [NetDriver]: {} | [FailureType]: {} | [ErrorString]: {}", This->GetFullName(), InWorld->GetFullName(), NetDriver->GetFullName(), (byte)FailureType, ErrorString.ToString()));
 

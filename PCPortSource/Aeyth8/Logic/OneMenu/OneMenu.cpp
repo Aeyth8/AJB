@@ -2,6 +2,7 @@
 #include <cmath>
 #include <unordered_set>
 #include "OneMenu.h"
+#include "ArcadeLink.h"
 #include <format>
 #include "../../Global.hpp"
 #include "../../../Dumper-7/SDK/CoreUObject_classes.hpp"
@@ -104,6 +105,8 @@ void OneMenu::Dump(SDK::UObject* Obj)
 static std::string TraceFilter;
 static int MenuConsole(const std::string& Cmd);
 
+static std::wstring NetFailMsg; static float NetFailT{0.f}, SteamFailT{0.f};
+static SDK::UObject* OfflinePopup{}; static float OfflinePopupT{0.f};
 bool OneMenu::OnPE(SDK::UObject* This, SDK::UFunction* Function, void* Parms)
 {
 	static SDK::FName SetupAI{A8CL::FName::NAME_FindOrAdd("SetupAILevel")};
@@ -132,6 +135,30 @@ void OneMenu::OnPEPost(SDK::UObject* This, SDK::UFunction* Function)
 {
 	static SDK::FName Setup{A8CL::FName::NAME_FindOrAdd("SetupAILevel")};
 	if (Function->Name == Setup && This->Class && This->Class->GetName() == "BP_AJBInGameAIRecognition_C") PatchAIRecognition(This);
+	// "Network is offline." only reports the missing original ALL.Net/arcade network: hide it, log it. Other windows are untouched.
+	static SDK::FName ShowTitle{A8CL::FName::NAME_FindOrAdd("ShowTitle")}, ShowText{A8CL::FName::NAME_FindOrAdd("ShowTextOnly")};
+	if ((Function->Name == ShowTitle || Function->Name == ShowText) && This->Class && This->Class->GetName() == "WB_CommonWIndow_S_C")
+	{
+		std::string T;
+		for (int Off : {0x300, 0x310}) if (SDK::UTextBlock* B = *(SDK::UTextBlock**)((char*)This + Off)) T += SDK::UKismetTextLibrary::Conv_TextToString(B->GetText()).ToString() + " | ";
+		std::string L = T; for (char& c : L) c = (char)tolower((unsigned char)c);
+		if (L.find("network is offline") != std::string::npos || L.find("while offline") != std::string::npos)
+		{
+			LogA("OneMenu", "Suppressed ALL.Net offline notice: " + T);
+			OfflinePopup = This; OfflinePopupT = 15.f;
+			((SDK::UWidget*)This)->SetVisibility(SDK::ESlateVisibility::Collapsed);
+		}
+		else LogA("OneMenu", "Popup shown: " + T);
+	}
+}
+
+void OneMenu::NetFailure(int Type, const std::string& Err)
+{
+	NetFailMsg = L"Connection to the host failed";
+	const std::string E = Err.empty() ? "" : ": " + Err;
+	NetFailMsg += std::wstring(E.begin(), E.end());
+	NetFailT = 12.f;
+	LogA("OneMenu", std::format("Network failure {} {}", Type, Err));
 }
 
 int OneMenu::Console(const std::string& Cmd)
@@ -181,6 +208,9 @@ static SDK::UUserWidget* MenuW{}; static SDK::UUserWidget* SearchW{}; static SDK
 static FBtn BQuick, BTrain, BTut, BDealer, BHost, BJoin, BEman, BBack, BStart;
 static SDK::UEditableTextBox* IPBox{};
 static SDK::UTextBlock* HoldTxt{};
+static SDK::UUserWidget* NoticeW{}; static SDK::UTextBlock* NoticeTxt{}; static std::wstring NoticeShown;
+static SDK::UTextBlock* StatusTxt{}; static SDK::UTextBlock* DrawTxt{}; static FBtn BDraw;
+static bool bResultSent{false}, bLoggedIn{false};
 static SDK::UObject* FE{}; static SDK::UObject* HostMenu{}; static SDK::UObject* Proxy{};
 static bool bHostMenuOpen{false};
 static EMode DeferredPick{EMode::None};
@@ -289,6 +319,7 @@ static void BuildMenu()
 	MenuW = Shell(); if (!MenuW) return;
 	SDK::UVerticalBox* V = Frame(MenuW, 0.93f, SDK::EVerticalAlignment::VAlign_Center);
 	const SDK::FLinearColor Main{0.85f, 0.45f, 0.05f, 1.f}, Norm{0.12f, 0.16f, 0.35f, 1.f}, Net{0.08f, 0.28f, 0.22f, 1.f};
+	StatusTxt = Label(MenuW, L"", 22); AddText(V, StatusTxt);
 	BQuick  = AddBtn(MenuW, V, L"QUICK MATCH", 46, 22.f, Main);
 	BTrain  = AddBtn(MenuW, V, L"Training", 26, 8.f, Norm);
 	BTut    = AddBtn(MenuW, V, L"Tutorial", 26, 8.f, Norm);
@@ -300,7 +331,37 @@ static void BuildMenu()
 	IPBox->SetHintText(Txt(L"Host IP address"));
 	if (SDK::UVerticalBoxSlot* S = V->AddChildToVerticalBox(IPBox)) { S->SetPadding({0.f, 0.f, 0.f, 6.f}); S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Fill); }
 	BEman   = AddBtn(MenuW, V, L"Emanate", 26, 8.f, Norm);
+	BDraw   = AddBtn(MenuW, V, L"Lucky Draw (1 ticket)", 26, 8.f, {0.45f, 0.12f, 0.45f, 1.f});
+	DrawTxt = Label(MenuW, L"", 22); AddText(V, DrawTxt);
 	MenuW->AddToViewport(200);
+}
+
+// Small banner at the bottom: only real problems (arcade server down, Steam connection failed, Steam not running).
+static void UpdateNotice(float DT)
+{
+	if (NetFailT > 0.f) NetFailT -= DT;
+	if (SteamFailT > 0.f) SteamFailT -= DT;
+	std::wstring Want;
+	if (ArcadeLink::Polled() && !ArcadeLink::Alive()) Want = L"Arcade server not responding: profile, PP, tickets and draws are not being saved. Start ajbserver\\ajbserver.py.";
+	else if (NetFailT > 0.f) Want = NetFailMsg;
+	else if (SteamFailT > 0.f) Want = L"Steam is not running. Online play needs Steam: start Steam, then try again.";
+	if (Want == NoticeShown && (Want.empty() || NoticeW)) return;
+	if (!NoticeW && !Want.empty())
+	{
+		NoticeW = Shell(); if (!NoticeW) return;
+		SDK::UVerticalBox* V = Frame(NoticeW, 0.f, SDK::EVerticalAlignment::VAlign_Bottom);
+		SDK::UBorder* B = NewW<SDK::UBorder>(NoticeW); B->BrushColor = {0.45f, 0.04f, 0.04f, 0.92f}; B->Visibility = SDK::ESlateVisibility::SelfHitTestInvisible;
+		NoticeTxt = Label(NoticeW, L"", 24);
+		if (SDK::UBorderSlot* S = (SDK::UBorderSlot*)B->SetContent(NoticeTxt)) S->SetPadding({24.f, 10.f, 24.f, 10.f});
+		if (SDK::UVerticalBoxSlot* S = V->AddChildToVerticalBox(B)) { S->SetPadding({0.f, 0.f, 0.f, 40.f}); S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Center); }
+		NoticeW->AddToViewport(400);
+	}
+	if (!NoticeW) return;
+	NoticeShown = Want;
+	if (NoticeTxt && !Want.empty()) NoticeTxt->SetText(Txt(Want));
+	NoticeW->SetVisibility(Want.empty() ? SDK::ESlateVisibility::Collapsed : SDK::ESlateVisibility::SelfHitTestInvisible);
+	std::string A; for (wchar_t c : Want) A += (char)c;
+	LogA("OneMenu", Want.empty() ? "Notice cleared" : "Notice: " + A);
 }
 
 static void BuildSearch()
@@ -350,6 +411,7 @@ static int ReadArrowIndex(SDK::UObject* Arrow, int Fallback)
 static void StartPick(EMode M)
 {
 	Pending = M;
+	if ((M == EMode::Host || M == EMode::Join || M == EMode::Quick) && !ArcadeLink::SteamRunning()) { SteamFailT = 10.f; LogA("OneMenu", "Online chosen without Steam running"); }
 	Show(MenuW, false);
 	LogA("OneMenu", std::format("StartPick {}", (int)M));
 	Exec("open /Game/AJB/Maps/AJBSimpleMatch_P");
@@ -425,6 +487,21 @@ bool OneMenu::OnFlow(const std::string& Tag)
 		return true;
 	}
 	LastFlow = Tag;
+	if (!bResultSent && (Tag == "InGame.Victory" || Tag == "InGame.Retire" || Tag == "InGame.Spector") && CurMap.find(L"Tutorial") == std::wstring::npos)
+	{
+		bResultSent = true;
+		int Kills{0}, Alive{0};
+		SDK::UWorld* Wd = World(); SDK::APlayerController* PC = Wd ? SDK::UGameplayStatics::GetPlayerController(Wd, 0) : nullptr;
+		if (PC && PC->Class->GetName() == "BP_AJBInGamePlayerController_C") Kills = *(int*)((char*)PC + 0x768);
+		for (int i{0}; Tag != "InGame.Victory" && i < SDK::UObject::GObjects->Num(); ++i)
+		{
+			SDK::UObject* O = SDK::UObject::GObjects->GetByIndex(i);
+			if (O && O->Class && !O->IsDefaultObject() && O != (PC ? (SDK::UObject*)PC->Pawn : nullptr) && O->IsA(SDK::AAJBInGameCharacter::StaticClass()) && *(int*)((char*)O + 0x8A4) > 0) ++Alive;
+		}
+		const int Rank = Tag == "InGame.Victory" ? 1 : Alive + 1;
+		LogA("OneMenu", std::format("Match over ({}): place {}, {} kills", Tag, Rank, Kills));
+		ArcadeLink::Result(Kills, Rank);
+	}
 	if (Tag == "SimpleMatch.SelectMode" && Pending != EMode::None) GotoDelay = 0.f;
 	if (bHosting)
 	{
@@ -443,8 +520,9 @@ bool OneMenu::OnFlow(const std::string& Tag)
 
 const wchar_t* OneMenu::OnBrowse(const wchar_t* Map, bool bListen)
 {
-	MenuW = SearchW = HoldW = nullptr; FE = HostMenu = Proxy = nullptr; IPBox = nullptr; HoldTxt = nullptr;
-	BQuick = BTrain = BTut = BDealer = BHost = BJoin = BEman = BBack = BStart = FBtn{};
+	MenuW = SearchW = HoldW = NoticeW = nullptr; FE = HostMenu = Proxy = nullptr; IPBox = nullptr; HoldTxt = NoticeTxt = StatusTxt = DrawTxt = nullptr; NoticeShown.clear();
+	BQuick = BTrain = BTut = BDealer = BHost = BJoin = BEman = BBack = BStart = BDraw = FBtn{};
+	OfflinePopup = nullptr; bResultSent = false;
 	bHostMenuOpen = false; FEWait = 0.f; GotoDelay = -1.f; StartPressT = -1.f;
 	CurMap = Map; Leveled.clear();
 	if (CurMap == L"/Game/AJB/Maps/SimpleStartLocationSelect_P" && !bListen)
@@ -511,7 +589,36 @@ void OneMenu::Tick(float DT)
 		}
 		if (N) LogA("OneMenu", std::format("AI level {} + find-enemy patch applied to {} bots", BotLevel, N));
 	}
+	ArcadeLink::Start();
 	if (!World()) return;
+	UpdateNotice(DT);
+	// ShowTitle is a BP-to-BP call (no ProcessEvent), so also scan: hide any visible common window carrying the ALL.Net offline text.
+	static float ScanT{0.f}; static std::vector<std::pair<int, SDK::UObject*>> Wins; static float FindT{0.f};
+	if ((FindT -= DT) <= 0.f)
+	{
+		FindT = 3.f; Wins.clear();
+		for (int i{0}; i < SDK::UObject::GObjects->Num(); ++i)
+		{
+			SDK::UObject* O = SDK::UObject::GObjects->GetByIndex(i);
+			if (O && O->Class && !O->IsDefaultObject() && O->Class->GetName() == "WB_CommonWIndow_S_C") Wins.push_back({i, O});
+		}
+	}
+	if ((ScanT -= DT) <= 0.f)
+	{
+		ScanT = 0.05f;
+		for (auto [Idx, O] : Wins)
+		{
+			if (SDK::UObject::GObjects->GetByIndex(Idx) != O) continue;	// collected since the last find
+			SDK::UWidget* W = (SDK::UWidget*)O;
+			if (!W->IsVisible()) continue;
+			std::string T;
+			for (int Off : {0x300, 0x310}) if (SDK::UTextBlock* B = *(SDK::UTextBlock**)((char*)O + Off)) T += SDK::UKismetTextLibrary::Conv_TextToString(B->GetText()).ToString() + " | ";
+			std::string L = T; for (char& c : L) c = (char)tolower((unsigned char)c);
+			if (L.find("network is offline") == std::string::npos && L.find("while offline") == std::string::npos) continue;
+			W->SetVisibility(SDK::ESlateVisibility::Collapsed);
+			if (OfflinePopup != O) { OfflinePopup = O; LogA("OneMenu", "Suppressed ALL.Net offline notice: " + T); }
+		}
+	}
 	if (bGotoFE) { bGotoFE = false; Exec("open /Game/Aeyth8/Maps/FrontEnd/AJBFrontEnd"); return; }
 
 	// ---- FrontEnd ----
@@ -580,6 +687,16 @@ void OneMenu::Tick(float DT)
 			HostCmd = IP;
 			StartPick(EMode::Join);
 		}
+		if (!bLoggedIn && ArcadeLink::Alive()) { bLoggedIn = true; std::wstring N = ArcadeLink::SteamName(); ArcadeLink::Login(N.empty() ? L"Player" : N); }
+		static float StatT{0.f}; StatT += DT;
+		if (StatT > 0.5f)
+		{
+			StatT = 0.f;
+			const std::string St = ArcadeLink::Status();
+			if (StatusTxt) StatusTxt->SetText(Txt(St.empty() ? L"Arcade profile offline" : std::wstring(St.begin(), St.end())));
+			if (const std::string M = ArcadeLink::TakeMessage(); !M.empty() && DrawTxt) DrawTxt->SetText(Txt(std::wstring(M.begin(), M.end())));
+		}
+		if (Clicked(BDraw)) { if (DrawTxt) DrawTxt->SetText(Txt(L"Drawing...")); ArcadeLink::Draw(1); }
 		if (Clicked(BEman)) { Show(MenuW, false); OneMenu::Call(FE, "BndEvt__BT_Emanate_K2Node_ComponentBoundEvent_4_OnButtonPressedEvent__DelegateSignature"); }
 		if (Clicked(BBack)) StopSearch();
 		return;
@@ -863,6 +980,21 @@ static std::string RunOnGame(const std::string& Cmd, const std::string& Arg)
 			LastPhase.empty() ? "none" : LastPhase, Joined, (int)bHosting, (int)OneMenu::bQuickHost, (int)bSearching, (int)bHoldActive, (int)(MenuW && MenuW->IsVisible()));
 	}
 	if (Cmd == "clickname") return ClickWidget(Arg);
+	if (Cmd == "widgets")	// visible live UserWidgets in the viewport (class names), optional substring filter
+	{
+		std::string Out = "ok";
+		for (int i{0}; i < SDK::UObject::GObjects->Num(); ++i)
+		{
+			SDK::UObject* O = SDK::UObject::GObjects->GetByIndex(i);
+			if (!O || !O->Class || O->IsDefaultObject() || !O->IsA(SDK::UUserWidget::StaticClass())) continue;
+			SDK::UUserWidget* W = (SDK::UUserWidget*)O;
+			if (!W->IsVisible() || !(W->IsInViewport() || (W->GetParent() && W->GetParent()->IsVisible()))) continue;
+			const std::string N = O->Class->GetName();
+			if (!Arg.empty() && N.find(Arg) == std::string::npos) continue;
+			Out += " " + N;
+		}
+		return Out;
+	}
 	if (Cmd == "hp" || Cmd == "nearbot")	// player HP, nearest bot; nearbot teleports the player beside it
 	{
 		SDK::UWorld* Wd = World(); SDK::APawn* P{nullptr};
@@ -938,7 +1070,7 @@ static std::string Handle(const std::string& Line)
 		return "ok unhooked";
 	}
 	if (!GameWnd && !EnableUnfocused()) return "err no game window yet";
-	if (C == "exec" || C == "state" || C == "buttons" || C == "hp" || C == "nearbot") return ToGame(Line);
+	if (C == "exec" || C == "state" || C == "buttons" || C == "hp" || C == "nearbot" || C == "widgets") return ToGame(Line);
 	if (C == "focus") { Activate(); return "ok focus"; }
 	if (C == "key") return Key(A);
 	if (C == "shot") return Shot(A);

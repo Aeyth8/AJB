@@ -29,4 +29,6 @@ namespace OneMenu
 	bool			OnPE(SDK::UObject* This, SDK::UFunction* Function, void* Parms);
 	// After the original ProcessEvent.
 	void			OnPEPost(SDK::UObject* This, SDK::UFunction* Function);
+	// Steam/IP connection failure: shows an English notice.
+	void			NetFailure(int Type, const std::string& Error);
 }
