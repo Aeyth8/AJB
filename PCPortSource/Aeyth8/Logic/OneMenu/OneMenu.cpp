@@ -154,9 +154,9 @@ void OneMenu::OnPEPost(SDK::UObject* This, SDK::UFunction* Function)
 
 void OneMenu::NetFailure(int Type, const std::string& Err)
 {
-	NetFailMsg = L"Connection to the host failed";
-	const std::string E = Err.empty() ? "" : ": " + Err;
-	NetFailMsg += std::wstring(E.begin(), E.end());
+	NetFailMsg = Err.find("TIMED OUT") != std::string::npos || Err.find("timed out") != std::string::npos
+		? L"Connection to the host timed out. Check the IP address and that the host has started a match."
+		: L"Connection to the host failed. Check the IP address, the host, and your network.";
 	NetFailT = 12.f;
 	LogA("OneMenu", std::format("Network failure {} {}", Type, Err));
 }
