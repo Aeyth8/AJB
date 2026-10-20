@@ -1,6 +1,7 @@
-#include "TickHook.h"
+﻿#include "TickHook.h"
 #include "../../Global.hpp"
 #include "../../Logic/AJB.h"
+#include "../../Logic/OneMenu/OneMenu.h"
 
 
 std::vector<A8CL::TickHook::FTimerHandlerEntry> A8CL::TickHook::CallbackTimers{};
@@ -49,6 +50,8 @@ void A8CL::TickHook::Tick(SDK::UGameEngine* This, float DeltaSeconds, bool bIdle
 		
 		Entry.fTimeElapsed += DeltaSeconds;
 	}
+
+	OneMenu::Tick(DeltaSeconds);
 
 	OFF::Tick.VerifyFC<Decl::Tick>()(This, DeltaSeconds, bIdleMode);
 }

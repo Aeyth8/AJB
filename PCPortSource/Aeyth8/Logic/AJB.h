@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 /*
 
@@ -359,6 +359,10 @@ namespace AJB
 	// ===========================================
 
 	bool __fastcall FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag);
+	// Re-issues a state change OneMenu held back.
+	void ReleaseHeldFlow();
+	// Changes state on a BP_GameFlowStateManager_C (its FlowStateHander is at +0xF8).
+	void ForceFlow(SDK::UObject* FlowManager, const wchar_t* Tag);
 	void __fastcall OnToggleFullMapVisibility(InvokeStack* Forwarded);
 	int __fastcall PostEventAtLocation(SDK::UAkAudioEvent* AkEvent, SDK::FVector& Location, SDK::FRotator& Orientation, UC::FString& EventName, SDK::UObject* WorldContextObject);
 	void __fastcall OnVictoryShot(InvokeStack* Forwarded);

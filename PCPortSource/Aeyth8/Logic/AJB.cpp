@@ -1,4 +1,5 @@
-#include "AJB.h"
+﻿#include "AJB.h"
+#include "OneMenu/OneMenu.h"
 #include "../Global.hpp"
 #include "../Hooks/Hooks.hpp"
 #include "../Offsets.h"
@@ -1205,11 +1206,35 @@ void A8CL::AJB::DedicatedServerLoop()
 
 
 
+static SDK::FFlowStateHandler* HeldHandler{nullptr};
+static SDK::FGameplayTag HeldTag{};
+
+void AJB::ReleaseHeldFlow()
+{
+	if (!HeldHandler) return;
+	SDK::FFlowStateHandler* H = HeldHandler; HeldHandler = nullptr;
+	AJB::FlowUtilChangeState(H, HeldTag);
+}
+
+void AJB::ForceFlow(SDK::UObject* FlowManager, const wchar_t* Tag)
+{
+	if (!FlowManager) return;
+	AJB::FlowUtilChangeState(reinterpret_cast<SDK::FFlowStateHandler*>(reinterpret_cast<char*>(FlowManager) + 0xF8), SDK::FGameplayTag{FName::NAME_FindOrAdd(Tag)});
+}
+
 bool __fastcall AJB::FlowUtilChangeState(SDK::FFlowStateHandler* StateHandler, SDK::FGameplayTag NextStateTag)
 {
+	if (OneMenu::HoldsFlow(NextStateTag.TagName.ToString()))
+	{
+		HeldHandler = StateHandler; HeldTag = NextStateTag;
+		LogA("UFlowStateUtil", "Holding " + NextStateTag.TagName.ToString() + " for the Quick Match wait");
+		return true;
+	}
+
 	LogA("UFlowStateUtil", std::format("New FlowState: {}", NextStateTag.TagName.ToString()));
 	
 	AJB::CurrentFlowstate = &NextStateTag;
+	if (OneMenu::OnFlow(NextStateTag.TagName.ToString())) return true;
 	
 	// The mouse will not lock into the viewport on its own (making KBM compatibility unplayable unless you enjoy constantly holding down middle click to move your camera)
 	constexpr const static wchar_t* SDT_MouseLockFlowstates[]

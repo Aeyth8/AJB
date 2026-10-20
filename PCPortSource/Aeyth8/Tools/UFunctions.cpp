@@ -1,9 +1,10 @@
-#include "UFunctions.hpp"
+﻿#include "UFunctions.hpp"
 #include "Pointers.h"
 #include "../Global.hpp"
 #include "../Hooks/Hooks.hpp"
 #include "../Offsets.h"
 #include "../Logic/AJB.h"
+#include "../Logic/OneMenu/OneMenu.h"
 
 #include "../../Dumper-7/SDK/BP_AJBWwiseManager_classes.hpp"
 #include "../../Dumper-7/SDK/BPF_AJBWwiseFunctionLibrary_classes.hpp"
@@ -326,6 +327,9 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 {
 	std::string StrCommand = Command->ToString();
 
+	if (int OMR = OneMenu::Console(StrCommand); OMR == 2) { memset((void*)Result, 0, sizeof(SDK::FString)); return Result; }
+	else if (OMR == 1) return OFF::ConsoleCommand.VerifyFC<Decl::ConsoleCommand>()(This, Result, Command, bWriteToLog);
+
 	if (AJB::IsServer())
 	{
 		SDK::APlayerController* Me = Pointers::Player();
@@ -556,8 +560,11 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 				ModeIdxEnd = StrCommand.length();
 			}
 
-			PARM_PlayMode = std::stoi(StrCommand.substr(ModeIdx, ModeIdxEnd - ModeIdx));
+			std::string ModeStr = StrCommand.substr(ModeIdx, ModeIdxEnd - ModeIdx);
+			if (!ModeStr.empty() && isdigit((unsigned char)ModeStr[0])) PARM_PlayMode = std::stoi(ModeStr);
+			else for (int m{0}; m < (int)(sizeof(SDT::EPlayMode) / sizeof(SDT::EPlayMode[0])); ++m) if (_stricmp(SDT::EPlayMode[m], ModeStr.c_str()) == 0) { PARM_PlayMode = m; break; }
 		}
+		OneMenu::bQuickHost = StrCommand.find("?QuickMatch=1") != std::string::npos;
 
 		size NPCIdx = StrCommand.find("?NPCNum=");
 		if (NPCIdx != std::string::npos)
@@ -623,8 +630,9 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		}
 
 		SDK::FAJBBattleSettings TheSettings{};
-		TheSettings.AILevel = PARM_NPCDifficulty;
+		TheSettings.AILevel = ((int)PARM_NPCDifficulty < 0 ? 0 : (int)PARM_NPCDifficulty > 3 ? 3 : (int)PARM_NPCDifficulty) + 1;
 		TheSettings.DamageAreaType = PARM_Area;
+		OneMenu::BotLevel = TheSettings.AILevel;
 		AJB::Instance->SetBattleSettings(TheSettings);
 		AJB::Instance->PlayMode = (SDK::EPlayMode)PARM_PlayMode;
 		AJB::Instance->AreaTypeID = PARM_Area;
@@ -1380,6 +1388,16 @@ UFunctions::BrowseReturnVal UFunctions::Browse(SDK::UEngine* This, SDK::FWorldCo
 		}
 	}
 
+	{
+		bool bListen{false};
+		for (SDK::FString& Entry : URL.Op) if (Entry.ToString() == "listen") bListen = true;
+		if (const wchar_t* OMRedirect = OneMenu::OnBrowse(URL.Map.CStr(), bListen))
+		{
+			static SDK::FString OMMap{L"/Game/Aeyth8/Maps/FrontEnd/AJBFrontEnd"};
+			Call<Decl::CopyString>(OFF::CopyString.PlusBase())(&URL.Map, &OMMap);
+		}
+	}
+
 	LogA("Browse", Helpers::FURLParser(URL));
 	
 	//LogA("Browse", Helpers::FWorldContextParser(WorldContext));
@@ -1911,12 +1929,15 @@ void UFunctions::ProcessEvent(SDK::UObject* This, SDK::UFunction* Function, LPVO
 		}
 	}*/
 
+	if (!OneMenu::OnPE(This, Function, Parms)) return;
+
 	if (AJB::IsServer())
 	{
 		if (!AJB::Server::ProcessEvent(This, Function, Parms)) return;
 	}
 
 	OFF::ProcessEvent.VerifyFC<Decl::ProcessEvent>()(This, Function, Parms);
+	OneMenu::OnPEPost(This, Function);
 }
 
 void UFunctions::Invoke(SDK::UFunction* This, SDK::UObject* Obj, void* FFrame_Stack, void* Result)
