@@ -1,4 +1,5 @@
 ﻿#include <algorithm>
+#include <thread>
 #include <cmath>
 #include <Windows.h>
 #include <Xinput.h>
@@ -530,6 +531,59 @@ static void GoldTick()
 		C.Flash->SetBrushColor({1.f, 1.f, 1.f, C.F});
 	}
 }
+static SDK::UObject* FindWidgetByName(const std::string& Name);
+static SDK::UUserWidget* CreditW{};
+static SDK::UObject* CreditTex[4]{};	// Discord, GitHub, YouTube, creator portrait: copied from the base port's title screen, rooted
+static SDK::UObject* BrushTex(SDK::UObject* W)
+{
+	if (!W || !W->Class) return nullptr;
+	if (ClassNameIs(W->Class, "Image")) return ((SDK::UImage*)W)->Brush.ResourceObject;
+	if (ClassNameIs(W->Class, "Button")) return ((SDK::UButton*)W)->WidgetStyle.Normal.ResourceObject;
+	return nullptr;
+}
+static void CaptureCreditTex()
+{
+	static int Tries{0}; if (Tries++ > 0) return;
+	static const char* N[4]{"Discord", "GitHub", "YouTube", "WidgetTree.TBD"};
+	for (int i{0}; i < SDK::UObject::GObjects->Num(); ++i)
+	{
+		SDK::UObject* O = SDK::UObject::GObjects->GetByIndex(i);
+		if (!O || !O->Class || O->IsDefaultObject() || !ClassNameIs(O->Class, "Image")) continue;
+		const std::string F = O->GetFullName();
+		if (F.find("WBP_AJBTitleScreen") == std::string::npos) continue;
+		SDK::UObject* T = ((SDK::UImage*)O)->Brush.ResourceObject;
+		if (!T) continue;
+		for (int k{0}; k < 4; ++k) if (!CreditTex[k] && F.find(N[k]) != std::string::npos) { SDK::UObject::GObjects->GetItemByIndex(T->Index)->Flags |= (1 << 30); CreditTex[k] = T; }
+	}
+}
+// Credit strip along the bottom edge plus Aeyth8's panel (open-source notice + link icons) in the top-right corner; click-through.
+static void BuildCredit()
+{
+	CreditW = Shell(); if (!CreditW) return;
+	SDK::UOverlay* Ov = NewW<SDK::UOverlay>(CreditW);
+	Ov->Visibility = SDK::ESlateVisibility::SelfHitTestInvisible;
+	CreditW->WidgetTree->RootWidget = Ov;
+	auto Text = [&](SDK::UVerticalBox* V, const std::wstring& S, int Sz, SDK::FLinearColor C, float Pad, SDK::EHorizontalAlignment HA) {
+		SDK::UTextBlock* T = Label(CreditW, S, Sz); T->SetColorAndOpacity(SDK::FSlateColor{C});
+		T->SetShadowOffset({2.f, 2.f}); T->SetShadowColorAndOpacity({0.f, 0.f, 0.f, 0.9f});
+		if (SDK::UVerticalBoxSlot* X = V->AddChildToVerticalBox(T)) { X->SetPadding({0.f, Pad, 0.f, 0.f}); X->SetHorizontalAlignment(HA); } };
+	SDK::UVerticalBox* B = NewW<SDK::UVerticalBox>(CreditW);
+	Text(B, L"I love you, Coraline, Andrea & Charlotte ♥  You're my favorite Stands!   ・   「君たちは僕の最高のスタンドだ」", 20, {1.f, 0.78f, 0.86f, 1.f}, 0.f, SDK::EHorizontalAlignment::HAlign_Center);
+	Text(B, L"AJB PC Port by Aeyth8  \x00B7  Multiplayer, skins, new menu, game features & more by SlavahDuck", 15, {1.f, 0.82f, 0.30f, 0.9f}, 2.f, SDK::EHorizontalAlignment::HAlign_Center);
+	if (auto* S = Ov->AddChildToOverlay(B)) { S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Center); S->SetVerticalAlignment(SDK::EVerticalAlignment::VAlign_Bottom); S->SetPadding({0.f, 0.f, 0.f, 4.f}); }
+	SDK::UVerticalBox* R = NewW<SDK::UVerticalBox>(CreditW);
+	SDK::UHorizontalBox* Ic = NewW<SDK::UHorizontalBox>(CreditW);
+	for (int k{0}; k < 4; ++k) if (CreditTex[k])
+	{
+		SDK::UImage* Im = NewW<SDK::UImage>(CreditW); Im->SetBrushFromTexture((SDK::UTexture2D*)CreditTex[k], false); Im->SetBrushSize({34.f, 34.f});
+		if (auto* S = Ic->AddChildToHorizontalBox(Im)) S->SetPadding({4.f, 0.f, 0.f, 0.f});
+	}
+	if (auto* S = R->AddChildToVerticalBox(Ic)) S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Right);
+	Text(R, L"AJB PC Port by Aeyth8 - free and open-source.", 13, {0.85f, 0.9f, 1.f, 0.9f}, 3.f, SDK::EHorizontalAlignment::HAlign_Right);
+	Text(R, L"If you paid for this, you were scammed.", 13, {0.85f, 0.9f, 1.f, 0.9f}, 0.f, SDK::EHorizontalAlignment::HAlign_Right);
+	if (auto* S = Ov->AddChildToOverlay(R)) { S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Right); S->SetVerticalAlignment(SDK::EVerticalAlignment::VAlign_Top); S->SetPadding({0.f, 8.f, 12.f, 0.f}); }
+	CreditW->AddToViewport(201);
+}
 static void BuildMenu()
 {
 	MenuW = Shell(); if (!MenuW) return;
@@ -567,6 +621,7 @@ static void BuildMenu()
 	if (auto* S = V->AddChildToVerticalBox(Bars)) { S->SetPadding({0.f, 26.f, 0.f, 0.f}); S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Fill); }
 	DrawTxt = Label(MenuW, L"", 22); AddText(V, DrawTxt);
 	MenuW->AddToViewport(200);
+	BuildCredit();
 }
 
 // Opaque English "Loading..." screen over every old PC-port menu frame (mode select skip, FrontEnd return, network step).
@@ -1041,7 +1096,7 @@ bool OneMenu::OnFlow(const std::string& Tag)
 
 const wchar_t* OneMenu::OnBrowse(const wchar_t* Map, bool bListen)
 {
-	MenuW = SearchW = HoldW = NoticeW = CoverW = nullptr; FE = HostMenu = Proxy = nullptr; IPBox = nullptr; GBg = nullptr; GGo[0] = GGo[1] = nullptr; GCards.clear(); PadFocus = -1; HoldTxt = NoticeTxt = StatusTxt = DrawTxt = nullptr; NoticeShown.clear();
+	CreditW = nullptr; MenuW = SearchW = HoldW = NoticeW = CoverW = nullptr; FE = HostMenu = Proxy = nullptr; IPBox = nullptr; GBg = nullptr; GGo[0] = GGo[1] = nullptr; GCards.clear(); PadFocus = -1; HoldTxt = NoticeTxt = StatusTxt = DrawTxt = nullptr; NoticeShown.clear();
 	TitleW = nullptr; TitleTxt = nullptr; TitleShown = -2;	// the title picker belongs to the old map: a stale TitleW hung the FrontEnd return (10-21)
 	BQuick = BTrain = BTut = BDealer = BHost = BJoin = BEman = BBack = BStart = BDraw = BDiff = FBtn{};
 	OfflinePopup = nullptr; bResultSent = false;
@@ -1098,8 +1153,12 @@ static void RunPostAction()
 }
 
 static void HarnessPump();
+static std::string ClickXY(float FX, float FY);
+static std::string ClickWidget(const std::string& Name);
+extern void FlushPendingBG(float DT);
 void OneMenu::Tick(float DT)
 {
+	FlushPendingBG(DT);
 	HarnessPump();
 	// SetupAILevel can also run from Blueprint bytecode without ProcessEvent: re-apply in matches.
 	static float AIScan{0.f}; AIScan += DT;
@@ -1126,6 +1185,19 @@ void OneMenu::Tick(float DT)
 		Exec(std::format("AJBExecInternal Host?Area={}?PlayMode=Solo?NPCNum=29?NPCDifficulty={}?QuickMatch=1", RandArea(), OneMenu::BotSetting - 1));	// random battle royale map, same set as ajbnet.py
 	}
 	if (!World()) return;
+	{	// Base port title screen (logo, PRESS TO START, Aeyth8 panel): press start for the player, boot straight to the menu.
+		static float TitleT{0.f}, ScanT2{0.f}; static bool Busy{false}, Up{false};
+		if ((ScanT2 += DT) > 0.5f)
+		{
+			ScanT2 = 0.f; SDK::UObject* O = FindLive("WBP_AJBTitleScreen_C");
+			Up = O && ((SDK::UUserWidget*)O)->IsInViewport() && ((SDK::UWidget*)O)->IsVisible();
+			if (!Up) TitleT = 0.f; else CaptureCreditTex();
+		}
+		if (Up && !Busy && (TitleT += DT) > 3.f)
+		{
+			TitleT = -2.f; Busy = true; LogA("OneMenu", "Title screen skipped"); Exec("open /Game/Aeyth8/Maps/FrontEnd/AJBFrontEnd");
+		}
+	}
 	UpdateCover(DT);
 	FixMatchRow(DT);
 	FixSelfTile(DT);
@@ -1186,6 +1258,7 @@ void OneMenu::Tick(float DT)
 
 		if (DeferredPick != EMode::None) { EMode M = DeferredPick; DeferredPick = EMode::None; StartPick(M); return; }
 		GoldTick();
+		if (CreditW) Show(CreditW, MenuW->IsVisible());
 		if (Clicked(BQuick)) StartPick(EMode::Quick);
 		if (Clicked(BTrain)) StartPick(EMode::Training);
 		if (Clicked(BTut)) StartPick(EMode::Tutorial);
@@ -1460,7 +1533,7 @@ static std::string ClickWidget(const std::string& Name)
 		if (Pick)
 		{
 			unsigned char Buf[0x400]{};
-			if (Pick->GetName().find("OnAJBButtonEvent") != std::string::npos) { *(SDK::UObject**)Buf = W; *(SDK::UObject**)(Buf + 8) = *(SDK::UObject**)((char*)W + 0x2B8); }	// UAJBButtonWidget::Button
+			if (Pick->GetName().find("OnAJBButtonEvent") != std::string::npos || Pick->GetName().find("OnButtonClickedEvent") != std::string::npos) { *(SDK::UObject**)Buf = W; *(SDK::UObject**)(Buf + 8) = *(SDK::UObject**)((char*)W + 0x2B8); }	// UAJBButtonWidget::Button
 			Own->ProcessEvent(Pick, Buf); return "ok " + Pick->GetName();
 		}
 	}
@@ -1563,6 +1636,13 @@ static std::string RunOnGame(const std::string& Cmd, const std::string& Arg)
 			LastPhase.empty() ? "none" : LastPhase, Joined, (int)bHosting, (int)OneMenu::bQuickHost, (int)bSearching, (int)bHoldActive, (int)(MenuW && MenuW->IsVisible()));
 	}
 	if (Cmd == "clickname") return ClickWidget(Arg);
+	if (Cmd == "fns")	// function and variable names of a live widget class (own class only)
+	{
+		SDK::UObject* O = OneMenu::FindLive(Arg.c_str()); if (!O) return "err none";
+		std::string Out = "ok";
+		for (SDK::UField* F = O->Class->Children; F; F = F->Next) Out += " " + F->GetName();
+		return Out;
+	}
 	if (Cmd == "widgets")	// visible live UserWidgets in the viewport (class names), optional substring filter
 	{
 		std::string Out = "ok";
@@ -1719,7 +1799,7 @@ static std::string Handle(const std::string& Line)
 		return "ok unhooked";
 	}
 	if (!GameWnd && !EnableUnfocused()) return "err no game window yet";
-	if (C == "exec" || C == "state" || C == "buttons" || C == "hp" || C == "nearbot" || C == "widgets" || C == "texts") return ToGame(Line);
+	if (C == "exec" || C == "fns" || C == "state" || C == "buttons" || C == "hp" || C == "nearbot" || C == "widgets" || C == "texts") return ToGame(Line);
 	if (C == "focus") { Activate(); return "ok focus"; }
 	if (C == "key") return Key(A);
 	if (C == "shot") return ToGame(Line);	// on the game thread: a cross-thread PrintWindow during a map load hung the game (join capture 10-21)

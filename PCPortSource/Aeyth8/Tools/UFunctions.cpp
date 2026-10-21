@@ -323,6 +323,14 @@ void UFunctions::OutputText(SDK::UConsole* This, SDK::FString* Text)
 }
 
 
+std::string PendingBG; float PendingBGT{0.f};
+void FlushPendingBG(float DT)
+{
+	if (PendingBG.empty() || (PendingBGT += DT) < 1.5f) return;
+	const std::string Tag = PendingBG; PendingBG.clear();
+	SDK::ABP_AJBWwiseManager_C* Manager = Pointers::SpawnActor<SDK::ABP_AJBWwiseManager_C>();
+	if (Manager) Manager->PostWwiseBGMEvent(SDK::FGameplayTag{FName::NAME_FindOrAdd(Tag.c_str())}, true);
+}
 SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FString* Result, SDK::FString* Command, bool bWriteToLog)
 {
 	std::string StrCommand = Command->ToString();
@@ -502,8 +510,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 	else if (StrCommand.find("AJBExecInternal PlayBG") == 0 && StrCommand.size() > 23)
 	{
 		// RequestWwiseBGM_Event silently plays nothing against the shipped 0.5.5 pak; the release port spawns the Wwise manager actor and posts the BGM event on it.
-		SDK::ABP_AJBWwiseManager_C* Manager = Pointers::SpawnActor<SDK::ABP_AJBWwiseManager_C>();
-		if (Manager) Manager->PostWwiseBGMEvent(SDK::FGameplayTag{FName::NAME_FindOrAdd(StrCommand.substr(23).c_str())}, true);
+		PendingBG = StrCommand.substr(23); PendingBGT = 0.f;	// spawning the Wwise manager inside the map-start console command hung the FrontEnd map: OneMenu::Tick posts it a moment later
 		UConsole::ConsoleOutput::Text(std::format("Playing soundtrack {}", Command->ToString().substr(23)).c_str());
 	}
 	else if (StrCommand.find("AJBExecInternal TempFix") == 0)
@@ -1643,7 +1650,7 @@ SDK::APlayerController* UFunctions::Login(SDK::AGameModeBase* This, SDK::UPlayer
 	if (!ONE)
 	{
 		constexpr const wchar_t* GlobalPatchObjectBlueprintPath{L"/Game/Aeyth8/Blueprints/Global/BP_GlobalPatcher.BP_GlobalPatcher_C"};
-		constexpr const wchar_t* OptionsMenuBlueprintPath{L"/Game/Aeyth8/Blueprints/UI/OptionsMenu/WBP_OptionsMenu.WBP_OptionsMenu_C"};
+		constexpr const wchar_t* OptionsMenuBlueprintPath{L"/Game/Aeyth8/Blueprints/UI/OptionsMenuV2/WBP_OptionsMenu.WBP_OptionsMenu_C"};
 		constexpr const wchar_t* SynchronizerPath{L"/Game/Aeyth8/Blueprints/Global/ServerReplicated/BP_Synchronizer.BP_Synchronizer_C"};
 
 		AJB::MOD_GlobalPatcherClass = UFunctions::StaticLoadClass(AJB::CoreUObject, GEngine, GlobalPatchObjectBlueprintPath, nullptr, 0, nullptr);
@@ -1681,7 +1688,10 @@ SDK::APlayerController* UFunctions::Login(SDK::AGameModeBase* This, SDK::UPlayer
 					AJB::MOD_OptionsMenu->AddToViewport(1170);
 					AJB::MOD_OptionsMenu->SetVisibility(SDK::ESlateVisibility::Collapsed);
 
-					// V1 options widget in the shipped pak has no VersionInfo member; skip it.
+					if (AJB::StrDLLCommitVersion)
+					{
+						AJB::MOD_OptionsMenu->VersionInfo->SetDLLCommitVersion(*AJB::StrDLLCommitVersion);
+					}
 
 				}
 			}
