@@ -105,7 +105,7 @@ void OneMenu::Dump(SDK::UObject* Obj)
 static std::string TraceFilter;
 static int MenuConsole(const std::string& Cmd);
 
-static std::wstring NetFailMsg; static float NetFailT{0.f}, SteamFailT{0.f};
+static std::wstring NetFailMsg; static float NetFailT{0.f}, SteamFailT{0.f}; static bool bFailBack{false};
 static SDK::UObject* OfflinePopup{}; static float OfflinePopupT{0.f};
 bool OneMenu::OnPE(SDK::UObject* This, SDK::UFunction* Function, void* Parms)
 {
@@ -157,7 +157,7 @@ void OneMenu::NetFailure(int Type, const std::string& Err)
 	NetFailMsg = Err.find("TIMED OUT") != std::string::npos || Err.find("timed out") != std::string::npos
 		? L"Connection to the host timed out. Check the IP address and that the host has started a match."
 		: L"Connection to the host failed. Check the IP address, the host, and your network.";
-	NetFailT = 12.f;
+	NetFailT = 12.f; bFailBack = true;
 	LogA("OneMenu", std::format("Network failure {} {}", Type, Err));
 }
 
@@ -375,6 +375,100 @@ static void UpdateCover(float DT)
 // Shorten the label and slide it left of the heart, and pull the unit in next to the number.
 // Old "offline mode" label: shown by the game whenever ALL.Net is absent. Same rule as the offline popup:
 // hidden while the local server answers, shown only on a real failure (server down, Steam not running, join failed).
+// Equip (owner 10-20): the game's own skin / stand-skin Prev/Next on character select, limited to owned skins,
+// saved to ajbserver (results/set_reward) and applied from the server profile at boot and before every match.
+static bool bFirstBlood{false};
+static SDK::UAJBGameInstance* GI() { return reinterpret_cast<SDK::UAJBGameInstance*>(AJB::Instance); }
+static void ApplySkin(int C, int Sk, int St)
+{
+	SDK::UAJBGameInstance* I = GI();
+	if (!I || C <= 0) return;
+	if (Sk > 0) I->SetCharacterSkinId(C, Sk);
+	if (St > 0) I->SetStandSkinId(C, St);
+	for (int i{0}; i < I->OfflineDefaultCustomData.Num(); ++i)
+		if (I->OfflineDefaultCustomData[i].First == C) { if (Sk > 0) I->OfflineDefaultCustomData[i].Second.charaSkinId = (uint8)Sk; if (St > 0) I->OfflineDefaultCustomData[i].Second.standSkinId = (uint8)St; }
+	if (I->PlayerLoginInfo.CustomData.IsValidIndex(C - 1)) { if (Sk > 0) I->PlayerLoginInfo.CustomData[C - 1].charaSkinId = (uint8)Sk; if (St > 0) I->PlayerLoginInfo.CustomData[C - 1].standSkinId = (uint8)St; }
+}
+
+static void EquipTick(float DT)
+{
+	static float T{0.f};
+	if ((T += DT) < 0.1f) return;
+	T = 0.f;
+	SDK::UAJBGameInstance* I = GI();
+	if (!I || !ArcadeLink::Alive()) return;
+	static bool bApplied{false};
+	if (!bApplied && ArcadeLink::ProfNum("level") > 0)
+	{
+		bApplied = true; int N{0};
+		for (int C{1}; C < 64; ++C)
+		{
+			const int Sk = ArcadeLink::Custom(C, "skin"), St = ArcadeLink::Custom(C, "stand");
+			if (Sk > 0 || St > 0) { ApplySkin(C, Sk, St); ++N; }
+		}
+		LogA("OneMenu", std::format("Equip: applied saved skins for {} characters", N));
+	}
+	// First blood: the first death of the match while this player already has a kill.
+	static bool bFBDecided{false};
+	if (LastFlow == "InGame.Standby") bFBDecided = false;
+	if (LastFlow == "InGame.Gameplay" && !bFBDecided)
+	{
+		SDK::UWorld* Wd = World(); SDK::APlayerController* PC = Wd ? SDK::UGameplayStatics::GetPlayerController(Wd, 0) : nullptr;
+		if (PC && PC->Class->GetName() == "BP_AJBInGamePlayerController_C")
+		{
+			const int K = *(int*)((char*)PC + 0x768); int Dead{0};
+			for (int i{0}; i < SDK::UObject::GObjects->Num(); ++i)
+				if (SDK::UObject* O = SDK::UObject::GObjects->GetByIndex(i); O && O->Class && !O->IsDefaultObject() && O->IsA(SDK::AAJBInGameCharacter::StaticClass()) && *(int*)((char*)O + 0x8A4) <= 0) ++Dead;
+			if (Dead > 0 || K > 0) { bFBDecided = true; bFirstBlood = K > 0; LogA("OneMenu", std::format("First blood decided: {}", bFirstBlood ? "this player" : "someone else")); }
+		}
+	}
+	static int LastC{-1}, LastSk{-1}, LastSt{-1};
+	if (LastFlow != "SimpleMatch.SelectCharacter") { LastC = -1; return; }
+	const int C = I->GetSelectedCharacterNo();
+	int Sk = I->GetCharacterSkinId(C), St = I->GetStandSkinId(C);
+	if (C == LastC && (Sk != LastSk || St != LastSt))
+	{
+		// Direction of the press: +1 unless the id went down by one or wrapped from low to high.
+		auto Up = [](int Now, int Was) { return Now > Was ? Now - Was == 1 : Was - Now > 1; };
+		// Skip unowned ids in the press direction (ids 1..32, wrapping); id 1 is always owned.
+		auto Skip = [&](int T, int Now, int Was) { const int D = Up(Now, Was) ? 1 : -1; for (int n{0}; n < 32 && !ArcadeLink::Owned(T, C, Now); ++n) Now = (Now - 1 + D + 32) % 32 + 1; return Now; };
+		const int Sk1 = Sk != LastSk ? Skip(1, Sk, LastSk) : Sk, St1 = St != LastSt ? Skip(2, St, LastSt) : St;
+		if (Sk1 != Sk || St1 != St) { ApplySkin(C, Sk1, St1); Sk = I->GetCharacterSkinId(C); St = I->GetStandSkinId(C); }
+		if (Sk != LastSk) ArcadeLink::Equip(1, C, Sk);
+		if (St != LastSt) ArcadeLink::Equip(2, C, St);
+		LogA("OneMenu", std::format("Equip: chara {} skin {} stand {}", C, Sk, St));
+	}
+	else if (C != LastC && C > 0)
+	{
+		const int Sk0 = ArcadeLink::Custom(C, "skin"), St0 = ArcadeLink::Custom(C, "stand");
+		if ((Sk0 > 0 && Sk0 != Sk) || (St0 > 0 && St0 != St)) { ApplySkin(C, Sk0, St0); Sk = I->GetCharacterSkinId(C); St = I->GetStandSkinId(C); }
+		LogA("OneMenu", std::format("Equip: selected chara {} skin {} stand {} (saved {}/{})", C, Sk, St, Sk0, St0));
+	}
+	LastC = C; LastSk = Sk; LastSt = St;
+}
+
+// Before the spawn: put the chosen skins on every matching entry of this character (the spawn reads MatchingPlayers).
+static void CarrySkin()
+{
+	SDK::UAJBGameInstance* I = GI();
+	if (!I) return;
+	const int C = I->GetSelectedCharacterNo();
+	const int Sk = I->GetCharacterSkinId(C), St = I->GetStandSkinId(C);
+	ApplySkin(C, Sk, St);
+	const int Icon = ArcadeLink::ProfNum("icon");
+	if (Icon > 0) I->PlayerLoginInfo.MatchingPlayerInfo.PlayerIconID = Icon;
+	I->PlayerLoginInfo.MatchingPlayerInfo.CustomData.charaSkinId = (uint8)Sk; I->PlayerLoginInfo.MatchingPlayerInfo.CustomData.standSkinId = (uint8)St;
+	int N{0};
+	for (int i{0}; i < I->MatchingPlayers.Num(); ++i)
+	{
+		SDK::FMatchingPlayerInfo& M = I->MatchingPlayers[i].Second;
+		LogA("OneMenu", std::format("Equip: entry {} id {} chara {} skin {} name {}", i, M.PlayerID, M.CharactorID, M.CustomData.charaSkinId, I->MatchingPlayers[i].First.ToString()));
+		if (M.CharactorID != C) continue;
+		M.CustomData.charaSkinId = (uint8)Sk; M.CustomData.standSkinId = (uint8)St; if (Icon > 0) M.PlayerIconID = Icon; ++N;
+	}
+	LogA("OneMenu", std::format("Equip: carry chara {} skin {} stand {} icon {} into {} entries of {}", C, Sk, St, Icon, N, I->MatchingPlayers.Num()));
+}
+
 static void UpdateOfflineLabel(float DT)
 {
 	static float T{0.f};
@@ -569,6 +663,8 @@ bool OneMenu::OnFlow(const std::string& Tag)
 		return true;
 	}
 	LastFlow = Tag;
+	if (Tag == "OutGame.Matching" || Tag == "OutGame.ToInGame" || Tag == "InGame.Standby") CarrySkin();
+	if (Tag == "InGame.Standby") bFirstBlood = false;
 	if (Tag.rfind("OutGame.", 0) == 0 || Tag.rfind("InGame.", 0) == 0) bCoverNet = false;
 	if (!bResultSent && (Tag == "InGame.Victory" || Tag == "InGame.Retire" || Tag == "InGame.Spector") && CurMap.find(L"Tutorial") == std::wstring::npos)
 	{
@@ -583,9 +679,11 @@ bool OneMenu::OnFlow(const std::string& Tag)
 		}
 		const int Rank = Tag == "InGame.Victory" ? 1 : Alive + 1;
 		LogA("OneMenu", std::format("Match over ({}): place {}, {} kills", Tag, Rank, Kills));
-		ArcadeLink::Result(Kills, Rank);
+		ArcadeLink::ResultEx(Kills, Rank, GI() ? GI()->GetSelectedCharacterNo() : 0, bFirstBlood);
 	}
 	if (Tag == "SimpleMatch.SelectMode" && Pending != EMode::None) GotoDelay = 0.f;
+	// After a failed join the game returns to its old mode select; send the player to the one menu instead.
+	if (Tag == "SimpleMatch.SelectMode" && Pending == EMode::None && bFailBack) { bFailBack = false; bGotoFE = true; LogA("OneMenu", "Join failed, back to the menu"); }
 	if (bHosting)
 	{
 		if (Tag == "OutGame.Matching" || Tag == "OutGame.SelectStartLocation") WritePhase("open");
@@ -634,6 +732,10 @@ static void RunPostAction()
 	const EMode M = PostAction; PostAction = EMode::None;
 	LogA("OneMenu", std::format("PostAction {} char {}", (int)M, Ch));
 	bCoverNet = (M == EMode::Host || M == EMode::Join); CoverNetT = 0.f;
+	if (M == EMode::Join)	// a dead address otherwise sits 60 s under the cover before failing
+		for (int i{0}; i < SDK::UObject::GObjects->Num(); ++i)
+			if (SDK::UObject* O = SDK::UObject::GObjects->GetByIndex(i); O && O->Class && O->IsA(SDK::UNetDriver::StaticClass()))
+				((SDK::UNetDriver*)O)->InitialConnectTimeout = 10.f;
 	if (M == EMode::Host)
 	{
 		Exec(std::format("AJBExecInternal Char {}", Ch));
@@ -686,6 +788,7 @@ void OneMenu::Tick(float DT)
 	UpdateCover(DT);
 	FixMatchRow(DT);
 	UpdateOfflineLabel(DT);
+	EquipTick(DT);
 	UpdateNotice(DT);
 	// ShowTitle is a BP-to-BP call (no ProcessEvent), so also scan: hide any visible common window carrying the ALL.Net offline text.
 	static float ScanT{0.f}; static std::vector<std::pair<int, SDK::UObject*>> Wins; static float FindT{0.f};

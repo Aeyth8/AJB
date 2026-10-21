@@ -17,4 +17,9 @@ namespace ArcadeLink
 	bool		SteamRunning();
 	std::string	SteamId();						// "steam:<SteamID64>" of the most recent Steam login, else "local"
 	void		SteamUser(std::string& Id, std::string& Name);
+	bool		Owned(int Type, int Chara, int No);	// profile unlock "type:chara:no"; skin 1 is always owned
+	int			Custom(int Chara, const char* Key);	// equipped "skin" / "stand" from the profile, -1 if unknown
+	int			ProfNum(const char* Key);			// top-level profile number ("icon", "title_id"), -1 if unknown
+	void		Equip(int Type, int Chara, int No);	// async results/set_reward (1 skin, 2 stand, 5 icon, 6 title)
+	void		ResultEx(int Kills, int Rank, int Chara, bool FirstBlood);
 }

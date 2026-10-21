@@ -26,7 +26,8 @@ namespace
 		WinHttpSetTimeouts(S, 5000, 5000, 5000, 5000);
 		HINTERNET C = WinHttpConnect(S, L"127.0.0.1", 47811, 0);
 		HINTERNET R = C ? WinHttpOpenRequest(C, Verb, Path, nullptr, nullptr, nullptr, 0) : nullptr;
-		if (R && WinHttpSendRequest(R, L"Content-Type: application/json\r\n", (DWORD)-1, (LPVOID)Body.data(), (DWORD)Body.size(), (DWORD)Body.size(), 0) && WinHttpReceiveResponse(R, nullptr))
+		const wchar_t* Type = wcsncmp(Path, L"/api/", 5) == 0 ? L"Content-Type: application/x-msgpack\r\n" : L"Content-Type: application/json\r\n";
+		if (R && WinHttpSendRequest(R, Type, (DWORD)-1, (LPVOID)Body.data(), (DWORD)Body.size(), (DWORD)Body.size(), 0) && WinHttpReceiveResponse(R, nullptr))
 		{
 			DWORD N{0}; char B[4096];
 			while (WinHttpReadData(R, B, sizeof B, &N) && N) Out.append(B, N);
@@ -119,11 +120,13 @@ void ArcadeLink::Login(const std::wstring& Name)
 	}).detach();
 }
 
-void ArcadeLink::Result(int Kills, int Rank)
+void ArcadeLink::Result(int Kills, int Rank) { ResultEx(Kills, Rank, 0, false); }
+
+void ArcadeLink::ResultEx(int Kills, int Rank, int Chara, bool FirstBlood)
 {
-	std::thread([Kills, Rank]
+	std::thread([Kills, Rank, Chara, FirstBlood]
 	{
-		const std::string J = Http(L"POST", L"/ajb/result", std::format("{{\"kills\": {}, \"rank\": {}}}", Kills, Rank));
+		const std::string J = Http(L"POST", L"/ajb/result", std::format("{{\"kills\": {}, \"rank\": {}, \"chara\": \"{}\", \"fb\": {}}}", Kills, Rank, Chara > 0 ? std::to_string(Chara) : "", FirstBlood ? 1 : 0));
 		Keep(J);
 		const size_t R = J.find("\"result\"");
 		const std::string Line = J.empty() ? "Match result not saved: arcade server not answering." :
@@ -204,4 +207,50 @@ void ArcadeLink::SteamUser(std::string& Id, std::string& Name)
 		else if (L.find("\"MostRecent\"") != std::string::npos && Val(L) == "1") { Id = CurId; Name = CurName; return; }
 		else if (L.find("\"timestamp\"") != std::string::npos && !CurId.empty()) { const long long T = atoll(Val(L).c_str()); if (T > Best) { Best = T; Id = CurId; Name = CurName; } }
 	}
+}
+
+bool ArcadeLink::Owned(int Type, int Chara, int No)
+{
+	if ((Type == 1 || Type == 2) && No <= 1) return true;
+	std::lock_guard G(M);
+	const size_t U = Prof.find("\"unlocks\":");
+	if (U == std::string::npos) return false;
+	const size_t E = Prof.find(']', U);
+	const size_t P = Prof.find(std::format("\"{}:{}:{}\"", Type, Chara, No), U);
+	return P != std::string::npos && P < E;
+}
+
+int ArcadeLink::Custom(int Chara, const char* Key)
+{
+	std::lock_guard G(M);
+	const size_t C = Prof.find("\"custom\":");
+	if (C == std::string::npos) return -1;
+	const size_t P = Prof.find(std::format("\"{}\": {{", Chara), C);
+	if (P == std::string::npos) return -1;
+	const std::string E = Prof.substr(P, Prof.find('}', P) - P);
+	return Num(E, Key);
+}
+
+int ArcadeLink::ProfNum(const char* Key)
+{
+	std::lock_guard G(M);
+	const size_t P = Prof.find(std::format("\"{}\":", Key));
+	return P == std::string::npos ? -1 : atoi(Prof.c_str() + P + strlen(Key) + 3);
+}
+
+void ArcadeLink::Equip(int Type, int Chara, int No)
+{
+	std::thread([Type, Chara, No]
+	{
+		// msgpack request the server's results/set_reward reads: {} header, then [type, chara, no, 0]
+		std::string B{"\x80\x94", 2};
+		for (int V : {Type, Chara, No, 0})
+			if (V >= 0 && V < 128) B += (char)V;
+			else { B += '\xcd'; B += (char)((V >> 8) & 0xFF); B += (char)(V & 0xFF); }
+		const std::string J = Http(L"POST", L"/api/results/set_reward", B);
+		std::string Hex; for (unsigned char c : J) Hex += std::format("{:02x}", c);
+		LogA("ArcadeLink", std::format("equip {}:{}:{} {} ({} bytes sent, reply {})", Type, Chara, No, J.empty() ? "failed" : "sent", B.size(), Hex));
+		const std::string P = Http(L"GET", L"/ajb/profile");
+		if (!P.empty()) { std::lock_guard G(M); Prof = "\"profile\": " + P; }
+	}).detach();
 }
