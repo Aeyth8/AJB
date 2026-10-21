@@ -204,10 +204,12 @@ static std::wstring CurMap;
 struct FBtn { SDK::UButton* B{}; SDK::UTextBlock* T{}; bool bWas{}; std::string L; };
 static std::string VClick; static bool VClickHit{false};
 static std::string LastFlow, LastPhase;
+static float MatchDX[2]{-45.f, -38.f};
 static SDK::UUserWidget* MenuW{}; static SDK::UUserWidget* SearchW{}; static SDK::UUserWidget* HoldW{};
 static FBtn BQuick, BTrain, BTut, BDealer, BHost, BJoin, BEman, BBack, BStart;
 static SDK::UEditableTextBox* IPBox{};
 static FBtn BDiff; static float SearchT{0.f};
+static SDK::UUserWidget* CoverW{}; static bool bCoverNet{false}; static float CoverNetT{0.f};
 static SDK::UTextBlock* HoldTxt{};
 static SDK::UUserWidget* NoticeW{}; static SDK::UTextBlock* NoticeTxt{}; static std::wstring NoticeShown;
 static SDK::UTextBlock* StatusTxt{}; static SDK::UTextBlock* DrawTxt{}; static FBtn BDraw;
@@ -349,6 +351,51 @@ static void BuildMenu()
 	MenuW->AddToViewport(200);
 }
 
+// Opaque English "Loading..." screen over every old PC-port menu frame (mode select skip, FrontEnd return, network step).
+static void UpdateCover(float DT)
+{
+	if (bCoverNet && (CoverNetT += DT) > 90.f) bCoverNet = false;
+	const bool bFE = CurMap.find(L"AJBFrontEnd") != std::wstring::npos;
+	const bool bSM = CurMap.find(L"AJBSimpleMatch_P") != std::wstring::npos;
+	const bool Want = (bFE && (!MenuW || PostAction != EMode::None)) || (bFE && bCoverNet && !(MenuW && MenuW->IsVisible()))
+		|| (bSM && LastFlow != "SimpleMatch.SelectCharacter") || (Pending != EMode::None && LastFlow == "SimpleMatch.SelectMode");
+	if (Want && !CoverW)
+	{
+		CoverW = Shell(); if (!CoverW) return;
+		SDK::UVerticalBox* V = Frame(CoverW, 1.f, SDK::EVerticalAlignment::VAlign_Center);
+		AddText(V, Label(CoverW, L"Loading...", 40));
+		CoverW->AddToViewport(190);
+	}
+	if (CoverW && CoverW->IsVisible() != Want) CoverW->SetVisibility(Want ? SDK::ESlateVisibility::Visible : SDK::ESlateVisibility::Collapsed);
+}
+
+// Matching countdown row: the English label is longer than the JP one and runs under the heart, and the "s" (秒) sits far right.
+// Shorten the label and slide it left of the heart, and pull the unit in next to the number.
+static SDK::UWidget* Sub(SDK::UObject* O, const char* Name);
+static void FixMatchRow(float DT)
+{
+	static float T{0.f};
+	if (LastFlow != "OutGame.Matching" || (T += DT) < 0.5f) return;
+	T = 0.f;
+	for (int i{0}; i < SDK::UObject::GObjects->Num(); ++i)
+	{
+		SDK::UObject* O = SDK::UObject::GObjects->GetByIndex(i);
+		if (!O || !O->Class || O->IsDefaultObject()) continue;
+		// Quick Match hold: our own line carries the real countdown, so the game's heart timer row is hidden (two clocks would disagree).
+		if (O->Class->GetName() == "WB_TimeLimitCountDown_C" || O->Class->GetName() == "WB_TimeLimit_TextSet_C")
+		{
+			const SDK::ESlateVisibility V = bHoldActive ? SDK::ESlateVisibility::Collapsed : SDK::ESlateVisibility::SelfHitTestInvisible;
+			if (((SDK::UWidget*)O)->Visibility != V) ((SDK::UWidget*)O)->SetVisibility(V);
+			continue;
+		}
+		if (!O->IsA(SDK::UTextBlock::StaticClass()) || !O->Outer || !O->Outer->Outer || O->Outer->Outer->Class->GetName() != "WB_TimeLimit_TextSet_C") continue;
+		const std::string N = O->GetName();
+		SDK::UTextBlock* B = (SDK::UTextBlock*)O;
+		if (N == "AJBTextBlock_130") { B->SetText(Txt(L"Match starts in")); B->SetRenderTranslation({MatchDX[0], 0.f}); }
+		else if (N == "AJBTextBlock_0") { B->SetText(Txt(L"sec")); B->SetRenderTranslation({MatchDX[1], 0.f}); }
+	}
+}
+
 // Small banner at the bottom: only real problems (arcade server down, Steam connection failed, Steam not running).
 static void UpdateNotice(float DT)
 {
@@ -390,7 +437,8 @@ static void BuildHold()
 {
 	HoldW = Shell(); if (!HoldW) return;
 	SDK::UVerticalBox* V = Frame(HoldW, 0.f, SDK::EVerticalAlignment::VAlign_Top);
-	HoldTxt = Label(HoldW, L"Waiting for players: 0 joined, starting in 1:30", 30);
+	AddText(V, Label(HoldW, L" ", 70));	// spacer: sit below the MATCHING title, above the countdown row
+	HoldTxt = Label(HoldW, L"Waiting for players: 0 joined, starting in 1:30", 26);
 	AddText(V, HoldTxt);
 	BStart = AddBtn(HoldW, V, L"Start now", 24, 6.f, {0.85f, 0.45f, 0.05f, 1.f});
 	HoldW->AddToViewport(250);
@@ -500,6 +548,7 @@ bool OneMenu::OnFlow(const std::string& Tag)
 		return true;
 	}
 	LastFlow = Tag;
+	if (Tag.rfind("OutGame.", 0) == 0 || Tag.rfind("InGame.", 0) == 0) bCoverNet = false;
 	if (!bResultSent && (Tag == "InGame.Victory" || Tag == "InGame.Retire" || Tag == "InGame.Spector") && CurMap.find(L"Tutorial") == std::wstring::npos)
 	{
 		bResultSent = true;
@@ -533,7 +582,7 @@ bool OneMenu::OnFlow(const std::string& Tag)
 
 const wchar_t* OneMenu::OnBrowse(const wchar_t* Map, bool bListen)
 {
-	MenuW = SearchW = HoldW = NoticeW = nullptr; FE = HostMenu = Proxy = nullptr; IPBox = nullptr; HoldTxt = NoticeTxt = StatusTxt = DrawTxt = nullptr; NoticeShown.clear();
+	MenuW = SearchW = HoldW = NoticeW = CoverW = nullptr; FE = HostMenu = Proxy = nullptr; IPBox = nullptr; HoldTxt = NoticeTxt = StatusTxt = DrawTxt = nullptr; NoticeShown.clear();
 	BQuick = BTrain = BTut = BDealer = BHost = BJoin = BEman = BBack = BStart = BDraw = BDiff = FBtn{};
 	OfflinePopup = nullptr; bResultSent = false;
 	bHostMenuOpen = false; FEWait = 0.f; GotoDelay = -1.f; StartPressT = -1.f;
@@ -563,6 +612,7 @@ static void RunPostAction()
 	const int Ch = (int)AJB::GetSelectedCharacter();
 	const EMode M = PostAction; PostAction = EMode::None;
 	LogA("OneMenu", std::format("PostAction {} char {}", (int)M, Ch));
+	bCoverNet = (M == EMode::Host || M == EMode::Join); CoverNetT = 0.f;
 	if (M == EMode::Host)
 	{
 		Exec(std::format("AJBExecInternal Char {}", Ch));
@@ -611,6 +661,8 @@ void OneMenu::Tick(float DT)
 		Exec(std::format("AJBExecInternal Host?Area={}?PlayMode=Solo?NPCNum=29?NPCDifficulty={}?QuickMatch=1", 2 + (int)(GetTickCount64() % 10), OneMenu::BotSetting - 1));	// random battle royale map, Areas 2-11 like ajbnet.py
 	}
 	if (!World()) return;
+	UpdateCover(DT);
+	FixMatchRow(DT);
 	UpdateNotice(DT);
 	// ShowTitle is a BP-to-BP call (no ProcessEvent), so also scan: hide any visible common window carrying the ALL.Net offline text.
 	static float ScanT{0.f}; static std::vector<std::pair<int, SDK::UObject*>> Wins; static float FindT{0.f};
@@ -668,6 +720,13 @@ void OneMenu::Tick(float DT)
 		if (Clicked(BTut)) StartPick(EMode::Tutorial);
 		if (Clicked(BDealer)) StartPick(EMode::Dealer);
 		if (Clicked(BHost))
+		{
+			// No old port host sub-menu: host straight away with a random battle royale map, 20 bots, the saved bot difficulty.
+			HostCmd = std::format("AJBExecInternal Host?Area={}?PlayMode=Solo?NPCNum=20?NPCDifficulty={}", 2 + (int)(GetTickCount64() % 10), OneMenu::BotSetting - 1);
+			LogA("OneMenu", "Host: " + HostCmd);
+			StartPick(EMode::Host);
+		}
+		if (false)
 		{
 			LogA("OneMenu", std::format("Host clicked, menu {}", HostMenu ? HostMenu->GetFullName() : "null"));
 			if (!HostMenu) return;
@@ -1021,6 +1080,30 @@ static std::string RunOnGame(const std::string& Cmd, const std::string& Arg)
 		}
 		return Out;
 	}
+	if (Cmd.rfind("mdx ", 0) == 0) { sscanf_s(Cmd.c_str() + 4, "%f %f", &MatchDX[0], &MatchDX[1]); return "ok"; }
+	if (Cmd == "texts")	// visible text blocks: outer widget class / name = text (one per line, | separated)
+	{
+		std::string Out = "ok";
+		for (int i{0}; i < SDK::UObject::GObjects->Num(); ++i)
+		{
+			SDK::UObject* O = SDK::UObject::GObjects->GetByIndex(i);
+			if (!O || !O->Class || O->IsDefaultObject()) continue;
+			std::string T;
+			if (O->IsA(SDK::UTextBlock::StaticClass())) T = SDK::UKismetTextLibrary::Conv_TextToString(((SDK::UTextBlock*)O)->GetText()).ToString();
+			else if (O->IsA(SDK::URichTextBlock::StaticClass())) T = SDK::UKismetTextLibrary::Conv_TextToString(*(SDK::FText*)((uint8_t*)O + 0x120)).ToString();
+			else continue;
+			SDK::UWidget* W = (SDK::UWidget*)O;
+			if (T.empty() || !W->IsVisible()) continue;
+			bool bShown{true};
+			for (SDK::UWidget* P = W->GetParent(); P; P = P->GetParent()) if (!P->IsVisible()) { bShown = false; break; }
+			if (!bShown) continue;
+			SDK::UObject* Outer = O->Outer ? O->Outer->Outer : nullptr;
+			if (!Arg.empty() && T.find(Arg) == std::string::npos && (!Outer || Outer->Class->GetName().find(Arg) == std::string::npos)) continue;
+			for (char& c : T) if (c == '\n' || c == '\r' || c == '|') c = ' ';
+			Out += " |" + (Outer ? Outer->Class->GetName() : std::string("?")) + "/" + O->GetName() + "=" + T;
+		}
+		return Out;
+	}
 	if (Cmd == "hp" || Cmd == "nearbot")	// player HP, nearest bot; nearbot teleports the player beside it
 	{
 		SDK::UWorld* Wd = World(); SDK::APawn* P{nullptr};
@@ -1096,7 +1179,7 @@ static std::string Handle(const std::string& Line)
 		return "ok unhooked";
 	}
 	if (!GameWnd && !EnableUnfocused()) return "err no game window yet";
-	if (C == "exec" || C == "state" || C == "buttons" || C == "hp" || C == "nearbot" || C == "widgets") return ToGame(Line);
+	if (C == "exec" || C == "state" || C == "buttons" || C == "hp" || C == "nearbot" || C == "widgets" || C == "texts") return ToGame(Line);
 	if (C == "focus") { Activate(); return "ok focus"; }
 	if (C == "key") return Key(A);
 	if (C == "shot") return Shot(A);
