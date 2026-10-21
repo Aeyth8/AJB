@@ -374,7 +374,7 @@ static FBtn MakeCard(SDK::UUserWidget* U, FBtn& R, const std::wstring& En, const
 	PicInk->SetRenderTranslation(bBig ? SDK::FVector2D{-30.f, -70.f} : SDK::FVector2D{-14.f, -30.f}); PicInk->SetRenderAngle(6.f);
 	H->AddChildToHorizontalBox(PicInk);
 	SDK::UVerticalBox* TV = NewW<SDK::UVerticalBox>(U);
-	R.T = GoldText(U, En, bBig ? 60 : (En.size() > 12 ? 21 : 26), Gold);
+	R.T = GoldText(U, En, bBig ? 60 : (En.size() > 12 ? 18 : 26), Gold);
 	if (auto* S = TV->AddChildToVerticalBox(R.T)) S->SetPadding({bBig ? 26.f : 8.f, bBig ? 30.f : 0.f, 0.f, 0.f});
 	SDK::UTextBlock* Sub = GoldText(U, Jp, bBig ? 30 : 17, {1.f, 1.f, 1.f, 1.f});
 	if (auto* S = TV->AddChildToVerticalBox(Sub)) S->SetPadding({bBig ? 30.f : 10.f, bBig ? 6.f : 2.f, 0.f, 0.f});
@@ -420,8 +420,8 @@ static void GoldBackdrop(SDK::UUserWidget* U)
 	if (auto* S = O->AddChildToOverlay(Tint)) { S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Fill); S->SetVerticalAlignment(SDK::EVerticalAlignment::VAlign_Fill); }
 	SDK::UImage* Logo = NewW<SDK::UImage>(U);
 	if (auto* Tx = (SDK::UTexture2D*)Asset(L"/Game/AJB/OutGame/1_Title/Textures/TX_UI_Title_LOGO.TX_UI_Title_LOGO")) Logo->SetBrushFromTexture(Tx, false);
-	Logo->SetBrushSize({420.f, 210.f});
-	if (auto* S = O->AddChildToOverlay(Logo)) { S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Left); S->SetVerticalAlignment(SDK::EVerticalAlignment::VAlign_Top); S->SetPadding({40.f, 30.f, 0.f, 0.f}); }
+	Logo->SetBrushSize({280.f, 140.f});
+	if (auto* S = O->AddChildToOverlay(Logo)) { S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Left); S->SetVerticalAlignment(SDK::EVerticalAlignment::VAlign_Top); S->SetPadding({16.f, 14.f, 0.f, 0.f}); }
 	const wchar_t* Go[2]{L"\u30b4\n\u30b4\n\u30b4", L"\u30c9\n\u30c9\n\u30c9"};
 	for (int i = 0; i < 2; ++i)
 	{
@@ -445,14 +445,15 @@ static bool PadMouseRunning()
 	for (BOOL Ok = Process32FirstW(S, &E); Ok; Ok = Process32NextW(S, &E)) if (_wcsicmp(E.szExeFile, L"PadMouse.exe") == 0) { bRun = true; break; }
 	CloseHandle(S); return bRun;
 }
+static std::atomic<WORD> PadInject{0};	// pipe "pad u|d|l|r|a": test input without a real or virtual controller
 static void PadNav()
 {
 	using XGS = DWORD(WINAPI*)(DWORD, XINPUT_STATE*);
 	static XGS Get = [] { HMODULE M = LoadLibraryW(L"xinput1_4.dll"); if (!M) M = LoadLibraryW(L"xinput9_1_0.dll"); return M ? (XGS)GetProcAddress(M, "XInputGetState") : (XGS)nullptr; }();
 	static WORD Prev{}; static ULONGLONG RepeatAt{};
-	if (!Get || GCards.size() < 9 || PadMouseRunning()) return;
-	WORD B{};
-	for (DWORD i{0}; i < 4; ++i)
+	if (GCards.size() < 9) return;
+	WORD B = PadInject.exchange(0);
+	if (Get && !PadMouseRunning()) for (DWORD i{0}; i < 4; ++i)
 	{
 		XINPUT_STATE St{}; if (Get(i, &St) != ERROR_SUCCESS) continue;
 		B |= St.Gamepad.wButtons;
@@ -505,7 +506,7 @@ static void BuildMenu()
 	GoldBackdrop(MenuW);
 	StatusTxt = Label(MenuW, L"", 22); AddText(V, StatusTxt);
 	MakeCard(MenuW, BQuick, L"QUICK MATCH", L"クイックマッチ", L"01_JTR", true);
-	if (auto* S = V->AddChildToVerticalBox(BQuick.B)) { S->SetPadding({0.f, 10.f, 0.f, 22.f}); S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Fill); }
+	if (auto* S = V->AddChildToVerticalBox(BQuick.B)) { S->SetPadding({70.f, 10.f, 0.f, 22.f}); S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Fill); }
 	IPBox = NewW<SDK::UEditableTextBox>(MenuW);
 	IPBox->SetText(Txt(L"127.0.0.1"));
 	IPBox->SetHintText(Txt(L"Host IP address"));
@@ -1311,12 +1312,13 @@ static BOOL CALLBACK FindGameWnd(HWND H, LPARAM)
 }
 
 // Slate only routes input after a real activation; take the foreground, then the subclass keeps it "active".
+static bool TestHidden() { static const bool b = std::filesystem::exists(AppDir() / "testhidden.txt"); return b; }
 static void Activate()
 {
 	if (OrigGetForegroundWindow() != GameWnd)
 	{
 		const DWORD Fg = GetWindowThreadProcessId(OrigGetForegroundWindow(), nullptr), Me = GetWindowThreadProcessId(GameWnd, nullptr);
-		if (!std::filesystem::exists(AppDir() / "testhidden.txt"))	// owner rule 10-20: a hidden test game never takes the foreground
+		if (!TestHidden())	// owner rule 10-20: a hidden test game never takes the foreground
 		{
 			AttachThreadInput(Fg, Me, TRUE);
 			BringWindowToTop(GameWnd); SetForegroundWindow(GameWnd); SetActiveWindow(GameWnd); SetFocus(GameWnd);
@@ -1582,6 +1584,47 @@ static std::string ToGame(const std::string& Line, int TimeoutMs = 10000)
 	std::string S = F.get(); delete R; return S;
 }
 
+// Test games (testhidden.txt): the window never activates and never touches her cursor. Every call that could take the
+// foreground, raise the window or move/clip the cursor is swallowed from DLL load on, before the engine makes its window.
+static HWND(WINAPI* OCreateWindowExW)(DWORD, LPCWSTR, LPCWSTR, DWORD, int, int, int, int, HWND, HMENU, HINSTANCE, LPVOID){};
+static BOOL(WINAPI* OShowWindow)(HWND, int){};
+static BOOL(WINAPI* OSetWindowPos)(HWND, HWND, int, int, int, int, UINT){};
+static HWND WINAPI HkCreateWindowExW(DWORD Ex, LPCWSTR C, LPCWSTR N, DWORD St, int X, int Y, int W, int H, HWND P, HMENU M, HINSTANCE I, LPVOID L)
+{
+	if (!P && !(St & WS_CHILD)) { Ex |= WS_EX_NOACTIVATE; X = -4000; Y = -4000; }
+	return OCreateWindowExW(Ex, C, N, St, X, Y, W, H, P, M, I, L);
+}
+static BOOL WINAPI HkShowWindow(HWND H, int Cmd)
+{
+	if (Cmd != SW_HIDE && Cmd != SW_MINIMIZE && Cmd != SW_SHOWMINNOACTIVE && Cmd != SW_SHOWNA && Cmd != SW_SHOWNOACTIVATE) Cmd = SW_SHOWNOACTIVATE;
+	return OShowWindow(H, Cmd);
+}
+static BOOL WINAPI HkSetWindowPos(HWND H, HWND A, int X, int Y, int W, int Hh, UINT F)
+{
+	F |= SWP_NOACTIVATE;
+	if (!(GetWindowLongPtrW(H, GWL_STYLE) & WS_CHILD)) { A = HWND_BOTTOM; F &= ~SWP_NOZORDER; if (!(F & SWP_NOMOVE)) { X = -4000; Y = -4000; } }
+	return OSetWindowPos(H, A, X, Y, W, Hh, F);
+}
+static BOOL WINAPI HkNoBool(HWND) { return TRUE; }
+static HWND WINAPI HkNoHwnd(HWND H) { return H; }
+static BOOL WINAPI HkNoCursor(int, int) { return TRUE; }
+static BOOL WINAPI HkNoClip(const RECT*) { return TRUE; }
+static UINT WINAPI HkNoInput(UINT, LPINPUT, int) { return 0; }
+static void WINAPI HkNoMouse(DWORD, DWORD, DWORD, DWORD, ULONG_PTR) {}
+static void WINAPI HkNoKeybd(BYTE, BYTE, DWORD, ULONG_PTR) {}
+static const bool bHiddenHooks = [] {
+	if (!TestHidden()) return false;
+	MH_Initialize();
+	struct { const char* Fn; LPVOID Hk; LPVOID* Orig; } T[]{
+		{"CreateWindowExW", (LPVOID)HkCreateWindowExW, (LPVOID*)&OCreateWindowExW}, {"ShowWindow", (LPVOID)HkShowWindow, (LPVOID*)&OShowWindow},
+		{"SetWindowPos", (LPVOID)HkSetWindowPos, (LPVOID*)&OSetWindowPos}, {"SetForegroundWindow", (LPVOID)HkNoBool, nullptr},
+		{"BringWindowToTop", (LPVOID)HkNoBool, nullptr}, {"SetActiveWindow", (LPVOID)HkNoHwnd, nullptr}, {"SetCursorPos", (LPVOID)HkNoCursor, nullptr},
+		{"ClipCursor", (LPVOID)HkNoClip, nullptr}, {"SendInput", (LPVOID)HkNoInput, nullptr}, {"mouse_event", (LPVOID)HkNoMouse, nullptr},
+		{"keybd_event", (LPVOID)HkNoKeybd, nullptr}};
+	for (auto& E : T) { LPVOID Tg{}, Dummy{}; if (MH_CreateHookApiEx(L"user32", E.Fn, E.Hk, E.Orig ? E.Orig : &Dummy, &Tg) == MH_OK) MH_EnableHook(Tg); }
+	return true;
+}();
+
 static std::string Handle(const std::string& Line)
 {
 	const size_t Sp = Line.find(' ');
@@ -1598,6 +1641,12 @@ static std::string Handle(const std::string& Line)
 	if (C == "focus") { Activate(); return "ok focus"; }
 	if (C == "key") return Key(A);
 	if (C == "shot") return Shot(A);
+	if (C == "pad")
+	{
+		const WORD M = A == "u" ? XINPUT_GAMEPAD_DPAD_UP : A == "d" ? XINPUT_GAMEPAD_DPAD_DOWN : A == "l" ? XINPUT_GAMEPAD_DPAD_LEFT : A == "r" ? XINPUT_GAMEPAD_DPAD_RIGHT : A == "a" ? XINPUT_GAMEPAD_A : 0;
+		if (!M) return "err pad u|d|l|r|a";
+		PadInject = M; return "ok pad " + A;
+	}
 	if (C == "click")
 	{
 		float X{}, Y{}; char Comma{};
@@ -1615,7 +1664,6 @@ static void HideThread()
 {
 	const auto F = AppDir() / "testhidden.txt";
 	if (!std::filesystem::exists(F)) return;
-	unsigned long long Prev{}; { std::ifstream I(F); I >> Prev; }
 	for (int i{0}; i < 2400; ++i)	// two minutes of 50 ms checks covers the launch and the first focus grab
 	{
 		HWND H{}; EnumWindows([](HWND W, LPARAM P) -> BOOL { DWORD Pid{}; GetWindowThreadProcessId(W, &Pid); wchar_t C[64]{}; GetClassNameW(W, C, 64);
@@ -1623,9 +1671,9 @@ static void HideThread()
 		if (H)
 		{
 			RECT R{}; GetWindowRect(H, &R);
-			if (R.left > -3000) SetWindowPos(H, HWND_BOTTOM, -4000, -4000, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE);
-			HWND Fg = (OrigGetForegroundWindow ? OrigGetForegroundWindow : GetForegroundWindow)();
-			if (Prev && Fg == H && IsWindow((HWND)Prev)) SetForegroundWindow((HWND)Prev);
+			const LONG_PTR Ex = GetWindowLongPtrW(H, GWL_EXSTYLE);
+			if (!(Ex & WS_EX_NOACTIVATE)) SetWindowLongPtrW(H, GWL_EXSTYLE, Ex | WS_EX_NOACTIVATE);
+			if (R.left > -3000) SetWindowPos(H, HWND_BOTTOM, -4000, -4000, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOOWNERZORDER);
 		}
 		Sleep(50);
 	}
