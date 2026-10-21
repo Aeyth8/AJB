@@ -333,13 +333,85 @@ static bool Clicked(FBtn& B)
 
 static void Show(SDK::UUserWidget* W, bool b) { if (W) W->SetVisibility(b ? SDK::ESlateVisibility::Visible : SDK::ESlateVisibility::Collapsed); }
 
+// Golden menu: game pak art only (no external files).
+static SDK::UObject* Asset(const wchar_t* P) { return UFunctions::StaticLoadObject(SDK::UObject::FindClass("Class CoreUObject.Object"), nullptr, P, nullptr, 0, nullptr, true); }
+static SDK::UImage* GBg{}; static SDK::UTextBlock* GGo[2]{}; static SDK::UWidget* GCard{};
+static SDK::UTextBlock* GoldText(SDK::UUserWidget* U, const std::wstring& S, int Size, SDK::FLinearColor C)
+{
+	SDK::UTextBlock* T = Label(U, S, Size);
+	T->SetColorAndOpacity(SDK::FSlateColor{C});
+	T->SetShadowOffset({4.f, 4.f}); T->SetShadowColorAndOpacity({0.f, 0.f, 0.f, 1.f});
+	return T;
+}
+static FBtn QuickCard(SDK::UUserWidget* U, SDK::UVerticalBox* V)
+{
+	const SDK::FLinearColor Gold{1.f, 0.72f, 0.08f, 1.f}, Mag{0.85f, 0.05f, 0.55f, 1.f};
+	FBtn R; R.L = "QUICK MATCH";
+	R.B = NewW<SDK::UButton>(U); R.B->IsFocusable = false; R.B->BackgroundColor = Mag;
+	SDK::UBorder* Ink = NewW<SDK::UBorder>(U); Ink->BrushColor = {0.f, 0.f, 0.f, 1.f}; Ink->SetPadding({8.f, 8.f, 8.f, 8.f});
+	SDK::UBorder* Face = NewW<SDK::UBorder>(U); Face->BrushColor = {0.22f, 0.04f, 0.32f, 1.f}; Face->SetPadding({10.f, 10.f, 28.f, 10.f});
+	SDK::UHorizontalBox* H = NewW<SDK::UHorizontalBox>(U);
+	SDK::UImage* Pic = NewW<SDK::UImage>(U);
+	if (auto* Tx = (SDK::UTexture2D*)Asset(L"/Game/AJB/OutGame/6_CharacterSelect/Textures/TX_UI_CharacterCard_01JTR.TX_UI_CharacterCard_01JTR")) Pic->SetBrushFromTexture(Tx, false);
+	Pic->SetBrushSize({150.f, 210.f});
+	SDK::UBorder* PicInk = NewW<SDK::UBorder>(U); PicInk->BrushColor = {0.f, 0.f, 0.f, 1.f}; PicInk->SetPadding({5.f, 5.f, 5.f, 5.f}); PicInk->SetContent(Pic);
+	H->AddChildToHorizontalBox(PicInk);
+	SDK::UVerticalBox* TV = NewW<SDK::UVerticalBox>(U);
+	R.T = GoldText(U, L"QUICK MATCH", 60, Gold);
+	if (auto* S = TV->AddChildToVerticalBox(R.T)) S->SetPadding({26.f, 30.f, 0.f, 0.f});
+	SDK::UTextBlock* Sub = GoldText(U, L"\u30af\u30a4\u30c3\u30af\u30de\u30c3\u30c1  \u30c9\u30c9\u30c9\u30c9", 30, {1.f, 1.f, 1.f, 1.f});
+	if (auto* S = TV->AddChildToVerticalBox(Sub)) S->SetPadding({30.f, 6.f, 0.f, 0.f});
+	if (auto* S = H->AddChildToHorizontalBox(TV)) S->SetVerticalAlignment(SDK::EVerticalAlignment::VAlign_Center);
+	Face->SetContent(H); Ink->SetContent(Face);
+	if (auto* S = (SDK::UButtonSlot*)R.B->SetContent(Ink)) S->SetPadding({6.f, 6.f, 6.f, 6.f});
+	R.B->SetRenderShear({-12.f, 0.f}); R.B->SetRenderAngle(-4.f);
+	if (auto* S = V->AddChildToVerticalBox(R.B)) { S->SetPadding({0.f, 10.f, 0.f, 26.f}); S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Fill); }
+	GCard = R.B;
+	return R;
+}
+static void GoldBackdrop(SDK::UUserWidget* U)
+{
+	SDK::UWidget* Old = U->WidgetTree->RootWidget;
+	((SDK::UBorder*)Old)->BrushColor = {0.f, 0.f, 0.f, 0.f};
+	SDK::UOverlay* O = NewW<SDK::UOverlay>(U);
+	GBg = NewW<SDK::UImage>(U);
+	if (auto* M = (SDK::UMaterialInterface*)Asset(L"/Game/AJB/OutGame/MenuBackGround3D/MT_MenuBG_Back.MT_MenuBG_Back")) GBg->SetBrushFromMaterial(M);
+	else if (auto* Tx = (SDK::UTexture2D*)Asset(L"/Game/AJB/OutGame/6_CharacterSelect/Textures/TX_UI_CharacterSelect_TypeBG1.TX_UI_CharacterSelect_TypeBG1")) GBg->SetBrushFromTexture(Tx, false);
+	GBg->SetRenderScale({1.15f, 1.15f});
+	if (auto* S = O->AddChildToOverlay(GBg)) { S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Fill); S->SetVerticalAlignment(SDK::EVerticalAlignment::VAlign_Fill); }
+	SDK::UBorder* Tint = NewW<SDK::UBorder>(U); Tint->BrushColor = {0.18f, 0.0f, 0.28f, 0.45f}; Tint->Visibility = SDK::ESlateVisibility::HitTestInvisible;
+	if (auto* S = O->AddChildToOverlay(Tint)) { S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Fill); S->SetVerticalAlignment(SDK::EVerticalAlignment::VAlign_Fill); }
+	SDK::UImage* Logo = NewW<SDK::UImage>(U);
+	if (auto* Tx = (SDK::UTexture2D*)Asset(L"/Game/AJB/OutGame/1_Title/Textures/TX_UI_Title_LOGO.TX_UI_Title_LOGO")) Logo->SetBrushFromTexture(Tx, false);
+	Logo->SetBrushSize({420.f, 210.f});
+	if (auto* S = O->AddChildToOverlay(Logo)) { S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Left); S->SetVerticalAlignment(SDK::EVerticalAlignment::VAlign_Top); S->SetPadding({40.f, 30.f, 0.f, 0.f}); }
+	const wchar_t* Go[2]{L"\u30b4\n\u30b4\n\u30b4", L"\u30c9\n\u30c9\n\u30c9"};
+	for (int i = 0; i < 2; ++i)
+	{
+		GGo[i] = GoldText(U, Go[i], 120, i ? SDK::FLinearColor{1.f, 0.72f, 0.08f, 0.9f} : SDK::FLinearColor{0.9f, 0.1f, 0.65f, 0.9f});
+		GGo[i]->Visibility = SDK::ESlateVisibility::HitTestInvisible;
+		if (auto* S = O->AddChildToOverlay(GGo[i])) { S->SetHorizontalAlignment(i ? SDK::EHorizontalAlignment::HAlign_Right : SDK::EHorizontalAlignment::HAlign_Left); S->SetVerticalAlignment(i ? SDK::EVerticalAlignment::VAlign_Top : SDK::EVerticalAlignment::VAlign_Bottom); S->SetPadding({60.f, 60.f, 60.f, 60.f}); }
+	}
+	if (auto* S = O->AddChildToOverlay(Old)) { S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Fill); S->SetVerticalAlignment(SDK::EVerticalAlignment::VAlign_Fill); }
+	U->WidgetTree->RootWidget = O;
+}
+static void GoldTick()
+{
+	if (!MenuW || !MenuW->IsVisible()) return;
+	const float T = (float)(GetTickCount64() % 600000ULL) / 1000.f;
+	if (GBg) GBg->SetRenderTranslation({std::sin(T * 0.13f) * 60.f, std::cos(T * 0.09f) * 35.f});
+	for (int i = 0; i < 2; ++i) if (GGo[i]) { GGo[i]->SetRenderTranslation({0.f, std::sin(T * 0.8f + i * 2.f) * 18.f}); GGo[i]->SetRenderAngle(-8.f + i * 16.f + std::sin(T * 1.3f + i) * 3.f); }
+	if (GCard) GCard->SetRenderScale({1.f + std::sin(T * 2.2f) * 0.015f, 1.f + std::sin(T * 2.2f) * 0.015f});
+}
+
 static void BuildMenu()
 {
 	MenuW = Shell(); if (!MenuW) return;
 	SDK::UVerticalBox* V = Frame(MenuW, 0.93f, SDK::EVerticalAlignment::VAlign_Center);
+	GoldBackdrop(MenuW);
 	const SDK::FLinearColor Main{0.85f, 0.45f, 0.05f, 1.f}, Norm{0.12f, 0.16f, 0.35f, 1.f}, Net{0.08f, 0.28f, 0.22f, 1.f};
 	StatusTxt = Label(MenuW, L"", 22); AddText(V, StatusTxt);
-	BQuick  = AddBtn(MenuW, V, L"QUICK MATCH", 46, 22.f, Main);
+	BQuick  = QuickCard(MenuW, V);
 	BTrain  = AddBtn(MenuW, V, L"Training", 26, 8.f, Norm);
 	BTut    = AddBtn(MenuW, V, L"Tutorial", 26, 8.f, Norm);
 	BDealer = AddBtn(MenuW, V, L"Dealer's Challenge", 26, 8.f, Norm);
@@ -930,6 +1002,7 @@ void OneMenu::Tick(float DT)
 		if (bHostMenuOpen && HostMenu && !((SDK::UWidget*)HostMenu)->IsVisible()) { bHostMenuOpen = false; Show(MenuW, true); }
 
 		if (DeferredPick != EMode::None) { EMode M = DeferredPick; DeferredPick = EMode::None; StartPick(M); return; }
+		GoldTick();
 		if (Clicked(BQuick)) StartPick(EMode::Quick);
 		if (Clicked(BTrain)) StartPick(EMode::Training);
 		if (Clicked(BTut)) StartPick(EMode::Tutorial);
