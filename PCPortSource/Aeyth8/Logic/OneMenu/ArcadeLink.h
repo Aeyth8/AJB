@@ -21,5 +21,6 @@ namespace ArcadeLink
 	int			Custom(int Chara, const char* Key);	// equipped "skin" / "stand" from the profile, -1 if unknown
 	int			ProfNum(const char* Key);			// top-level profile number ("icon", "title_id"), -1 if unknown
 	void		Equip(int Type, int Chara, int No);	// async results/set_reward (1 skin, 2 stand, 5 icon, 6 title)
+	std::wstring TitleText(int Id);			// titles.json "JP / EN" for a title id, "" if unknown
 	void		ResultEx(int Kills, int Rank, int Chara, bool FirstBlood);
 }

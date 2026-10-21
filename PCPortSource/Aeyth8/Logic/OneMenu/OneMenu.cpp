@@ -10,6 +10,7 @@
 #include "../../../Dumper-7/SDK/Engine_classes.hpp"
 #include "../../../Dumper-7/SDK/BP_CharaSelectMannequin_classes.hpp"
 #include "../../../Dumper-7/SDK/WB_CharacterSelect_classes.hpp"
+#include "../../../Dumper-7/SDK/WB_PlayerDetail_classes.hpp"
 #include "../../../Dumper-7/SDK/LoadingScreenSystem_classes.hpp"
 #include "../../../Dumper-7/SDK/WB_ModeSelect_classes.hpp"
 #include "../../Offsets.h"
@@ -507,6 +508,33 @@ static void UpdateOfflineLabel(float DT)
 	if (Logged != (int)Fail) { Logged = Fail; LogA("OneMenu", Fail ? "Offline label allowed (real failure)" : "Offline label hidden (server answering)"); }
 }
 
+// Matching tiles: our own tile shows the Steam name, profile icon, level and title (JP / EN).
+static void FixSelfTile(float DT)
+{
+	static float T{0.f};
+	if (LastFlow != "OutGame.Matching" || (T += DT) < 0.5f) return;
+	T = 0.f;
+	const int Icon = ArcadeLink::ProfNum("icon"), Lv = ArcadeLink::ProfNum("level"), Tid = ArcadeLink::ProfNum("title_id");
+	const std::wstring Name = ArcadeLink::SteamName(), Title = ArcadeLink::TitleText(Tid > 0 ? Tid : 1);
+	static int Logged{0};
+	for (int i{0}; i < SDK::UObject::GObjects->Num(); ++i)
+		if (SDK::UObject* O = SDK::UObject::GObjects->GetByIndex(i); O && O->Class && !O->IsDefaultObject() && O->IsA(SDK::UWB_PlayerDetail_C::StaticClass()))
+		{
+			SDK::UWB_PlayerDetail_C* P = (SDK::UWB_PlayerDetail_C*)O;
+			// IsSelfMatchingInfo is also true on empty slots, so match our own login name on the tile instead.
+			if (!P->PlayerName || !P->IsVisible()) continue;
+			const std::wstring Shown = SDK::UKismetTextLibrary::Conv_TextToString(P->PlayerName->GetText()).ToWString();
+			// Our own entry in MatchingPlayers is the one on our selected character (the same rule CarrySkin uses).
+			std::wstring Mine;
+			if (SDK::UAJBGameInstance* I = GI())
+				for (int k{0}; k < I->MatchingPlayers.Num(); ++k)
+					if (I->MatchingPlayers[k].Second.CharactorID == I->GetSelectedCharacterNo()) Mine = I->MatchingPlayers[k].Second.PlayerName.ToWString();
+			if (Shown.empty() || (Shown != Mine && Shown != Name)) continue;
+			P->ManualUpdateDisplay(Icon > 0 ? Icon : 1, Lv > 0 ? Lv : 1, Txt(Name.empty() ? L"Player" : Name), Txt(Title), true, P->Over_Host && P->Over_Host->IsVisible());
+			if (Logged++ < 2) LogA("OneMenu", std::format("Tile: self icon {} lv {} title {}", Icon, Lv, Tid));
+		}
+}
+
 static SDK::UWidget* Sub(SDK::UObject* O, const char* Name);
 static void FixMatchRow(float DT)
 {
@@ -808,6 +836,7 @@ void OneMenu::Tick(float DT)
 	if (!World()) return;
 	UpdateCover(DT);
 	FixMatchRow(DT);
+	FixSelfTile(DT);
 	UpdateOfflineLabel(DT);
 	EquipTick(DT);
 	UpdateNotice(DT);

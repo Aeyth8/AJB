@@ -254,3 +254,31 @@ void ArcadeLink::Equip(int Type, int Chara, int No)
 		if (!P.empty()) { std::lock_guard G(M); Prof = "\"profile\": " + P; }
 	}).detach();
 }
+
+std::wstring ArcadeLink::TitleText(int Id)
+{
+	static std::string J; static bool bRead{false};
+	if (!bRead)
+	{
+		bRead = true;
+		wchar_t Exe[MAX_PATH]{}; GetModuleFileNameW(nullptr, Exe, MAX_PATH);
+		std::wstring Root = Exe;
+		for (int i{0}; i < 4; ++i) Root = Root.substr(0, Root.find_last_of(L'\\'));
+		std::ifstream F(Root + L"\\ajbserver\\titles.json", std::ios::binary);
+		J.assign(std::istreambuf_iterator<char>(F), {});
+	}
+	const size_t P = J.find(std::format("\"id\": {},", Id));
+	if (P == std::string::npos) return L"";
+	auto Field = [&](const char* K) -> std::wstring
+	{
+		const size_t A = J.find(std::format("\"{}\": \"", K), P);
+		if (A == std::string::npos) return L"";
+		const size_t B = J.find('"', A + strlen(K) + 5);
+		const std::string U = J.substr(A + strlen(K) + 5, B - A - strlen(K) - 5);
+		std::wstring W(MultiByteToWideChar(CP_UTF8, 0, U.data(), (int)U.size(), nullptr, 0), L'\0');
+		MultiByteToWideChar(CP_UTF8, 0, U.data(), (int)U.size(), W.data(), (int)W.size());
+		return W.substr(0, 15);
+	};
+	const std::wstring Jp = Field("jp"), En = Field("en");
+	return Jp.empty() ? En : En.empty() ? Jp : Jp + L" / " + En;
+}
