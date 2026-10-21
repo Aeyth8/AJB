@@ -3,6 +3,7 @@
 #include <Windows.h>
 #include <Xinput.h>
 #include <tlhelp32.h>
+#include <map>
 #include <unordered_set>
 #include "OneMenu.h"
 #include "ArcadeLink.h"
@@ -283,8 +284,10 @@ static SDK::UTextBlock* Label(SDK::UUserWidget* U, const std::wstring& Str, int 
 
 static SDK::UUserWidget* Shell()
 {
-	// Not cached: the class is not rooted and can be garbage collected between maps.
-	SDK::UClass* C = UFunctions::StaticLoadClass(SDK::UUserWidget::StaticClass(), GEngine, L"/Game/Aeyth8/Blueprints/WBP_Cursor.WBP_Cursor_C", nullptr, 0, nullptr);
+	// Loaded once and rooted: a reload on the return to the menu map hung the game thread for 60 s (10-21).
+	static SDK::UClass* C = nullptr;
+	if (!C && (C = UFunctions::StaticLoadClass(SDK::UUserWidget::StaticClass(), GEngine, L"/Game/Aeyth8/Blueprints/WBP_Cursor.WBP_Cursor_C", nullptr, 0, nullptr)))
+		SDK::UObject::GObjects->GetItemByIndex(C->Index)->Flags |= (1 << 30);	// EInternalObjectFlags::RootSet
 	SDK::UWorld* W = World();
 	if (!C || !W) return nullptr;
 	SDK::UUserWidget* U = SDK::UWidgetBlueprintLibrary::Create(W, C, SDK::UGameplayStatics::GetPlayerController(W, 0));
@@ -338,7 +341,15 @@ static bool Clicked(FBtn& B)
 static void Show(SDK::UUserWidget* W, bool b) { if (W) W->SetVisibility(b ? SDK::ESlateVisibility::Visible : SDK::ESlateVisibility::Collapsed); }
 
 // Golden menu: game pak art only (no external files).
-static SDK::UObject* Asset(const wchar_t* P) { return UFunctions::StaticLoadObject(SDK::UObject::FindClass("Class CoreUObject.Object"), nullptr, P, nullptr, 0, nullptr, true); }
+// Loaded once and rooted: a second synchronous load during the menu map's return load hung the game for 60 s (10-21).
+static SDK::UObject* Asset(const wchar_t* P)
+{
+	static std::map<std::wstring, SDK::UObject*> Cache;
+	if (auto I = Cache.find(P); I != Cache.end()) return I->second;
+	SDK::UObject* O = UFunctions::StaticLoadObject(SDK::UObject::FindClass("Class CoreUObject.Object"), nullptr, P, nullptr, 0, nullptr, true);
+	if (O) SDK::UObject::GObjects->GetItemByIndex(O->Index)->Flags |= (1 << 30);	// EInternalObjectFlags::RootSet
+	return Cache[P] = O;
+}
 static SDK::UImage* GBg{}; static SDK::UTextBlock* GGo[2]{};
 static SDK::UTextBlock* GoldText(SDK::UUserWidget* U, const std::wstring& S, int Size, SDK::FLinearColor C)
 {
@@ -1278,6 +1289,7 @@ void OneMenu::Tick(float DT)
 #include <deque>
 #include <atomic>
 #include <vector>
+#include <map>
 
 struct FReq { std::string Line; std::promise<std::string> P; };
 static std::mutex ReqM; static std::deque<FReq*> Reqs;
@@ -1380,8 +1392,14 @@ static std::string ClickWidget(const std::string& Name)
 				if (FN.rfind(Pre, 0) != 0) continue;
 				if (FN.find("Clicked") != std::string::npos) { Pick = (SDK::UFunction*)F; break; }
 				if (FN.find("Pressed") != std::string::npos && !Pick) Pick = (SDK::UFunction*)F;
+				if (FN.find("OnAJBButtonEvent") != std::string::npos && !Pick) Pick = (SDK::UFunction*)F;	// (OwnerWidget, TargetButton)
 			}
-		if (Pick) { unsigned char Buf[0x400]{}; Own->ProcessEvent(Pick, Buf); return "ok " + Pick->GetName(); }
+		if (Pick)
+		{
+			unsigned char Buf[0x400]{};
+			if (Pick->GetName().find("OnAJBButtonEvent") != std::string::npos) { *(SDK::UObject**)Buf = W; *(SDK::UObject**)(Buf + 8) = *(SDK::UObject**)((char*)W + 0x2B8); }	// UAJBButtonWidget::Button
+			Own->ProcessEvent(Pick, Buf); return "ok " + Pick->GetName();
+		}
 	}
 	// Dynamically bound (Bind Event node): broadcast the button's multicast delegates by hand.
 	if (ClassNameIs(W->Class, "Button"))
@@ -1498,6 +1516,7 @@ static std::string RunOnGame(const std::string& Cmd, const std::string& Arg)
 		return Out;
 	}
 	if (Cmd.rfind("mdx ", 0) == 0) { sscanf_s(Cmd.c_str() + 4, "%f %f", &MatchDX[0], &MatchDX[1]); return "ok"; }
+	if (Cmd == "shot") return Shot(Arg);
 	if (Cmd == "texts")	// visible text blocks: outer widget class / name = text (one per line, | separated)
 	{
 		std::string Out = "ok";
@@ -1640,7 +1659,7 @@ static std::string Handle(const std::string& Line)
 	if (C == "exec" || C == "state" || C == "buttons" || C == "hp" || C == "nearbot" || C == "widgets" || C == "texts") return ToGame(Line);
 	if (C == "focus") { Activate(); return "ok focus"; }
 	if (C == "key") return Key(A);
-	if (C == "shot") return Shot(A);
+	if (C == "shot") return ToGame(Line);	// on the game thread: a cross-thread PrintWindow during a map load hung the game (join capture 10-21)
 	if (C == "pad")
 	{
 		const WORD M = A == "u" ? XINPUT_GAMEPAD_DPAD_UP : A == "d" ? XINPUT_GAMEPAD_DPAD_DOWN : A == "l" ? XINPUT_GAMEPAD_DPAD_LEFT : A == "r" ? XINPUT_GAMEPAD_DPAD_RIGHT : A == "a" ? XINPUT_GAMEPAD_A : 0;
