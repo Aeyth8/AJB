@@ -838,7 +838,7 @@ static void FixTexts(float DT)
 		{
 			const std::string BN = B->GetName();
 			if (BN == "AJBTextBlock_18") N = L"Training End";
-			else if (BN == "AJBTextBlock_19") N = L"";
+			else if (BN == "AJBTextBlock_19" || BN == "AJBTextBlock_0") N = L"";
 		}
 		if (N == L"NO NAME") { if (Me.empty()) Me = ArcadeLink::SteamName(); N = Me.empty() ? L"Player" : Me; }
 		for (size_t P; (P = N.find(L"EndEnd")) != std::wstring::npos;) N.erase(P, 3);
