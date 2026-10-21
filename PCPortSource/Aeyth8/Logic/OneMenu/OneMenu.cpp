@@ -1,5 +1,8 @@
 ﻿#include <algorithm>
 #include <cmath>
+#include <Windows.h>
+#include <Xinput.h>
+#include <tlhelp32.h>
 #include <unordered_set>
 #include "OneMenu.h"
 #include "ArcadeLink.h"
@@ -205,7 +208,7 @@ static bool bStartNow{false};
 static std::wstring CurMap;
 
 struct FBtn { SDK::UButton* B{}; SDK::UTextBlock* T{}; bool bWas{}; std::string L; };
-static std::string VClick; static bool VClickHit{false};
+static std::string VClick; static bool VClickHit{false}; static std::string PadClick;
 static std::string LastFlow, LastPhase;
 // Areas 2-7 all load AJBStage01: pick one per distinct map (same set as ajbnet.py Quick Match).
 static int RandArea() { static const int A[]{2, 8, 9, 10, 11}; return A[GetTickCount64() % 5]; }
@@ -325,6 +328,7 @@ static bool Clicked(FBtn& B)
 {
 	if (!B.B) return false;
 	if (!VClick.empty() && _stricmp(VClick.c_str(), B.L.c_str()) == 0) { VClick.clear(); VClickHit = true; return true; }
+	if (!PadClick.empty() && PadClick == B.L) { PadClick.clear(); return true; }
 	const bool P = B.B->IsPressed();
 	const bool R = B.bWas && !P && B.B->IsHovered();
 	B.bWas = P;
@@ -335,7 +339,7 @@ static void Show(SDK::UUserWidget* W, bool b) { if (W) W->SetVisibility(b ? SDK:
 
 // Golden menu: game pak art only (no external files).
 static SDK::UObject* Asset(const wchar_t* P) { return UFunctions::StaticLoadObject(SDK::UObject::FindClass("Class CoreUObject.Object"), nullptr, P, nullptr, 0, nullptr, true); }
-static SDK::UImage* GBg{}; static SDK::UTextBlock* GGo[2]{}; static SDK::UWidget* GCard{};
+static SDK::UImage* GBg{}; static SDK::UTextBlock* GGo[2]{};
 static SDK::UTextBlock* GoldText(SDK::UUserWidget* U, const std::wstring& S, int Size, SDK::FLinearColor C)
 {
 	SDK::UTextBlock* T = Label(U, S, Size);
@@ -343,30 +347,63 @@ static SDK::UTextBlock* GoldText(SDK::UUserWidget* U, const std::wstring& S, int
 	T->SetShadowOffset({4.f, 4.f}); T->SetShadowColorAndOpacity({0.f, 0.f, 0.f, 1.f});
 	return T;
 }
-static FBtn QuickCard(SDK::UUserWidget* U, SDK::UVerticalBox* V)
+struct FGCard { FBtn* B; SDK::UWidget* Root; SDK::UBorder* Flash; float S; float F; bool bWas; };
+static std::vector<FGCard> GCards; static int PadFocus{-1};
+static SDK::UTexture2D* Portrait(const wchar_t* Code)
+{
+	const std::wstring N = std::wstring(L"TX_UI_CharacterSelect_Icon") + Code;
+	return (SDK::UTexture2D*)Asset((L"/Game/AJB/OutGame/6_CharacterSelect/Textures/" + N + L"." + N).c_str());
+}
+// Manga panel card: black ink outline, purple face, portrait breaking out of the top-left corner, English title + small Japanese line.
+static FBtn MakeCard(SDK::UUserWidget* U, FBtn& R, const std::wstring& En, const std::wstring& Jp, const wchar_t* Icon, bool bBig, SDK::UWidget* Extra = nullptr)
 {
 	const SDK::FLinearColor Gold{1.f, 0.72f, 0.08f, 1.f}, Mag{0.85f, 0.05f, 0.55f, 1.f};
-	FBtn R; R.L = "QUICK MATCH";
+	R = FBtn{}; for (wchar_t c : En) R.L += (char)c;
 	R.B = NewW<SDK::UButton>(U); R.B->IsFocusable = false; R.B->BackgroundColor = Mag;
-	SDK::UBorder* Ink = NewW<SDK::UBorder>(U); Ink->BrushColor = {0.f, 0.f, 0.f, 1.f}; Ink->SetPadding({8.f, 8.f, 8.f, 8.f});
-	SDK::UBorder* Face = NewW<SDK::UBorder>(U); Face->BrushColor = {0.22f, 0.04f, 0.32f, 1.f}; Face->SetPadding({10.f, 10.f, 28.f, 10.f}); Face->SetClipping(SDK::EWidgetClipping::Inherit);
+	SDK::UOverlay* Ink = NewW<SDK::UOverlay>(U);
+	SDK::UBorder* Edge = NewW<SDK::UBorder>(U); Edge->BrushColor = {0.f, 0.f, 0.f, 1.f}; Edge->SetPadding({bBig ? 8.f : 6.f, bBig ? 8.f : 6.f, bBig ? 8.f : 6.f, bBig ? 8.f : 6.f});
+	SDK::UBorder* Face = NewW<SDK::UBorder>(U); Face->BrushColor = {0.22f, 0.04f, 0.32f, 1.f};
+	Face->SetPadding(bBig ? SDK::FMargin{10.f, 10.f, 28.f, 10.f} : SDK::FMargin{6.f, 6.f, 14.f, 6.f});
 	SDK::UHorizontalBox* H = NewW<SDK::UHorizontalBox>(U);
 	SDK::UImage* Pic = NewW<SDK::UImage>(U);
-	if (auto* Tx = (SDK::UTexture2D*)Asset(L"/Game/AJB/OutGame/6_CharacterSelect/Textures/TX_UI_CharacterSelect_Icon01_JTR.TX_UI_CharacterSelect_Icon01_JTR")) Pic->SetBrushFromTexture(Tx, false);
-	Pic->SetBrushSize({300.f, 300.f});
-	SDK::UBorder* PicInk = NewW<SDK::UBorder>(U); PicInk->BrushColor = {0.f, 0.f, 0.f, 1.f}; PicInk->SetPadding({5.f, 5.f, 5.f, 5.f}); PicInk->SetContent(Pic); PicInk->SetRenderTranslation({-30.f, -70.f}); PicInk->SetRenderAngle(6.f);
+	if (SDK::UTexture2D* Tx = Portrait(Icon)) Pic->SetBrushFromTexture(Tx, false);
+	const float PS = bBig ? 300.f : 132.f;
+	Pic->SetBrushSize({PS, PS});
+	SDK::UBorder* PicInk = NewW<SDK::UBorder>(U); PicInk->BrushColor = {0.f, 0.f, 0.f, 1.f};
+	const float PI = bBig ? 5.f : 4.f; PicInk->SetPadding({PI, PI, PI, PI}); PicInk->SetContent(Pic);
+	PicInk->SetRenderTranslation(bBig ? SDK::FVector2D{-30.f, -70.f} : SDK::FVector2D{-14.f, -30.f}); PicInk->SetRenderAngle(6.f);
 	H->AddChildToHorizontalBox(PicInk);
 	SDK::UVerticalBox* TV = NewW<SDK::UVerticalBox>(U);
-	R.T = GoldText(U, L"QUICK MATCH", 60, Gold);
-	if (auto* S = TV->AddChildToVerticalBox(R.T)) S->SetPadding({26.f, 30.f, 0.f, 0.f});
-	SDK::UTextBlock* Sub = GoldText(U, L"\u30af\u30a4\u30c3\u30af\u30de\u30c3\u30c1", 30, {1.f, 1.f, 1.f, 1.f});
-	if (auto* S = TV->AddChildToVerticalBox(Sub)) S->SetPadding({30.f, 6.f, 0.f, 0.f});
-	if (auto* S = H->AddChildToHorizontalBox(TV)) S->SetVerticalAlignment(SDK::EVerticalAlignment::VAlign_Center);
-	Face->SetContent(H); Ink->SetContent(Face);
-	if (auto* S = (SDK::UButtonSlot*)R.B->SetContent(Ink)) S->SetPadding({6.f, 6.f, 6.f, 6.f});
-	R.B->SetRenderShear({-12.f, 0.f}); R.B->SetRenderAngle(-4.f);
-	if (auto* S = V->AddChildToVerticalBox(R.B)) { S->SetPadding({0.f, 10.f, 0.f, 26.f}); S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Fill); }
-	GCard = R.B;
+	R.T = GoldText(U, En, bBig ? 60 : (En.size() > 12 ? 21 : 26), Gold);
+	if (auto* S = TV->AddChildToVerticalBox(R.T)) S->SetPadding({bBig ? 26.f : 8.f, bBig ? 30.f : 0.f, 0.f, 0.f});
+	SDK::UTextBlock* Sub = GoldText(U, Jp, bBig ? 30 : 17, {1.f, 1.f, 1.f, 1.f});
+	if (auto* S = TV->AddChildToVerticalBox(Sub)) S->SetPadding({bBig ? 30.f : 10.f, bBig ? 6.f : 2.f, 0.f, 0.f});
+	if (Extra) if (auto* S = TV->AddChildToVerticalBox(Extra)) { S->SetPadding({10.f, 6.f, 0.f, 0.f}); S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Fill); }
+	if (auto* S = H->AddChildToHorizontalBox(TV)) { S->SetVerticalAlignment(SDK::EVerticalAlignment::VAlign_Center); S->SetSize(SDK::FSlateChildSize{1.f, SDK::ESlateSizeRule::Fill}); }
+	Face->SetContent(H); Edge->SetContent(Face);
+	SDK::UBorder* Flash = NewW<SDK::UBorder>(U); Flash->BrushColor = {1.f, 1.f, 1.f, 0.f}; Flash->Visibility = SDK::ESlateVisibility::HitTestInvisible;
+	if (auto* S = Ink->AddChildToOverlay(Edge)) { S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Fill); S->SetVerticalAlignment(SDK::EVerticalAlignment::VAlign_Fill); }
+	if (auto* S = Ink->AddChildToOverlay(Flash)) { S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Fill); S->SetVerticalAlignment(SDK::EVerticalAlignment::VAlign_Fill); }
+	if (auto* S = (SDK::UButtonSlot*)R.B->SetContent(Ink)) { const float P = bBig ? 6.f : 4.f; S->SetPadding({P, P, P, P}); S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Fill); }
+	R.B->SetRenderShear({bBig ? -12.f : -8.f, 0.f}); R.B->SetRenderAngle(bBig ? -4.f : -2.f);
+	R.B->SetRenderTransformPivot({0.5f, 0.5f});
+	GCards.push_back({&R, R.B, Flash, 1.f, 0.f, false});
+	return R;
+}
+// Small styled bar (Bot difficulty, Lucky Draw): ink outline, coloured face, gold label.
+static FBtn MakeBar(SDK::UUserWidget* U, FBtn& R, const std::wstring& En, SDK::FLinearColor Col)
+{
+	R = FBtn{}; for (wchar_t c : En) R.L += (char)c;
+	R.B = NewW<SDK::UButton>(U); R.B->IsFocusable = false; R.B->BackgroundColor = {0.f, 0.f, 0.f, 1.f};
+	SDK::UOverlay* O = NewW<SDK::UOverlay>(U);
+	SDK::UBorder* Face = NewW<SDK::UBorder>(U); Face->BrushColor = Col; Face->SetPadding({24.f, 6.f, 24.f, 6.f}); Face->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Center);
+	R.T = GoldText(U, En, 22, {1.f, 0.85f, 0.35f, 1.f}); Face->SetContent(R.T);
+	SDK::UBorder* Flash = NewW<SDK::UBorder>(U); Flash->BrushColor = {1.f, 1.f, 1.f, 0.f}; Flash->Visibility = SDK::ESlateVisibility::HitTestInvisible;
+	if (auto* S = O->AddChildToOverlay(Face)) { S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Fill); S->SetVerticalAlignment(SDK::EVerticalAlignment::VAlign_Fill); }
+	if (auto* S = O->AddChildToOverlay(Flash)) { S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Fill); S->SetVerticalAlignment(SDK::EVerticalAlignment::VAlign_Fill); }
+	if (auto* S = (SDK::UButtonSlot*)R.B->SetContent(O)) { S->SetPadding({4.f, 4.f, 4.f, 4.f}); S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Fill); }
+	R.B->SetRenderShear({-8.f, 0.f}); R.B->SetRenderTransformPivot({0.5f, 0.5f});
+	GCards.push_back({&R, R.B, Flash, 1.f, 0.f, false});
 	return R;
 }
 static void GoldBackdrop(SDK::UUserWidget* U)
@@ -397,35 +434,104 @@ static void GoldBackdrop(SDK::UUserWidget* U)
 	if (auto* S = O->AddChildToOverlay(Old)) { S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Fill); S->SetVerticalAlignment(SDK::EVerticalAlignment::VAlign_Fill); }
 	U->WidgetTree->RootWidget = O;
 }
+// Pad navigation over the golden cards (XInput, read directly so it works without window focus). PadMouse owns the pad when it runs.
+static bool PadMouseRunning()
+{
+	static ULONGLONG Next{}; static bool bRun{false};
+	if (GetTickCount64() < Next) return bRun;
+	Next = GetTickCount64() + 3000; bRun = false;
+	HANDLE S = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0); if (S == INVALID_HANDLE_VALUE) return false;
+	PROCESSENTRY32W E{sizeof(E)};
+	for (BOOL Ok = Process32FirstW(S, &E); Ok; Ok = Process32NextW(S, &E)) if (_wcsicmp(E.szExeFile, L"PadMouse.exe") == 0) { bRun = true; break; }
+	CloseHandle(S); return bRun;
+}
+static void PadNav()
+{
+	using XGS = DWORD(WINAPI*)(DWORD, XINPUT_STATE*);
+	static XGS Get = [] { HMODULE M = LoadLibraryW(L"xinput1_4.dll"); if (!M) M = LoadLibraryW(L"xinput9_1_0.dll"); return M ? (XGS)GetProcAddress(M, "XInputGetState") : (XGS)nullptr; }();
+	static WORD Prev{}; static ULONGLONG RepeatAt{};
+	if (!Get || GCards.size() < 9 || PadMouseRunning()) return;
+	WORD B{};
+	for (DWORD i{0}; i < 4; ++i)
+	{
+		XINPUT_STATE St{}; if (Get(i, &St) != ERROR_SUCCESS) continue;
+		B |= St.Gamepad.wButtons;
+		if (St.Gamepad.sThumbLY > 16000) B |= XINPUT_GAMEPAD_DPAD_UP; if (St.Gamepad.sThumbLY < -16000) B |= XINPUT_GAMEPAD_DPAD_DOWN;
+		if (St.Gamepad.sThumbLX > 16000) B |= XINPUT_GAMEPAD_DPAD_RIGHT; if (St.Gamepad.sThumbLX < -16000) B |= XINPUT_GAMEPAD_DPAD_LEFT;
+	}
+	const WORD Dirs = XINPUT_GAMEPAD_DPAD_UP | XINPUT_GAMEPAD_DPAD_DOWN | XINPUT_GAMEPAD_DPAD_LEFT | XINPUT_GAMEPAD_DPAD_RIGHT;
+	WORD Hit = B & ~Prev;
+	if ((B & Dirs) && (B & Dirs) == (Prev & Dirs) && GetTickCount64() >= RepeatAt) { Hit |= B & Dirs; RepeatAt = GetTickCount64() + 180; }
+	if (Hit & Dirs) RepeatAt = (std::max)(RepeatAt, GetTickCount64() + ((Prev & Dirs) ? 0 : 400));
+	Prev = B;
+	if (!Hit) return;
+	// Layout: 0 Quick | 1 2 3 | 4 5 6 | 7 8 ; table = up, down, left, right.
+	static const int Nav[9][4]{{0, 1, 0, 0}, {0, 4, 1, 2}, {0, 5, 1, 3}, {0, 6, 2, 3}, {1, 7, 4, 5}, {2, 7, 4, 6}, {3, 8, 5, 6}, {4, 7, 7, 8}, {6, 8, 7, 8}};
+	if (PadFocus < 0) { if (Hit & (Dirs | XINPUT_GAMEPAD_A)) PadFocus = 0; return; }
+	if (Hit & XINPUT_GAMEPAD_DPAD_UP) PadFocus = Nav[PadFocus][0];
+	else if (Hit & XINPUT_GAMEPAD_DPAD_DOWN) PadFocus = Nav[PadFocus][1];
+	else if (Hit & XINPUT_GAMEPAD_DPAD_LEFT) PadFocus = Nav[PadFocus][2];
+	else if (Hit & XINPUT_GAMEPAD_DPAD_RIGHT) PadFocus = Nav[PadFocus][3];
+	if (Hit & XINPUT_GAMEPAD_A) PadClick = GCards[PadFocus].B->L;
+}
 static void GoldTick()
 {
 	if (!MenuW || !MenuW->IsVisible()) return;
-	const float T = (float)(GetTickCount64() % 600000ULL) / 1000.f;
+	static ULONGLONG Last{GetTickCount64()};
+	const ULONGLONG Now = GetTickCount64(); const float DT = (std::min)(0.1f, (Now - Last) / 1000.f); Last = Now;
+	const float T = (float)(Now % 600000ULL) / 1000.f;
 	if (GBg) GBg->SetRenderTranslation({std::sin(T * 0.13f) * 60.f, std::cos(T * 0.09f) * 35.f});
 	for (int i = 0; i < 2; ++i) if (GGo[i]) { GGo[i]->SetRenderTranslation({0.f, std::sin(T * 0.8f + i * 2.f) * 18.f}); GGo[i]->SetRenderAngle(-8.f + i * 16.f + std::sin(T * 1.3f + i) * 3.f); }
-	if (GCard) GCard->SetRenderScale({1.f + std::sin(T * 2.2f) * 0.015f, 1.f + std::sin(T * 2.2f) * 0.015f});
+	PadNav();
+	for (size_t i = 0; i < GCards.size(); ++i)
+	{
+		FGCard& C = GCards[i];
+		const bool bOn = C.B->B && (C.B->B->IsHovered() || (int)i == PadFocus);
+		if (bOn && !C.bWas) C.F = 0.85f;	// white flash on the punch-in
+		C.bWas = bOn;
+		const float Want = bOn ? 1.08f : 1.f;
+		C.S += (Want - C.S) * (std::min)(1.f, DT * 18.f);
+		C.F = (std::max)(0.f, C.F - DT * 2.5f);
+		const float Pulse = (i == 0 && !bOn) ? std::sin(T * 2.2f) * 0.015f : 0.f;
+		C.Root->SetRenderScale({C.S + Pulse, C.S + Pulse});
+		C.Flash->SetBrushColor({1.f, 1.f, 1.f, C.F});
+	}
 }
-
 static void BuildMenu()
 {
 	MenuW = Shell(); if (!MenuW) return;
+	GCards.clear(); PadFocus = -1; PadClick.clear();
 	SDK::UVerticalBox* V = Frame(MenuW, 0.93f, SDK::EVerticalAlignment::VAlign_Center);
 	GoldBackdrop(MenuW);
-	const SDK::FLinearColor Main{0.85f, 0.45f, 0.05f, 1.f}, Norm{0.12f, 0.16f, 0.35f, 1.f}, Net{0.08f, 0.28f, 0.22f, 1.f};
 	StatusTxt = Label(MenuW, L"", 22); AddText(V, StatusTxt);
-	BQuick  = QuickCard(MenuW, V);
-	BTrain  = AddBtn(MenuW, V, L"Training", 26, 8.f, Norm);
-	BTut    = AddBtn(MenuW, V, L"Tutorial", 26, 8.f, Norm);
-	BDealer = AddBtn(MenuW, V, L"Dealer's Challenge", 26, 8.f, Norm);
-	BHost   = AddBtn(MenuW, V, L"Host Online", 26, 8.f, Net);
-	BJoin   = AddBtn(MenuW, V, L"Join Online", 26, 8.f, Net);
+	MakeCard(MenuW, BQuick, L"QUICK MATCH", L"クイックマッチ", L"01_JTR", true);
+	if (auto* S = V->AddChildToVerticalBox(BQuick.B)) { S->SetPadding({0.f, 10.f, 0.f, 22.f}); S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Fill); }
 	IPBox = NewW<SDK::UEditableTextBox>(MenuW);
 	IPBox->SetText(Txt(L"127.0.0.1"));
 	IPBox->SetHintText(Txt(L"Host IP address"));
-	if (SDK::UVerticalBoxSlot* S = V->AddChildToVerticalBox(IPBox)) { S->SetPadding({0.f, 0.f, 0.f, 6.f}); S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Fill); }
-	BEman   = AddBtn(MenuW, V, L"Emanate", 26, 8.f, Norm);
-	BDiff   = AddBtn(MenuW, V, std::wstring(L"Bot difficulty: ") + DiffName(OneMenu::BotSetting), 26, 8.f, Norm);
-	BDraw   = AddBtn(MenuW, V, L"Lucky Draw (1 ticket)", 26, 8.f, {0.45f, 0.12f, 0.45f, 1.f});
+	struct { FBtn* B; const wchar_t* En; const wchar_t* Jp; const wchar_t* Icon; SDK::UWidget* Extra; } Grid[6]{
+		{&BTrain, L"Training", L"トレーニング", L"02_KKI", nullptr},
+		{&BTut, L"Tutorial", L"チュートリアル", L"06_JSK", nullptr},
+		{&BDealer, L"Dealer's Challenge", L"ディーラーの挑戦", L"05_DIO", nullptr},
+		{&BHost, L"Host Online", L"オンラインで待つ", L"09_GRN", nullptr},
+		{&BJoin, L"Join Online", L"オンラインに参加", L"08_RHN", IPBox},
+		{&BEman, L"Emanate", L"エマネイト", L"23_ABD", nullptr}};
+	for (int Row = 0; Row < 2; ++Row)
+	{
+		SDK::UHorizontalBox* H = NewW<SDK::UHorizontalBox>(MenuW);
+		for (int Col = 0; Col < 3; ++Col)
+		{
+			auto& G = Grid[Row * 3 + Col];
+			MakeCard(MenuW, *G.B, G.En, G.Jp, G.Icon, false, G.Extra);
+			if (auto* S = H->AddChildToHorizontalBox(G.B->B)) { S->SetPadding({10.f, 0.f, 10.f, 0.f}); S->SetSize(SDK::FSlateChildSize{1.f, SDK::ESlateSizeRule::Fill}); S->SetVerticalAlignment(SDK::EVerticalAlignment::VAlign_Fill); }
+		}
+		if (auto* S = V->AddChildToVerticalBox(H)) { S->SetPadding({0.f, Row ? 26.f : 18.f, 0.f, 0.f}); S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Fill); }
+	}
+	SDK::UHorizontalBox* Bars = NewW<SDK::UHorizontalBox>(MenuW);
+	MakeBar(MenuW, BDiff, std::wstring(L"Bot difficulty: ") + DiffName(OneMenu::BotSetting), {0.12f, 0.16f, 0.35f, 1.f});
+	MakeBar(MenuW, BDraw, L"Lucky Draw (1 ticket)", {0.45f, 0.12f, 0.45f, 1.f});
+	for (FBtn* B : {&BDiff, &BDraw}) if (auto* S = Bars->AddChildToHorizontalBox(B->B)) { S->SetPadding({10.f, 0.f, 10.f, 0.f}); S->SetSize(SDK::FSlateChildSize{1.f, SDK::ESlateSizeRule::Fill}); }
+	if (auto* S = V->AddChildToVerticalBox(Bars)) { S->SetPadding({0.f, 26.f, 0.f, 0.f}); S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Fill); }
 	DrawTxt = Label(MenuW, L"", 22); AddText(V, DrawTxt);
 	MenuW->AddToViewport(200);
 }
@@ -862,7 +968,7 @@ bool OneMenu::OnFlow(const std::string& Tag)
 
 const wchar_t* OneMenu::OnBrowse(const wchar_t* Map, bool bListen)
 {
-	MenuW = SearchW = HoldW = NoticeW = CoverW = nullptr; FE = HostMenu = Proxy = nullptr; IPBox = nullptr; HoldTxt = NoticeTxt = StatusTxt = DrawTxt = nullptr; NoticeShown.clear();
+	MenuW = SearchW = HoldW = NoticeW = CoverW = nullptr; FE = HostMenu = Proxy = nullptr; IPBox = nullptr; GBg = nullptr; GGo[0] = GGo[1] = nullptr; GCards.clear(); PadFocus = -1; HoldTxt = NoticeTxt = StatusTxt = DrawTxt = nullptr; NoticeShown.clear();
 	BQuick = BTrain = BTut = BDealer = BHost = BJoin = BEman = BBack = BStart = BDraw = BDiff = FBtn{};
 	OfflinePopup = nullptr; bResultSent = false;
 	bHostMenuOpen = false; FEWait = 0.f; GotoDelay = -1.f; StartPressT = -1.f;
@@ -1210,9 +1316,12 @@ static void Activate()
 	if (OrigGetForegroundWindow() != GameWnd)
 	{
 		const DWORD Fg = GetWindowThreadProcessId(OrigGetForegroundWindow(), nullptr), Me = GetWindowThreadProcessId(GameWnd, nullptr);
-		AttachThreadInput(Fg, Me, TRUE);
-		BringWindowToTop(GameWnd); SetForegroundWindow(GameWnd); SetActiveWindow(GameWnd); SetFocus(GameWnd);
-		AttachThreadInput(Fg, Me, FALSE);
+		if (!std::filesystem::exists(AppDir() / "testhidden.txt"))	// owner rule 10-20: a hidden test game never takes the foreground
+		{
+			AttachThreadInput(Fg, Me, TRUE);
+			BringWindowToTop(GameWnd); SetForegroundWindow(GameWnd); SetActiveWindow(GameWnd); SetFocus(GameWnd);
+			AttachThreadInput(Fg, Me, FALSE);
+		}
 	}
 	PostMessageW(GameWnd, WM_ACTIVATEAPP, TRUE, 0);
 	PostMessageW(GameWnd, WM_ACTIVATE, WA_CLICKACTIVE, 0);
@@ -1501,8 +1610,30 @@ static std::string Handle(const std::string& Line)
 	return "err unknown command " + C;
 }
 
+// Test runs (testhidden.txt holds the owner's foreground HWND): keep the game window off-screen, behind everything, and hand her window back.
+static void HideThread()
+{
+	const auto F = AppDir() / "testhidden.txt";
+	if (!std::filesystem::exists(F)) return;
+	unsigned long long Prev{}; { std::ifstream I(F); I >> Prev; }
+	for (int i{0}; i < 2400; ++i)	// two minutes of 50 ms checks covers the launch and the first focus grab
+	{
+		HWND H{}; EnumWindows([](HWND W, LPARAM P) -> BOOL { DWORD Pid{}; GetWindowThreadProcessId(W, &Pid); wchar_t C[64]{}; GetClassNameW(W, C, 64);
+			if (Pid == GetCurrentProcessId() && wcscmp(C, L"UnrealWindow") == 0) { *(HWND*)P = W; return FALSE; } return TRUE; }, (LPARAM)&H);
+		if (H)
+		{
+			RECT R{}; GetWindowRect(H, &R);
+			if (R.left > -3000) SetWindowPos(H, HWND_BOTTOM, -4000, -4000, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE);
+			HWND Fg = (OrigGetForegroundWindow ? OrigGetForegroundWindow : GetForegroundWindow)();
+			if (Prev && Fg == H && IsWindow((HWND)Prev)) SetForegroundWindow((HWND)Prev);
+		}
+		Sleep(50);
+	}
+}
+
 static void PipeThread()
 {
+	std::thread(HideThread).detach();
 	const std::wstring Name = L"\\\\.\\pipe\\ajbtest-" + std::to_wstring(GetCurrentProcessId());
 	for (;;)
 	{
