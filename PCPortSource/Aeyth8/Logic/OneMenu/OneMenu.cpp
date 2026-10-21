@@ -207,6 +207,7 @@ static std::string LastFlow, LastPhase;
 static SDK::UUserWidget* MenuW{}; static SDK::UUserWidget* SearchW{}; static SDK::UUserWidget* HoldW{};
 static FBtn BQuick, BTrain, BTut, BDealer, BHost, BJoin, BEman, BBack, BStart;
 static SDK::UEditableTextBox* IPBox{};
+static FBtn BDiff; static float SearchT{0.f};
 static SDK::UTextBlock* HoldTxt{};
 static SDK::UUserWidget* NoticeW{}; static SDK::UTextBlock* NoticeTxt{}; static std::wstring NoticeShown;
 static SDK::UTextBlock* StatusTxt{}; static SDK::UTextBlock* DrawTxt{}; static FBtn BDraw;
@@ -225,6 +226,17 @@ static std::filesystem::path AppDir()
 	std::error_code Err; std::filesystem::create_directories(P, Err);
 	return P;
 }
+
+// Bot difficulty (1 Easy .. 4 Very Hard), saved in %LOCALAPPDATA%\AJB\onemenu.cfg.
+static const wchar_t* DiffName(int L) { static const wchar_t* N[] = {L"Easy", L"Normal", L"Hard", L"Very Hard"}; return N[std::clamp(L, 1, 4) - 1]; }
+static void LoadBotSetting()
+{
+	static bool bDone{false}; if (bDone) return; bDone = true;
+	std::ifstream F(AppDir() / "onemenu.cfg"); std::string Line;
+	while (std::getline(F, Line)) if (Line.rfind("BotDifficulty=", 0) == 0) try { OneMenu::BotSetting = std::clamp(std::stoi(Line.substr(14)), 1, 4); } catch (...) {}
+	OneMenu::BotLevel = OneMenu::BotSetting;
+}
+static void SaveBotSetting() { std::ofstream(AppDir() / "onemenu.cfg", std::ios::trunc) << "BotDifficulty=" << OneMenu::BotSetting << '\n'; }
 
 static void WritePhase(const char* Ph)
 {
@@ -331,6 +343,7 @@ static void BuildMenu()
 	IPBox->SetHintText(Txt(L"Host IP address"));
 	if (SDK::UVerticalBoxSlot* S = V->AddChildToVerticalBox(IPBox)) { S->SetPadding({0.f, 0.f, 0.f, 6.f}); S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Fill); }
 	BEman   = AddBtn(MenuW, V, L"Emanate", 26, 8.f, Norm);
+	BDiff   = AddBtn(MenuW, V, std::wstring(L"Bot difficulty: ") + DiffName(OneMenu::BotSetting), 26, 8.f, Norm);
 	BDraw   = AddBtn(MenuW, V, L"Lucky Draw (1 ticket)", 26, 8.f, {0.45f, 0.12f, 0.45f, 1.f});
 	DrawTxt = Label(MenuW, L"", 22); AddText(V, DrawTxt);
 	MenuW->AddToViewport(200);
@@ -453,7 +466,7 @@ static int MenuConsole(const std::string& Cmd)
 		if (Area.empty()) Area = "4";
 		if (NPC.empty()) NPC = "0";
 		const char* PM = (Mode == "2") ? "Pair" : "Solo";
-		const int Diff = ReadArrowIndex(HostMenu ? (SDK::UObject*)Sub(HostMenu, "Arrow_NPC_Difficulty") : nullptr, 2);
+		const int Diff = OneMenu::BotSetting - 1;
 		HostCmd = std::format("AJBExecInternal Host?Area={}?PlayMode={}?NPCNum={}?NPCDifficulty={}", Area, PM, NPC, Diff);
 		LogA("OneMenu", "Translated host command: " + HostCmd);
 		bHostMenuOpen = false;
@@ -521,7 +534,7 @@ bool OneMenu::OnFlow(const std::string& Tag)
 const wchar_t* OneMenu::OnBrowse(const wchar_t* Map, bool bListen)
 {
 	MenuW = SearchW = HoldW = NoticeW = nullptr; FE = HostMenu = Proxy = nullptr; IPBox = nullptr; HoldTxt = NoticeTxt = StatusTxt = DrawTxt = nullptr; NoticeShown.clear();
-	BQuick = BTrain = BTut = BDealer = BHost = BJoin = BEman = BBack = BStart = BDraw = FBtn{};
+	BQuick = BTrain = BTut = BDealer = BHost = BJoin = BEman = BBack = BStart = BDraw = BDiff = FBtn{};
 	OfflinePopup = nullptr; bResultSent = false;
 	bHostMenuOpen = false; FEWait = 0.f; GotoDelay = -1.f; StartPressT = -1.f;
 	CurMap = Map; Leveled.clear();
@@ -538,7 +551,7 @@ const wchar_t* OneMenu::OnBrowse(const wchar_t* Map, bool bListen)
 	}
 	if (CurMap.find(L"AJBFrontEnd") != std::wstring::npos || CurMap.find(L"TitleScreen") != std::wstring::npos)
 	{
-		bHosting = false; bQuickHost = false; bHoldActive = false; bFlowHeld = false; bFlowForced = false; ForcedT = -1.f; BotLevel = 4;
+		bHosting = false; bQuickHost = false; bHoldActive = false; bFlowHeld = false; bFlowForced = false; ForcedT = -1.f; BotLevel = BotSetting;
 		WritePhase("menu");
 	}
 	return nullptr;
@@ -565,7 +578,7 @@ static void RunPostAction()
 	else if (M == EMode::Quick)
 	{
 		std::ofstream(QJsonPath(), std::ios::trunc) << std::format("{{\"char\":{},\"t\":{}}}", Ch, (long long)std::time(nullptr));
-		bSearching = true;
+		bSearching = true; SearchT = 0.f;
 		BuildSearch();
 	}
 }
@@ -590,6 +603,13 @@ void OneMenu::Tick(float DT)
 		if (N) LogA("OneMenu", std::format("AI level {} + find-enemy patch applied to {} bots", BotLevel, N));
 	}
 	ArcadeLink::Start();
+	LoadBotSetting();
+	// Quick Match without AJB Online.exe: nobody found in 20 s (the app would have hosted by now) -> host a bot match ourselves.
+	if (bSearching && (SearchT += DT) > 22.f)
+	{
+		LogA("OneMenu", "Quick Match: no players found in 20 s, hosting a bot match");
+		Exec(std::format("AJBExecInternal Host?Area={}?PlayMode=Solo?NPCNum=29?NPCDifficulty={}?QuickMatch=1", 2 + (int)(GetTickCount64() % 10), OneMenu::BotSetting - 1));	// random battle royale map, Areas 2-11 like ajbnet.py
+	}
 	if (!World()) return;
 	UpdateNotice(DT);
 	// ShowTitle is a BP-to-BP call (no ProcessEvent), so also scan: hide any visible common window carrying the ALL.Net offline text.
@@ -695,6 +715,12 @@ void OneMenu::Tick(float DT)
 			const std::string St = ArcadeLink::Status();
 			if (StatusTxt) StatusTxt->SetText(Txt(St.empty() ? L"Arcade profile offline" : std::wstring(St.begin(), St.end())));
 			if (const std::string M = ArcadeLink::TakeMessage(); !M.empty() && DrawTxt) DrawTxt->SetText(Txt(std::wstring(M.begin(), M.end())));
+		}
+		if (Clicked(BDiff))
+		{
+			OneMenu::BotSetting = OneMenu::BotSetting % 4 + 1; OneMenu::BotLevel = OneMenu::BotSetting; SaveBotSetting();
+			if (BDiff.T) BDiff.T->SetText(Txt(std::wstring(L"Bot difficulty: ") + DiffName(OneMenu::BotSetting)));
+			LogA("OneMenu", std::format("Bot difficulty set to {}", OneMenu::BotSetting));
 		}
 		if (Clicked(BDraw)) { if (DrawTxt) DrawTxt->SetText(Txt(L"Drawing...")); ArcadeLink::Draw(1); }
 		if (Clicked(BEman)) { Show(MenuW, false); OneMenu::Call(FE, "BndEvt__BT_Emanate_K2Node_ComponentBoundEvent_4_OnButtonPressedEvent__DelegateSignature"); }

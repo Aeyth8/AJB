@@ -632,6 +632,7 @@ SDK::FString* UFunctions::ConsoleCommand(SDK::APlayerController* This, SDK::FStr
 		SDK::FAJBBattleSettings TheSettings{};
 		TheSettings.AILevel = ((int)PARM_NPCDifficulty < 0 ? 0 : (int)PARM_NPCDifficulty > 3 ? 3 : (int)PARM_NPCDifficulty) + 1;
 		TheSettings.DamageAreaType = PARM_Area;
+		TheSettings.AILevel = OneMenu::BotSetting;	// the menu setting feeds every mode
 		OneMenu::BotLevel = TheSettings.AILevel;
 		AJB::Instance->SetBattleSettings(TheSettings);
 		AJB::Instance->PlayMode = (SDK::EPlayMode)PARM_PlayMode;
