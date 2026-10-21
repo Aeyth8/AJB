@@ -373,6 +373,25 @@ static void UpdateCover(float DT)
 
 // Matching countdown row: the English label is longer than the JP one and runs under the heart, and the "s" (秒) sits far right.
 // Shorten the label and slide it left of the heart, and pull the unit in next to the number.
+// Old "offline mode" label: shown by the game whenever ALL.Net is absent. Same rule as the offline popup:
+// hidden while the local server answers, shown only on a real failure (server down, Steam not running, join failed).
+static void UpdateOfflineLabel(float DT)
+{
+	static float T{0.f};
+	if ((T += DT) < 0.25f) return;
+	T = 0.f;
+	const bool Fail = (ArcadeLink::Polled() && !ArcadeLink::Alive()) || NetFailT > 0.f || SteamFailT > 0.f;
+	const SDK::ESlateVisibility V = Fail ? SDK::ESlateVisibility::SelfHitTestInvisible : SDK::ESlateVisibility::Collapsed;
+	static int Logged{-1};
+	for (int i{0}; i < SDK::UObject::GObjects->Num(); ++i)
+	{
+		SDK::UObject* O = SDK::UObject::GObjects->GetByIndex(i);
+		if (!O || !O->Class || O->IsDefaultObject() || O->Class->GetName() != "WB_OfflineModeLabel_C") continue;
+		if (((SDK::UWidget*)O)->Visibility != V) ((SDK::UWidget*)O)->SetVisibility(V);
+	}
+	if (Logged != (int)Fail) { Logged = Fail; LogA("OneMenu", Fail ? "Offline label allowed (real failure)" : "Offline label hidden (server answering)"); }
+}
+
 static SDK::UWidget* Sub(SDK::UObject* O, const char* Name);
 static void FixMatchRow(float DT)
 {
@@ -657,7 +676,8 @@ void OneMenu::Tick(float DT)
 	ArcadeLink::Start();
 	LoadBotSetting();
 	// Quick Match without AJB Online.exe: nobody found in 20 s (the app would have hosted by now) -> host a bot match ourselves.
-	if (bSearching && (SearchT += DT) > 22.f)
+	// AJB Online removes quickmatch.json within 2 s of reading it; still there after 3 s = the app is not running, so host now.
+	if (bSearching && ((SearchT += DT) > 22.f || (SearchT > 3.f && std::filesystem::exists(QJsonPath()))))
 	{
 		LogA("OneMenu", "Quick Match: no players found in 20 s, hosting a bot match");
 		Exec(std::format("AJBExecInternal Host?Area={}?PlayMode=Solo?NPCNum=29?NPCDifficulty={}?QuickMatch=1", RandArea(), OneMenu::BotSetting - 1));	// random battle royale map, same set as ajbnet.py
@@ -665,6 +685,7 @@ void OneMenu::Tick(float DT)
 	if (!World()) return;
 	UpdateCover(DT);
 	FixMatchRow(DT);
+	UpdateOfflineLabel(DT);
 	UpdateNotice(DT);
 	// ShowTitle is a BP-to-BP call (no ProcessEvent), so also scan: hide any visible common window carrying the ALL.Net offline text.
 	static float ScanT{0.f}; static std::vector<std::pair<int, SDK::UObject*>> Wins; static float FindT{0.f};
@@ -817,6 +838,22 @@ void OneMenu::Tick(float DT)
 			}
 		}
 		return;
+	}
+
+	// ---- Test-only: %LOCALAPPDATA%/AJB/testfast.txt makes the matching wait, Quick Match hold and start-location pick 0 s ----
+	{
+		static std::string FastFlow; static float FastT{0.f}; static bool bFast{false};
+		if (LastFlow != FastFlow)
+		{
+			FastFlow = LastFlow; FastT = 0.f;
+			wchar_t P[MAX_PATH]{}; GetEnvironmentVariableW(L"LOCALAPPDATA", P, MAX_PATH);
+			bFast = GetFileAttributesW((std::wstring(P) + L"\\AJB\\testfast.txt").c_str()) != INVALID_FILE_ATTRIBUTES;
+		}
+		if (bFast && FastT >= 0.f && (FastT += DT) > 1.f)
+		{
+			if (LastFlow == "OutGame.Matching") { FastT = -1.f; LogA("OneMenu", "testfast: matching wait 0"); StartNow(); }
+			else if (LastFlow == "OutGame.SelectStartLocation") { FastT = -1.f; LogA("OneMenu", "testfast: GotoInGame"); OneMenu::Call(Proxy ? Proxy : FindLive("BP_AJBOutGameProxy_C"), "GotoInGame"); }
+		}
 	}
 
 	// ---- Quick match host hold ----
