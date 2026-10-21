@@ -813,26 +813,36 @@ static void FixTexts(float DT)
 	static float T{0.f};
 	if ((T += DT) < 0.5f) return;
 	T = 0.f;
-	static const std::wstring Bot{L"ダービーの刺客"};
+	static const std::wstring Bot{L"\u30c0\u30fc\u30d3\u30fc\u306e\u523a\u5ba2"};
 	std::wstring Me;
 	for (int i{0}; i < SDK::UObject::GObjects->Num(); ++i)
 	{
 		SDK::UObject* O = SDK::UObject::GObjects->GetByIndex(i);
-		if (!O || !O->Class || O->IsDefaultObject() || !O->IsA(SDK::UTextBlock::StaticClass())) continue;
+		if (!O || !O->Class || O->IsDefaultObject()) continue;
+		const bool Rich = O->IsA(SDK::URichTextBlock::StaticClass());
+		if (!Rich && !O->IsA(SDK::UTextBlock::StaticClass())) continue;
 		SDK::UTextBlock* B = (SDK::UTextBlock*)O;
-		const std::wstring W = SDK::UKismetTextLibrary::Conv_TextToString(B->GetText()).ToWString();
+		const std::wstring W = SDK::UKismetTextLibrary::Conv_TextToString(Rich ? ((SDK::URichTextBlock*)O)->Text : B->GetText()).ToWString();
 		if (W.empty()) continue;
 		std::wstring N = W;
-		if (size_t P = N.find(Bot); P != std::wstring::npos)
+		for (size_t P; (P = N.find(Bot)) != std::wstring::npos;)
 		{
 			N.replace(P, Bot.size(), L"D'Arby's Assassin ");
-			for (wchar_t& c : N) if (c >= 0xFF10 && c <= 0xFF19) c = (wchar_t)(L'0' + (c - 0xFF10));
-			if (const size_t E = P + 18; E < N.size() && N[E] == L' ') N.erase(E, 1);
-			while (!N.empty() && N.back() == L' ') N.pop_back();
+			size_t E = P + 18;
+			while (E < N.size() && N[E] == L' ') N.erase(E, 1);
+			while (E < N.size() && N[E] >= 0xFF10 && N[E] <= 0xFF19) { N[E] = (wchar_t)(L'0' + (N[E] - 0xFF10)); ++E; }
+			if (E == P + 18) N.erase(P + 17, 1);	// no number follows: drop the spacer
+		}
+		// End-training tab: the JP split "トレー|ニング終了" became "Train|ing End" and drew as "Training EndEnd".
+		if (B->Outer && B->Outer->Outer && B->Outer->Outer->Class->GetName() == "WB_EndTrainingButton_C")
+		{
+			const std::string BN = B->GetName();
+			if (BN == "AJBTextBlock_18") N = L"Training End";
+			else if (BN == "AJBTextBlock_19") N = L"";
 		}
 		if (N == L"NO NAME") { if (Me.empty()) Me = ArcadeLink::SteamName(); N = Me.empty() ? L"Player" : Me; }
 		for (size_t P; (P = N.find(L"EndEnd")) != std::wstring::npos;) N.erase(P, 3);
-		if (N != W) B->SetText(Txt(N));
+		if (N != W) { if (Rich) ((SDK::URichTextBlock*)O)->SetText(Txt(N)); else B->SetText(Txt(N)); }
 	}
 }
 
