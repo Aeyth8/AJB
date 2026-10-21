@@ -204,6 +204,8 @@ static std::wstring CurMap;
 struct FBtn { SDK::UButton* B{}; SDK::UTextBlock* T{}; bool bWas{}; std::string L; };
 static std::string VClick; static bool VClickHit{false};
 static std::string LastFlow, LastPhase;
+// Areas 2-7 all load AJBStage01: pick one per distinct map (same set as ajbnet.py Quick Match).
+static int RandArea() { static const int A[]{2, 8, 9, 10, 11}; return A[GetTickCount64() % 5]; }
 static float MatchDX[2]{-45.f, -38.f};
 static SDK::UUserWidget* MenuW{}; static SDK::UUserWidget* SearchW{}; static SDK::UUserWidget* HoldW{};
 static FBtn BQuick, BTrain, BTut, BDealer, BHost, BJoin, BEman, BBack, BStart;
@@ -658,7 +660,7 @@ void OneMenu::Tick(float DT)
 	if (bSearching && (SearchT += DT) > 22.f)
 	{
 		LogA("OneMenu", "Quick Match: no players found in 20 s, hosting a bot match");
-		Exec(std::format("AJBExecInternal Host?Area={}?PlayMode=Solo?NPCNum=29?NPCDifficulty={}?QuickMatch=1", 2 + (int)(GetTickCount64() % 10), OneMenu::BotSetting - 1));	// random battle royale map, Areas 2-11 like ajbnet.py
+		Exec(std::format("AJBExecInternal Host?Area={}?PlayMode=Solo?NPCNum=29?NPCDifficulty={}?QuickMatch=1", RandArea(), OneMenu::BotSetting - 1));	// random battle royale map, same set as ajbnet.py
 	}
 	if (!World()) return;
 	UpdateCover(DT);
@@ -722,7 +724,7 @@ void OneMenu::Tick(float DT)
 		if (Clicked(BHost))
 		{
 			// No old port host sub-menu: host straight away with a random battle royale map, 20 bots, the saved bot difficulty.
-			HostCmd = std::format("AJBExecInternal Host?Area={}?PlayMode=Solo?NPCNum=20?NPCDifficulty={}", 2 + (int)(GetTickCount64() % 10), OneMenu::BotSetting - 1);
+			HostCmd = std::format("AJBExecInternal Host?Area={}?PlayMode=Solo?NPCNum=20?NPCDifficulty={}", RandArea(), OneMenu::BotSetting - 1);
 			LogA("OneMenu", "Host: " + HostCmd);
 			StartPick(EMode::Host);
 		}
