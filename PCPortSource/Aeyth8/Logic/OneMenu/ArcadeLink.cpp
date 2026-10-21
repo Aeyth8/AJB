@@ -1,4 +1,4 @@
-#include "../../Global.hpp"
+﻿#include "../../Global.hpp"
 #include "ArcadeLink.h"
 #include <windows.h>
 #include <winhttp.h>
@@ -7,6 +7,7 @@
 #include <mutex>
 #include <thread>
 #include <format>
+#include <fstream>
 #pragma comment(lib, "winhttp.lib")
 using namespace A8CL; using namespace Global;
 
@@ -113,7 +114,7 @@ void ArcadeLink::Login(const std::wstring& Name)
 {
 	std::thread([Name]
 	{
-		const std::string J = Http(L"POST", L"/ajb/login", "{\"card\": \"local\", \"name\": \"" + Utf8(Name) + "\"}");
+		const std::string J = Http(L"POST", L"/ajb/login", "{\"card\": \"" + SteamId() + "\", \"name\": \"" + Utf8(Name) + "\"}");
 		Keep(J); LogA("ArcadeLink", J.empty() ? "login failed" : "login ok " + Status());
 	}).detach();
 }
@@ -176,7 +177,31 @@ std::wstring ArcadeLink::SteamName()
 	auto Get = H ? (const char* (*)(void*))GetProcAddress(H, "SteamAPI_ISteamFriends_GetPersonaName") : nullptr;
 	void* I = F ? F() : nullptr;
 	const char* N = (I && Get) ? Get(I) : nullptr;
-	if (!N || !*N) return L"";
-	wchar_t W[128]{}; MultiByteToWideChar(CP_UTF8, 0, N, -1, W, 127);
-	return W;
+	wchar_t W[128]{};
+	if (N && *N) { MultiByteToWideChar(CP_UTF8, 0, N, -1, W, 127); return W; }
+	// The game does not load steam_api64: read the most recent Steam login's persona name from Steam's own files.
+	std::string Id, Name; SteamUser(Id, Name);
+	if (!Name.empty()) { MultiByteToWideChar(CP_UTF8, 0, Name.c_str(), -1, W, 127); return W; }
+	DWORD Sz = sizeof W;
+	if (RegGetValueW(HKEY_CURRENT_USER, L"Software\\Valve\\Steam", L"LastGameNameUsed", RRF_RT_REG_SZ, nullptr, W, &Sz) == ERROR_SUCCESS) return W;
+	return L"";
+}
+
+std::string ArcadeLink::SteamId() { std::string Id, Name; SteamUser(Id, Name); return Id.empty() ? "local" : "steam:" + Id; }
+
+void ArcadeLink::SteamUser(std::string& Id, std::string& Name)
+{
+	wchar_t P[MAX_PATH]{}; DWORD Sz = sizeof P;
+	if (RegGetValueW(HKEY_CURRENT_USER, L"Software\\Valve\\Steam", L"SteamPath", RRF_RT_REG_SZ, nullptr, P, &Sz) != ERROR_SUCCESS) return;
+	std::ifstream F(std::wstring(P) + L"/config/loginusers.vdf");
+	std::string L, CurId, CurName; long long Best{-1};	// no "MostRecent" flag: the newest login timestamp wins
+	auto Val = [](const std::string& S) { size_t A = S.find('"', S.find('"', S.find('"') + 1) + 1); return A == std::string::npos ? std::string() : S.substr(A + 1, S.rfind('"') - A - 1); };
+	while (std::getline(F, L))
+	{
+		const size_t Q = L.find("\"7656");
+		if (Q != std::string::npos && L.find('"', Q + 1) == L.rfind('"')) { CurId = L.substr(Q + 1, L.rfind('"') - Q - 1); CurName.clear(); }
+		else if (L.find("\"PersonaName\"") != std::string::npos) CurName = Val(L);
+		else if (L.find("\"MostRecent\"") != std::string::npos && Val(L) == "1") { Id = CurId; Name = CurName; return; }
+		else if (L.find("\"timestamp\"") != std::string::npos && !CurId.empty()) { const long long T = atoll(Val(L).c_str()); if (T > Best) { Best = T; Id = CurId; Name = CurName; } }
+	}
 }

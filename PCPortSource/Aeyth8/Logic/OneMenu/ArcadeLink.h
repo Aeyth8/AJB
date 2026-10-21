@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <string>
 
 // Link to the local arcade server (ajbserver.py, 127.0.0.1:47811): profile, match results, ticket draws.
@@ -15,4 +15,6 @@ namespace ArcadeLink
 	std::string	TakeMessage();					// last draw/result line for the menu, cleared on read
 	std::wstring SteamName();					// Steam persona name, "" without Steam
 	bool		SteamRunning();
+	std::string	SteamId();						// "steam:<SteamID64>" of the most recent Steam login, else "local"
+	void		SteamUser(std::string& Id, std::string& Name);
 }
