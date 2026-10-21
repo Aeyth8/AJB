@@ -374,7 +374,7 @@ static SDK::UTextBlock* GoldText(SDK::UUserWidget* U, const std::wstring& S, int
 	T->SetShadowOffset({4.f, 4.f}); T->SetShadowColorAndOpacity({0.f, 0.f, 0.f, 1.f});
 	return T;
 }
-struct FGCard { FBtn* B; SDK::UWidget* Root; SDK::UBorder* Flash; float S; float F; bool bWas; };
+struct FGCard { FBtn* B; SDK::UWidget* Root; SDK::UBorder* Flash; float S; float F; bool bWas; SDK::UBorder* Edge{}; int Lit{-1}; };
 static std::vector<FGCard> GCards; static int PadFocus{-1};
 static SDK::UTexture2D* Portrait(const wchar_t* Code)
 {
@@ -414,7 +414,7 @@ static FBtn MakeCard(SDK::UUserWidget* U, FBtn& R, const std::wstring& En, const
 	if (auto* S = (SDK::UButtonSlot*)R.B->SetContent(Ink)) { const float P = bBig ? 6.f : 4.f; S->SetPadding({P, P, P, P}); S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Fill); }
 	R.B->SetRenderShear({bBig ? -12.f : -8.f, 0.f}); R.B->SetRenderAngle(bBig ? -4.f : -2.f);
 	R.B->SetRenderTransformPivot({0.5f, 0.5f});
-	GCards.push_back({&R, R.B, Flash, 1.f, 0.f, false});
+	GCards.push_back({&R, R.B, Flash, 1.f, 0.f, false, Edge});
 	return R;
 }
 // Small styled bar (Bot difficulty, Lucky Draw): ink outline, coloured face, gold label.
@@ -517,7 +517,12 @@ static void GoldTick()
 		const bool bOn = C.B->B && (C.B->B->IsHovered() || (int)i == PadFocus);
 		if (bOn && !C.bWas) C.F = 0.85f;	// white flash on the punch-in
 		C.bWas = bOn;
-		const float Want = bOn ? 1.08f : 1.f;
+		if (C.Lit != (int)bOn)	// focused card: gold ink outline (cards) / gold frame (bars) that stays while focused
+		{
+			C.Lit = bOn; const SDK::FLinearColor Ink = bOn ? SDK::FLinearColor{1.f, 0.72f, 0.08f, 1.f} : SDK::FLinearColor{0.f, 0.f, 0.f, 1.f};
+			if (C.Edge) C.Edge->SetBrushColor(Ink); else C.B->B->SetBackgroundColor(Ink);
+		}
+		const float Want = bOn ? 1.1f : 1.f;
 		C.S += (Want - C.S) * (std::min)(1.f, DT * 18.f);
 		C.F = (std::max)(0.f, C.F - DT * 2.5f);
 		const float Pulse = (i == 0 && !bOn) ? std::sin(T * 2.2f) * 0.015f : 0.f;
