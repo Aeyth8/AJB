@@ -349,17 +349,17 @@ static FBtn QuickCard(SDK::UUserWidget* U, SDK::UVerticalBox* V)
 	FBtn R; R.L = "QUICK MATCH";
 	R.B = NewW<SDK::UButton>(U); R.B->IsFocusable = false; R.B->BackgroundColor = Mag;
 	SDK::UBorder* Ink = NewW<SDK::UBorder>(U); Ink->BrushColor = {0.f, 0.f, 0.f, 1.f}; Ink->SetPadding({8.f, 8.f, 8.f, 8.f});
-	SDK::UBorder* Face = NewW<SDK::UBorder>(U); Face->BrushColor = {0.22f, 0.04f, 0.32f, 1.f}; Face->SetPadding({10.f, 10.f, 28.f, 10.f});
+	SDK::UBorder* Face = NewW<SDK::UBorder>(U); Face->BrushColor = {0.22f, 0.04f, 0.32f, 1.f}; Face->SetPadding({10.f, 10.f, 28.f, 10.f}); Face->SetClipping(SDK::EWidgetClipping::Inherit);
 	SDK::UHorizontalBox* H = NewW<SDK::UHorizontalBox>(U);
 	SDK::UImage* Pic = NewW<SDK::UImage>(U);
-	if (auto* Tx = (SDK::UTexture2D*)Asset(L"/Game/AJB/OutGame/6_CharacterSelect/Textures/TX_UI_CharacterCard_01JTR.TX_UI_CharacterCard_01JTR")) Pic->SetBrushFromTexture(Tx, false);
-	Pic->SetBrushSize({150.f, 210.f});
-	SDK::UBorder* PicInk = NewW<SDK::UBorder>(U); PicInk->BrushColor = {0.f, 0.f, 0.f, 1.f}; PicInk->SetPadding({5.f, 5.f, 5.f, 5.f}); PicInk->SetContent(Pic);
+	if (auto* Tx = (SDK::UTexture2D*)Asset(L"/Game/AJB/OutGame/6_CharacterSelect/Textures/TX_UI_CharacterSelect_Icon01_JTR.TX_UI_CharacterSelect_Icon01_JTR")) Pic->SetBrushFromTexture(Tx, false);
+	Pic->SetBrushSize({300.f, 300.f});
+	SDK::UBorder* PicInk = NewW<SDK::UBorder>(U); PicInk->BrushColor = {0.f, 0.f, 0.f, 1.f}; PicInk->SetPadding({5.f, 5.f, 5.f, 5.f}); PicInk->SetContent(Pic); PicInk->SetRenderTranslation({-30.f, -70.f}); PicInk->SetRenderAngle(6.f);
 	H->AddChildToHorizontalBox(PicInk);
 	SDK::UVerticalBox* TV = NewW<SDK::UVerticalBox>(U);
 	R.T = GoldText(U, L"QUICK MATCH", 60, Gold);
 	if (auto* S = TV->AddChildToVerticalBox(R.T)) S->SetPadding({26.f, 30.f, 0.f, 0.f});
-	SDK::UTextBlock* Sub = GoldText(U, L"\u30af\u30a4\u30c3\u30af\u30de\u30c3\u30c1  \u30c9\u30c9\u30c9\u30c9", 30, {1.f, 1.f, 1.f, 1.f});
+	SDK::UTextBlock* Sub = GoldText(U, L"\u30af\u30a4\u30c3\u30af\u30de\u30c3\u30c1", 30, {1.f, 1.f, 1.f, 1.f});
 	if (auto* S = TV->AddChildToVerticalBox(Sub)) S->SetPadding({30.f, 6.f, 0.f, 0.f});
 	if (auto* S = H->AddChildToHorizontalBox(TV)) S->SetVerticalAlignment(SDK::EVerticalAlignment::VAlign_Center);
 	Face->SetContent(H); Ink->SetContent(Face);
@@ -390,6 +390,8 @@ static void GoldBackdrop(SDK::UUserWidget* U)
 	{
 		GGo[i] = GoldText(U, Go[i], 120, i ? SDK::FLinearColor{1.f, 0.72f, 0.08f, 0.9f} : SDK::FLinearColor{0.9f, 0.1f, 0.65f, 0.9f});
 		GGo[i]->Visibility = SDK::ESlateVisibility::HitTestInvisible;
+		{ SDK::FSlateFontInfo F = GGo[i]->Font; F.Size = 150; F.OutlineSettings.OutlineSize = 9; F.OutlineSettings.OutlineColor = {0.f, 0.f, 0.f, 1.f}; F.TypefaceFontName = A8CL::FName::NAME_FindOrAdd("Bold"); GGo[i]->SetFont(F); }
+		GGo[i]->SetRenderOpacity(0.82f); GGo[i]->SetShadowOffset({8.f, 8.f});
 		if (auto* S = O->AddChildToOverlay(GGo[i])) { S->SetHorizontalAlignment(i ? SDK::EHorizontalAlignment::HAlign_Right : SDK::EHorizontalAlignment::HAlign_Left); S->SetVerticalAlignment(i ? SDK::EVerticalAlignment::VAlign_Top : SDK::EVerticalAlignment::VAlign_Bottom); S->SetPadding({60.f, 60.f, 60.f, 60.f}); }
 	}
 	if (auto* S = O->AddChildToOverlay(Old)) { S->SetHorizontalAlignment(SDK::EHorizontalAlignment::HAlign_Fill); S->SetVerticalAlignment(SDK::EVerticalAlignment::VAlign_Fill); }
