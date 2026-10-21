@@ -54,4 +54,5 @@ void A8CL::TickHook::Tick(SDK::UGameEngine* This, float DeltaSeconds, bool bIdle
 	OneMenu::Tick(DeltaSeconds);
 
 	OFF::Tick.VerifyFC<Decl::Tick>()(This, DeltaSeconds, bIdleMode);
+	OneMenu::PostTick();
 }

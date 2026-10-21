@@ -17,6 +17,7 @@ namespace OneMenu
 
 	inline bool		bQuickHost{false};
 	void			Tick(float DeltaSeconds);
+	void			PostTick();	// after UGameEngine::Tick: deferred map travel
 	inline int		BotSetting{4};	// saved "Bot difficulty" menu setting (1 Easy .. 4 Very Hard)
 	inline int		BotLevel{4};	// AI level forced into every offline/hosted bot (1-4)
 	// True swallows the state change.

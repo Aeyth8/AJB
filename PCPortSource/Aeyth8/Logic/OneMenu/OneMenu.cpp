@@ -258,7 +258,23 @@ static void WritePhase(const char* Ph)
 	LogA("OneMenu", std::string("phase.txt = ") + Ph);
 }
 
+// Map travel is never run from inside our Tick hook: the FrontEnd "open" loaded the map in the middle of UGameEngine::Tick
+// and the game thread hung for 60 s (10-21). "open" commands are queued and run by PostTick, after the engine's own Tick.
+static std::string PendingOpen;
+static void ExecNow(const std::string& Cmd);
 static void Exec(const std::string& Cmd)
+{
+	if (Cmd.rfind("open ", 0) == 0) { PendingOpen = Cmd; return; }
+	ExecNow(Cmd);
+}
+void OneMenu::PostTick()
+{
+	if (PendingOpen.empty()) return;
+	const std::string C = std::move(PendingOpen); PendingOpen.clear();
+	LogA("OneMenu", "Deferred travel: " + C);
+	ExecNow(C);
+}
+static void ExecNow(const std::string& Cmd)
 {
 	if (!GEngine || !GEngine->GameViewport || !GEngine->GameViewport->ViewportConsole) return;
 	std::wstring W(Cmd.begin(), Cmd.end());
