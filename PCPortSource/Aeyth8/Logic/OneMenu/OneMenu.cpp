@@ -491,6 +491,44 @@ static void CarrySkin()
 	LogA("OneMenu", std::format("Equip: carry chara {} skin {} stand {} icon {} into {} entries of {}", C, Sk, St, Icon, N, I->MatchingPlayers.Num()));
 }
 
+// Title picker on character select: Prev / Next cycle the owned titles (6:0:id unlocks plus the start title) and save via set_reward.
+static SDK::UUserWidget* TitleW{}; static FBtn BTPrev, BTNext; static SDK::UTextBlock* TitleTxt{};
+static void TitleTick()
+{
+	const bool Want = LastFlow == "SimpleMatch.SelectCharacter" && ArcadeLink::Alive();
+	if (Want && !TitleW)
+	{
+		TitleW = Shell(); if (!TitleW) return;
+		SDK::UVerticalBox* V = Frame(TitleW, 0.f, SDK::EVerticalAlignment::VAlign_Bottom);
+		SDK::UHorizontalBox* H = NewW<SDK::UHorizontalBox>(TitleW);
+		auto Btn = [&](const std::wstring& S) { FBtn R; R.B = NewW<SDK::UButton>(TitleW); R.B->IsFocusable = false; R.B->BackgroundColor = {0.12f, 0.16f, 0.35f, 1.f}; R.T = Label(TitleW, S, 20); for (wchar_t c : S) R.L += (char)c;
+			if (SDK::UButtonSlot* B = (SDK::UButtonSlot*)R.B->SetContent(R.T)) B->SetPadding({18.f, 4.f, 18.f, 4.f});
+			if (SDK::UHorizontalBoxSlot* B = H->AddChildToHorizontalBox(R.B)) B->SetVerticalAlignment(SDK::EVerticalAlignment::VAlign_Center); return R; };
+		BTPrev = Btn(L"Previous Title");
+		TitleTxt = Label(TitleW, L"", 22);
+		if (SDK::UHorizontalBoxSlot* B = H->AddChildToHorizontalBox(TitleTxt)) { B->SetPadding({20.f, 0.f, 20.f, 0.f}); B->SetVerticalAlignment(SDK::EVerticalAlignment::VAlign_Center); }
+		BTNext = Btn(L"Next Title");
+		if (SDK::UVerticalBoxSlot* S = V->AddChildToVerticalBox(H)) S->SetPadding({0.f, 0.f, 0.f, 120.f});	// above the skin buttons row
+		TitleW->AddToViewport(240);
+	}
+	if (!TitleW) return;
+	Show(TitleW, Want);
+	if (!Want) return;
+	static int Cur{-1}, LastTid{-2};
+	const int Tid = ArcadeLink::ProfNum("title_id");
+	if (Cur < 0 || Tid != LastTid) { if (Tid > 0 || Cur < 0) Cur = Tid > 0 ? Tid : 1; LastTid = Tid; }	// follow the profile only when it changes
+	const bool P = Clicked(BTPrev), N = Clicked(BTNext);
+	if (P || N)
+	{
+		int T = Cur;
+		for (int n{0}; n < 128; ++n) { T += N ? 1 : -1; if (T > 128) T = 1; if (T < 1) T = 128; if (ArcadeLink::Owned(6, 0, T) && !ArcadeLink::TitleText(T).empty()) break; }
+		if (T != Cur) { Cur = T; ArcadeLink::Equip(6, 0, Cur); }
+		LogA("OneMenu", std::format("Title picker: title {}", Cur));
+	}
+	static int Shown{-2};
+	if (Shown != Cur) { Shown = Cur; TitleTxt->SetText(Txt(L"Title: " + ArcadeLink::TitleText(Cur))); }
+}
+
 static void UpdateOfflineLabel(float DT)
 {
 	static float T{0.f};
@@ -839,6 +877,7 @@ void OneMenu::Tick(float DT)
 	FixSelfTile(DT);
 	UpdateOfflineLabel(DT);
 	EquipTick(DT);
+	TitleTick();
 	UpdateNotice(DT);
 	// ShowTitle is a BP-to-BP call (no ProcessEvent), so also scan: hide any visible common window carrying the ALL.Net offline text.
 	static float ScanT{0.f}; static std::vector<std::pair<int, SDK::UObject*>> Wins; static float FindT{0.f};

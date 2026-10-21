@@ -212,6 +212,7 @@ void ArcadeLink::SteamUser(std::string& Id, std::string& Name)
 bool ArcadeLink::Owned(int Type, int Chara, int No)
 {
 	if ((Type == 1 || Type == 2) && No <= 1) return true;
+	if (Type == 6 && No == 1) return true;	// the start title
 	std::lock_guard G(M);
 	const size_t U = Prof.find("\"unlocks\":");
 	if (U == std::string::npos) return false;
