@@ -701,6 +701,7 @@ static void CarrySkin()
 
 // Title picker on character select: Prev / Next cycle the owned titles (6:0:id unlocks plus the start title) and save via set_reward.
 static SDK::UUserWidget* TitleW{}; static FBtn BTPrev, BTNext; static SDK::UTextBlock* TitleTxt{};
+static int TitleShown{-2};
 static void TitleTick()
 {
 	const bool Want = LastFlow == "SimpleMatch.SelectCharacter" && ArcadeLink::Alive();
@@ -733,8 +734,8 @@ static void TitleTick()
 		if (T != Cur) { Cur = T; ArcadeLink::Equip(6, 0, Cur); }
 		LogA("OneMenu", std::format("Title picker: title {}", Cur));
 	}
-	static int Shown{-2};
-	if (Shown != Cur) { Shown = Cur; TitleTxt->SetText(Txt(L"Title: " + ArcadeLink::TitleText(Cur))); }
+	// TitleShown lives at file scope so a new map (new TitleTxt) redraws the label.
+	if (TitleShown != Cur) { TitleShown = Cur; TitleTxt->SetText(Txt(L"Title: " + ArcadeLink::TitleText(Cur))); }
 }
 
 static void UpdateOfflineLabel(float DT)
@@ -997,6 +998,7 @@ bool OneMenu::OnFlow(const std::string& Tag)
 const wchar_t* OneMenu::OnBrowse(const wchar_t* Map, bool bListen)
 {
 	MenuW = SearchW = HoldW = NoticeW = CoverW = nullptr; FE = HostMenu = Proxy = nullptr; IPBox = nullptr; GBg = nullptr; GGo[0] = GGo[1] = nullptr; GCards.clear(); PadFocus = -1; HoldTxt = NoticeTxt = StatusTxt = DrawTxt = nullptr; NoticeShown.clear();
+	TitleW = nullptr; TitleTxt = nullptr; TitleShown = -2;	// the title picker belongs to the old map: a stale TitleW hung the FrontEnd return (10-21)
 	BQuick = BTrain = BTut = BDealer = BHost = BJoin = BEman = BBack = BStart = BDraw = BDiff = FBtn{};
 	OfflinePopup = nullptr; bResultSent = false;
 	bHostMenuOpen = false; FEWait = 0.f; GotoDelay = -1.f; StartPressT = -1.f;
