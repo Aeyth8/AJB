@@ -1,0 +1,662 @@
+[
+ {
+  "id": 1,
+  "jp": "運命の始まり",
+  "en": "Fate Begins",
+  "unlock": {
+   "kind": "start",
+   "n": 0,
+   "chara": "",
+   "text": "Everyone starts with this"
+  }
+ },
+ {
+  "id": 2,
+  "jp": "ヤレヤレだぜ",
+  "en": "Yare Yare Daze",
+  "unlock": {
+   "kind": "wins",
+   "n": 1,
+   "chara": "",
+   "text": "Win 1 match"
+  }
+ },
+ {
+  "id": 3,
+  "jp": "黄金の精神",
+  "en": "Golden Spirit",
+  "unlock": {
+   "kind": "wins",
+   "n": 5,
+   "chara": "",
+   "text": "Win 5 matches"
+  }
+ },
+ {
+  "id": 4,
+  "jp": "覚悟はできている",
+  "en": "Prepared",
+  "unlock": {
+   "kind": "wins",
+   "n": 10,
+   "chara": "",
+   "text": "Win 10 matches"
+  }
+ },
+ {
+  "id": 5,
+  "jp": "無駄無駄無駄",
+  "en": "Muda Muda Muda",
+  "unlock": {
+   "kind": "wins",
+   "n": 25,
+   "chara": "",
+   "text": "Win 25 matches"
+  }
+ },
+ {
+  "id": 6,
+  "jp": "最高にハイ！",
+  "en": "Maximum High",
+  "unlock": {
+   "kind": "wins",
+   "n": 50,
+   "chara": "",
+   "text": "Win 50 matches"
+  }
+ },
+ {
+  "id": 7,
+  "jp": "世界を支配",
+  "en": "Rule the World",
+  "unlock": {
+   "kind": "wins",
+   "n": 100,
+   "chara": "",
+   "text": "Win 100 matches"
+  }
+ },
+ {
+  "id": 8,
+  "jp": "天国に到達",
+  "en": "Reached Heaven",
+  "unlock": {
+   "kind": "wins",
+   "n": 250,
+   "chara": "",
+   "text": "Win 250 matches"
+  }
+ },
+ {
+  "id": 9,
+  "jp": "初のダウン",
+  "en": "First Down",
+  "unlock": {
+   "kind": "kills",
+   "n": 1,
+   "chara": "",
+   "text": "Knock down 1 players in total"
+  }
+ },
+ {
+  "id": 10,
+  "jp": "オラオラの化身",
+  "en": "Ora Ora Avatar",
+  "unlock": {
+   "kind": "kills",
+   "n": 10,
+   "chara": "",
+   "text": "Knock down 10 players in total"
+  }
+ },
+ {
+  "id": 11,
+  "jp": "ラッシュの嵐",
+  "en": "Rush Storm",
+  "unlock": {
+   "kind": "kills",
+   "n": 25,
+   "chara": "",
+   "text": "Knock down 25 players in total"
+  }
+ },
+ {
+  "id": 12,
+  "jp": "ぶっ潰す",
+  "en": "Crush Them",
+  "unlock": {
+   "kind": "kills",
+   "n": 50,
+   "chara": "",
+   "text": "Knock down 50 players in total"
+  }
+ },
+ {
+  "id": 13,
+  "jp": "ブッ飛ばす",
+  "en": "Blast Away",
+  "unlock": {
+   "kind": "kills",
+   "n": 100,
+   "chara": "",
+   "text": "Knock down 100 players in total"
+  }
+ },
+ {
+  "id": 14,
+  "jp": "無敵のスタンド",
+  "en": "Stand Unbeaten",
+  "unlock": {
+   "kind": "kills",
+   "n": 250,
+   "chara": "",
+   "text": "Knock down 250 players in total"
+  }
+ },
+ {
+  "id": 15,
+  "jp": "帝王の貫禄",
+  "en": "Boss Presence",
+  "unlock": {
+   "kind": "kills",
+   "n": 500,
+   "chara": "",
+   "text": "Knock down 500 players in total"
+  }
+ },
+ {
+  "id": 16,
+  "jp": "先手必勝",
+  "en": "First Strike",
+  "unlock": {
+   "kind": "firstblood",
+   "n": 1,
+   "chara": "",
+   "text": "Get first blood 1 time"
+  }
+ },
+ {
+  "id": 17,
+  "jp": "時よ止まれ",
+  "en": "Time Stop",
+  "unlock": {
+   "kind": "firstblood",
+   "n": 10,
+   "chara": "",
+   "text": "Get first blood 10 times"
+  }
+ },
+ {
+  "id": 18,
+  "jp": "見切った",
+  "en": "Seen Through",
+  "unlock": {
+   "kind": "firstblood",
+   "n": 25,
+   "chara": "",
+   "text": "Get first blood 25 times"
+  }
+ },
+ {
+  "id": 19,
+  "jp": "旅の仲間",
+  "en": "Fellow Traveler",
+  "unlock": {
+   "kind": "matches",
+   "n": 5,
+   "chara": "",
+   "text": "Play 5 matches"
+  }
+ },
+ {
+  "id": 20,
+  "jp": "長き旅路",
+  "en": "Long Journey",
+  "unlock": {
+   "kind": "matches",
+   "n": 25,
+   "chara": "",
+   "text": "Play 25 matches"
+  }
+ },
+ {
+  "id": 21,
+  "jp": "不屈の旅人",
+  "en": "Unyielding",
+  "unlock": {
+   "kind": "matches",
+   "n": 100,
+   "chara": "",
+   "text": "Play 100 matches"
+  }
+ },
+ {
+  "id": 22,
+  "jp": "終わらぬ冒険",
+  "en": "Endless Quest",
+  "unlock": {
+   "kind": "matches",
+   "n": 250,
+   "chara": "",
+   "text": "Play 250 matches"
+  }
+ },
+ {
+  "id": 23,
+  "jp": "見習い使い",
+  "en": "Stand Rookie",
+  "unlock": {
+   "kind": "level",
+   "n": 5,
+   "chara": "",
+   "text": "Reach level 5"
+  }
+ },
+ {
+  "id": 24,
+  "jp": "一人前",
+  "en": "Full-Fledged",
+  "unlock": {
+   "kind": "level",
+   "n": 10,
+   "chara": "",
+   "text": "Reach level 10"
+  }
+ },
+ {
+  "id": 25,
+  "jp": "熟練の使い手",
+  "en": "Seasoned User",
+  "unlock": {
+   "kind": "level",
+   "n": 20,
+   "chara": "",
+   "text": "Reach level 20"
+  }
+ },
+ {
+  "id": 26,
+  "jp": "伝説の使い手",
+  "en": "Legendary User",
+  "unlock": {
+   "kind": "level",
+   "n": 30,
+   "chara": "",
+   "text": "Reach level 30"
+  }
+ },
+ {
+  "id": 27,
+  "jp": "表彰台",
+  "en": "On the Podium",
+  "unlock": {
+   "kind": "top3",
+   "n": 1,
+   "chara": "",
+   "text": "Finish in the top 3, 1 times"
+  }
+ },
+ {
+  "id": 28,
+  "jp": "常に上位",
+  "en": "Top Contender",
+  "unlock": {
+   "kind": "top3",
+   "n": 10,
+   "chara": "",
+   "text": "Finish in the top 3, 10 times"
+  }
+ },
+ {
+  "id": 29,
+  "jp": "頂点を歩む者",
+  "en": "Summit Walker",
+  "unlock": {
+   "kind": "top3",
+   "n": 50,
+   "chara": "",
+   "text": "Finish in the top 3, 50 times"
+  }
+ },
+ {
+  "id": 30,
+  "jp": "スタープラチナ",
+  "en": "Star Platinum",
+  "unlock": {
+   "kind": "char_wins",
+   "n": 10,
+   "chara": "JTR",
+   "text": "Win 10 matches as Jotaro"
+  }
+ },
+ {
+  "id": 31,
+  "jp": "波紋疾走",
+  "en": "Hamon Overdrive",
+  "unlock": {
+   "kind": "char_wins",
+   "n": 10,
+   "chara": "JSP",
+   "text": "Win 10 matches as Joseph"
+  }
+ },
+ {
+  "id": 32,
+  "jp": "シャボン使い",
+  "en": "Bubble Master",
+  "unlock": {
+   "kind": "char_wins",
+   "n": 10,
+   "chara": "CSR",
+   "text": "Win 10 matches as Caesar"
+  }
+ },
+ {
+  "id": 33,
+  "jp": "ザ・ワールド",
+  "en": "The World",
+  "unlock": {
+   "kind": "char_wins",
+   "n": 10,
+   "chara": "DIO",
+   "text": "Win 10 matches as DIO"
+  }
+ },
+ {
+  "id": 34,
+  "jp": "クレイジー・D",
+  "en": "Crazy Diamond",
+  "unlock": {
+   "kind": "char_wins",
+   "n": 10,
+   "chara": "JSK",
+   "text": "Win 10 matches as Josuke"
+  }
+ },
+ {
+  "id": 35,
+  "jp": "キラークイーン",
+  "en": "Killer Queen",
+  "unlock": {
+   "kind": "char_wins",
+   "n": 10,
+   "chara": "KIR",
+   "text": "Win 10 matches as Kira"
+  }
+ },
+ {
+  "id": 36,
+  "jp": "ゴールド・E",
+  "en": "Gold Experience",
+  "unlock": {
+   "kind": "char_wins",
+   "n": 10,
+   "chara": "GRN",
+   "text": "Win 10 matches as Giorno"
+  }
+ },
+ {
+  "id": 37,
+  "jp": "ジッパーの男",
+  "en": "Zipper Man",
+  "unlock": {
+   "kind": "char_wins",
+   "n": 10,
+   "chara": "BCT",
+   "text": "Win 10 matches as Bruno"
+  }
+ },
+ {
+  "id": 38,
+  "jp": "キング・クリムゾン",
+  "en": "King Crimson",
+  "unlock": {
+   "kind": "char_wins",
+   "n": 10,
+   "chara": "DVL",
+   "text": "Win 10 matches as Diavolo"
+  }
+ },
+ {
+  "id": 39,
+  "jp": "ストーンフリー",
+  "en": "Stone Free",
+  "unlock": {
+   "kind": "char_wins",
+   "n": 10,
+   "chara": "JLN",
+   "text": "Win 10 matches as Jolyne"
+  }
+ },
+ {
+  "id": 40,
+  "jp": "天国への道",
+  "en": "Path to Heaven",
+  "unlock": {
+   "kind": "char_wins",
+   "n": 10,
+   "chara": "C28",
+   "text": "Win 10 matches as Pucci"
+  }
+ },
+ {
+  "id": 41,
+  "jp": "ジョジョ立ち",
+  "en": "JoJo Pose",
+  "unlock": {
+   "kind": "draw",
+   "n": 0,
+   "chara": "",
+   "text": "Lucky or Premium Draw"
+  }
+ },
+ {
+  "id": 42,
+  "jp": "だが断る",
+  "en": "But I Refuse",
+  "unlock": {
+   "kind": "draw",
+   "n": 0,
+   "chara": "",
+   "text": "Lucky or Premium Draw"
+  }
+ },
+ {
+  "id": 43,
+  "jp": "ロードローラーだ",
+  "en": "Road Roller!",
+  "unlock": {
+   "kind": "draw",
+   "n": 0,
+   "chara": "",
+   "text": "Lucky or Premium Draw"
+  }
+ },
+ {
+  "id": 44,
+  "jp": "奇妙な冒険",
+  "en": "Bizarre Journey",
+  "unlock": {
+   "kind": "draw",
+   "n": 0,
+   "chara": "",
+   "text": "Lucky or Premium Draw"
+  }
+ },
+ {
+  "id": 45,
+  "jp": "スタンド使い",
+  "en": "Stand User",
+  "unlock": {
+   "kind": "draw",
+   "n": 0,
+   "chara": "",
+   "text": "Lucky or Premium Draw"
+  }
+ },
+ {
+  "id": 46,
+  "jp": "波紋の戦士",
+  "en": "Hamon Warrior",
+  "unlock": {
+   "kind": "draw",
+   "n": 0,
+   "chara": "",
+   "text": "Lucky or Premium Draw"
+  }
+ },
+ {
+  "id": 47,
+  "jp": "黄金の風",
+  "en": "Golden Wind",
+  "unlock": {
+   "kind": "draw",
+   "n": 0,
+   "chara": "",
+   "text": "Lucky or Premium Draw"
+  }
+ },
+ {
+  "id": 48,
+  "jp": "ダイヤは砕けない",
+  "en": "Unbreakable",
+  "unlock": {
+   "kind": "draw",
+   "n": 0,
+   "chara": "",
+   "text": "Lucky or Premium Draw"
+  }
+ },
+ {
+  "id": 49,
+  "jp": "石の海",
+  "en": "Stone Ocean",
+  "unlock": {
+   "kind": "draw",
+   "n": 0,
+   "chara": "",
+   "text": "Lucky or Premium Draw"
+  }
+ },
+ {
+  "id": 50,
+  "jp": "スティール・ボール",
+  "en": "Steel Ball Run",
+  "unlock": {
+   "kind": "draw",
+   "n": 0,
+   "chara": "",
+   "text": "Lucky or Premium Draw"
+  }
+ },
+ {
+  "id": 51,
+  "jp": "黄金の回転",
+  "en": "Golden Spin",
+  "unlock": {
+   "kind": "draw",
+   "n": 0,
+   "chara": "",
+   "text": "Lucky or Premium Draw"
+  }
+ },
+ {
+  "id": 52,
+  "jp": "ジョジョランズ",
+  "en": "JoJolands",
+  "unlock": {
+   "kind": "draw",
+   "n": 0,
+   "chara": "",
+   "text": "Lucky or Premium Draw"
+  }
+ },
+ {
+  "id": 53,
+  "jp": "ジョジョリオン",
+  "en": "JoJolion",
+  "unlock": {
+   "kind": "draw",
+   "n": 0,
+   "chara": "",
+   "text": "Lucky or Premium Draw"
+  }
+ },
+ {
+  "id": 54,
+  "jp": "ファントムブラッド",
+  "en": "Phantom Blood",
+  "unlock": {
+   "kind": "draw",
+   "n": 0,
+   "chara": "",
+   "text": "Lucky or Premium Draw"
+  }
+ },
+ {
+  "id": 55,
+  "jp": "戦闘潮流",
+  "en": "Battle Tendency",
+  "unlock": {
+   "kind": "draw",
+   "n": 0,
+   "chara": "",
+   "text": "Lucky or Premium Draw"
+  }
+ },
+ {
+  "id": 56,
+  "jp": "クルセイダース",
+  "en": "Crusaders",
+  "unlock": {
+   "kind": "draw",
+   "n": 0,
+   "chara": "",
+   "text": "Lucky or Premium Draw"
+  }
+ },
+ {
+  "id": 57,
+  "jp": "ラスト・サバイバー",
+  "en": "Last Survivor",
+  "unlock": {
+   "kind": "draw",
+   "n": 0,
+   "chara": "",
+   "text": "Lucky or Premium Draw"
+  }
+ },
+ {
+  "id": 58,
+  "jp": "運命の奴隷",
+  "en": "Slave of Fate",
+  "unlock": {
+   "kind": "draw",
+   "n": 0,
+   "chara": "",
+   "text": "Lucky or Premium Draw"
+  }
+ },
+ {
+  "id": 59,
+  "jp": "ギャングスター",
+  "en": "Gang Star",
+  "unlock": {
+   "kind": "draw",
+   "n": 0,
+   "chara": "",
+   "text": "Lucky or Premium Draw"
+  }
+ },
+ {
+  "id": 60,
+  "jp": "ラッシュ連打",
+  "en": "Rush Barrage",
+  "unlock": {
+   "kind": "draw",
+   "n": 0,
+   "chara": "",
+   "text": "Lucky or Premium Draw"
+  }
+ }
+]
