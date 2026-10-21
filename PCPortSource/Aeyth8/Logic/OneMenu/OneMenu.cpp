@@ -8,6 +8,7 @@
 #include "../../../Dumper-7/SDK/CoreUObject_classes.hpp"
 #include "../../../Dumper-7/SDK/UMG_classes.hpp"
 #include "../../../Dumper-7/SDK/Engine_classes.hpp"
+#include "../../../Dumper-7/SDK/BP_CharaSelectMannequin_classes.hpp"
 #include "../../../Dumper-7/SDK/LoadingScreenSystem_classes.hpp"
 #include "../../../Dumper-7/SDK/WB_ModeSelect_classes.hpp"
 #include "../../Offsets.h"
@@ -430,10 +431,26 @@ static void EquipTick(float DT)
 	{
 		// Direction of the press: +1 unless the id went down by one or wrapped from low to high.
 		auto Up = [](int Now, int Was) { return Now > Was ? Now - Was == 1 : Was - Now > 1; };
-		// Skip unowned ids in the press direction (ids 1..32, wrapping); id 1 is always owned.
-		auto Skip = [&](int T, int Now, int Was) { const int D = Up(Now, Was) ? 1 : -1; for (int n{0}; n < 32 && !ArcadeLink::Owned(T, C, Now); ++n) Now = (Now - 1 + D + 32) % 32 + 1; return Now; };
-		const int Sk1 = Sk != LastSk ? Skip(1, Sk, LastSk) : Sk, St1 = St != LastSt ? Skip(2, St, LastSt) : St;
-		if (Sk1 != Sk || St1 != St) { ApplySkin(C, Sk1, St1); Sk = I->GetCharacterSkinId(C); St = I->GetStandSkinId(C); }
+		// Unowned id: press the select mannequin's own skin step (one per tick) so the preview follows.
+		static int TSk{0}, TSt{0}, Presses{0};
+		SDK::ABP_CharaSelectMannequin_C* H{nullptr};
+		for (int i{0}; !H && i < SDK::UObject::GObjects->Num(); ++i)
+			if (SDK::UObject* O = SDK::UObject::GObjects->GetByIndex(i); O && O->Class && !O->IsDefaultObject() && O->IsA(SDK::ABP_CharaSelectMannequin_C::StaticClass())) H = (SDK::ABP_CharaSelectMannequin_C*)O;
+		// Target = next owned id in the press direction, wrapping past the highest owned id to 1.
+		auto Tgt = [&](int T, int Now, int D) { int Max{1}; for (int n{2}; n <= 32; ++n) if (ArcadeLink::Owned(T, C, n)) Max = n; for (int n{Now + D}; n >= 1 && n <= Max; n += D) if (ArcadeLink::Owned(T, C, n)) return n; return 1; };
+		if (!TSk && Sk != LastSk && !ArcadeLink::Owned(1, C, Sk)) TSk = Tgt(1, Sk, Up(Sk, LastSk) ? 1 : -1);
+		if (!TSt && St != LastSt && !ArcadeLink::Owned(2, C, St)) TSt = Tgt(2, St, Up(St, LastSt) ? 1 : -1);
+		if (TSk == Sk) TSk = 0;
+		if (TSt == St) TSt = 0;
+		if (H && (TSk || TSt) && Presses < 64)
+		{
+			if (TSk) TSk > Sk ? H->Debug_TryChangeNextSkin() : H->Debug_TryChangePrevSkin();
+			if (TSt) TSt > St ? H->Debug_TryChangeNextSkin_Stand() : H->Debug_TryChangePrevSkin_Stand();
+			++Presses; LogA("OneMenu", std::format("Equip: skin {} / stand {} not owned, stepping to {} / {}", Sk, St, TSk, TSt));
+			LastSk = Sk; LastSt = St; return;
+		}
+		if (!H && (TSk || TSt)) LogA("OneMenu", "Equip: no mannequin to skip an unowned skin");
+		TSk = TSt = Presses = 0;
 		if (Sk != LastSk) ArcadeLink::Equip(1, C, Sk);
 		if (St != LastSt) ArcadeLink::Equip(2, C, St);
 		LogA("OneMenu", std::format("Equip: chara {} skin {} stand {}", C, Sk, St));
