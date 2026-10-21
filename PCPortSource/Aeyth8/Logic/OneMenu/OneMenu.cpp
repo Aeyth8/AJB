@@ -162,8 +162,8 @@ void OneMenu::OnPEPost(SDK::UObject* This, SDK::UFunction* Function)
 void OneMenu::NetFailure(int Type, const std::string& Err)
 {
 	NetFailMsg = Err.find("TIMED OUT") != std::string::npos || Err.find("timed out") != std::string::npos
-		? L"Connection to the host timed out. Check the IP address and that the host has started a match."
-		: L"Connection to the host failed. Check the IP address, the host, and your network.";
+		? L"Could not join: the host did not answer. Check the IP address, and that the host has chosen Host and is waiting for players."
+		: L"Could not join the host. Check the IP address, that the host is waiting for players, and your network.";
 	NetFailT = 12.f; bFailBack = true;
 	LogA("OneMenu", std::format("Network failure {} {}", Type, Err));
 }
@@ -807,6 +807,35 @@ static void FixMatchRow(float DT)
 	}
 }
 
+// TEXT_STYLE: bot names read "D'Arby's Assassin 001", the player is never "NO NAME", no doubled "EndEnd".
+static void FixTexts(float DT)
+{
+	static float T{0.f};
+	if ((T += DT) < 0.5f) return;
+	T = 0.f;
+	static const std::wstring Bot{L"ダービーの刺客"};
+	std::wstring Me;
+	for (int i{0}; i < SDK::UObject::GObjects->Num(); ++i)
+	{
+		SDK::UObject* O = SDK::UObject::GObjects->GetByIndex(i);
+		if (!O || !O->Class || O->IsDefaultObject() || !O->IsA(SDK::UTextBlock::StaticClass())) continue;
+		SDK::UTextBlock* B = (SDK::UTextBlock*)O;
+		const std::wstring W = SDK::UKismetTextLibrary::Conv_TextToString(B->GetText()).ToWString();
+		if (W.empty()) continue;
+		std::wstring N = W;
+		if (size_t P = N.find(Bot); P != std::wstring::npos)
+		{
+			N.replace(P, Bot.size(), L"D'Arby's Assassin ");
+			for (wchar_t& c : N) if (c >= 0xFF10 && c <= 0xFF19) c = (wchar_t)(L'0' + (c - 0xFF10));
+			if (const size_t E = P + 18; E < N.size() && N[E] == L' ') N.erase(E, 1);
+			while (!N.empty() && N.back() == L' ') N.pop_back();
+		}
+		if (N == L"NO NAME") { if (Me.empty()) Me = ArcadeLink::SteamName(); N = Me.empty() ? L"Player" : Me; }
+		for (size_t P; (P = N.find(L"EndEnd")) != std::wstring::npos;) N.erase(P, 3);
+		if (N != W) B->SetText(Txt(N));
+	}
+}
+
 // Small banner at the bottom: only real problems (arcade server down, Steam connection failed, Steam not running).
 static void UpdateNotice(float DT)
 {
@@ -1085,6 +1114,7 @@ void OneMenu::Tick(float DT)
 	UpdateCover(DT);
 	FixMatchRow(DT);
 	FixSelfTile(DT);
+	FixTexts(DT);
 	UpdateOfflineLabel(DT);
 	EquipTick(DT);
 	TitleTick();
