@@ -9,6 +9,7 @@
 #include "../../../Dumper-7/SDK/UMG_classes.hpp"
 #include "../../../Dumper-7/SDK/Engine_classes.hpp"
 #include "../../../Dumper-7/SDK/BP_CharaSelectMannequin_classes.hpp"
+#include "../../../Dumper-7/SDK/WB_CharacterSelect_classes.hpp"
 #include "../../../Dumper-7/SDK/LoadingScreenSystem_classes.hpp"
 #include "../../../Dumper-7/SDK/WB_ModeSelect_classes.hpp"
 #include "../../Offsets.h"
@@ -450,6 +451,9 @@ static void EquipTick(float DT)
 			LastSk = Sk; LastSt = St; return;
 		}
 		if (!H && (TSk || TSt)) LogA("OneMenu", "Equip: no mannequin to skip an unowned skin");
+		if (Presses > 0)	// the skin labels only refresh on a real click, so redraw them after stepping
+			for (int i{0}; i < SDK::UObject::GObjects->Num(); ++i)
+				if (SDK::UObject* O = SDK::UObject::GObjects->GetByIndex(i); O && O->Class && !O->IsDefaultObject() && O->IsA(SDK::UWB_CharacterSelect_C::StaticClass())) ((SDK::UWB_CharacterSelect_C*)O)->SetupDebugSkinChangeName();
 		TSk = TSt = Presses = 0;
 		if (Sk != LastSk) ArcadeLink::Equip(1, C, Sk);
 		if (St != LastSt) ArcadeLink::Equip(2, C, St);
